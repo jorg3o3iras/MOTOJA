@@ -101,6 +101,7 @@
     <button id="btn-localizar" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold hover:scale-[1.02] active:scale-[0.98] transition">📍 Onde estou</button>
     <button id="btn-tema" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold" title="Alternar tema">🌙</button>
     <button id="btn-conta" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold">👤 Entrar</button>
+    <button id="btn-sair-header" type="button" class="hidden glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold hover:bg-red-50 hover:text-red-600 transition">🚪 Sair</button>
     <button id="btn-abrir-cadastro-moto" type="button" class="bg-black text-white shadow-premium-lg rounded-full px-5 py-2.5 text-[13px] font-bold hover:bg-zinc-900 transition">🪪 Sou Motoqueiro</button>
     <button id="btn-admin" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold">🔧 Admin</button>
   </div>
@@ -587,6 +588,35 @@
 </div>
 
 <!-- ============================================================
+     MODAL SENHA ADMIN
+     ============================================================ -->
+<div id="modal-admin-senha" class="fixed inset-0 z-[2800] bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+  <div class="bg-white rounded-[28px] w-full max-w-[400px] shadow-premium-lg p-6" onclick="event.stopPropagation()">
+    <div class="text-center mb-5">
+      <div class="w-14 h-14 rounded-full bg-black text-white flex items-center justify-center text-2xl mx-auto">🔐</div>
+      <h3 class="sora font-extrabold text-[20px] mt-3">Acesso restrito</h3>
+      <p class="text-[13px] text-zinc-500 mt-1">Digite a senha de administrador</p>
+    </div>
+    <input id="admin-senha-input" type="password" inputmode="numeric" maxlength="6" autocomplete="off"
+      class="w-full text-center text-[24px] sora font-extrabold tracking-[0.4em]
+             rounded-2xl border-2 border-zinc-200 px-4 py-4 outline-none
+             focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition"
+      placeholder="••••••">
+    <div class="flex gap-3 mt-5">
+      <button id="btn-admin-senha-cancelar" type="button"
+        class="flex-1 bg-white border-2 border-zinc-200 rounded-2xl py-3.5 font-bold text-[14px] hover:bg-zinc-50 transition">
+        Cancelar
+      </button>
+      <button id="btn-admin-senha-entrar" type="button"
+        class="flex-1 bg-black text-white rounded-2xl py-3.5 font-bold text-[14px] hover:bg-zinc-900 transition">
+        Entrar
+      </button>
+    </div>
+    <div id="admin-senha-erro" class="hidden mt-3 text-center text-[12px] text-red-500 font-bold">Senha incorreta</div>
+  </div>
+</div>
+
+<!-- ============================================================
      MODO MAPA (ESCOLHER DESTINO ARRASTANDO)
      ============================================================ -->
 <div id="modo-mapa-overlay" class="hidden">
@@ -633,6 +663,7 @@
      ========================================================= */
   const SUPABASE_URL = 'https://zthpupgggmxwrsfksalw.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_Q0zXHqPXXsUrbzwOxHL5_w_2E1vKdo4';
+  const SENHA_ADMIN = '123456'; // ← troque aqui pela sua senha
 
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
@@ -767,14 +798,11 @@
     pickup: null, destino: null, rota: null, opcao: null,
     user: null, profile: null,
     motoqueiroCadastro: null,
-    // corrida (passageiro)
     corridaId: null, canalCorrida: null, canalMotoPos: null, pollTimer: null,
     motoqueiroAtual: null, timeoutSemAceite: null, corridaParaAvaliar: null,
-    // motoqueiro
     canalOfertas: null, canalMinhaCorrida: null, ofertaAtual: null,
     timerOferta: null, corridaAtual: null, timerHeartbeat: null,
     _pollOferta: null,
-    // misc
     buscaAbort: null, favAbort: null
   };
 
@@ -812,7 +840,7 @@
       p_distancia_km: distancia, p_duracao_min: duracao, p_preco_total: preco
     });
     if (error) throw error;
-    return data; // { corrida_id, oferta: {...} }
+    return data;
   }
   async function buscarMeuCadastroMotoqueiro() {
     if (!state.user) return null;
@@ -897,6 +925,11 @@
     else abrirAuth('login');
   });
 
+  // Botão Sair do header
+  $('btn-sair-header').addEventListener('click', () => {
+    if (confirm('Deseja sair da conta?')) fazerLogout();
+  });
+
   async function fazerLogin(email, senha) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
     if (error) throw error;
@@ -911,12 +944,10 @@
     return data;
   }
   async function fazerLogout() {
-    // encerra tudo do motoqueiro antes de sair
     pararHeartbeat();
     if (state.canalOfertas) { supabase.removeChannel(state.canalOfertas); state.canalOfertas = null; }
     if (state.canalMinhaCorrida) { supabase.removeChannel(state.canalMinhaCorrida); state.canalMinhaCorrida = null; }
     if (state._pollOferta) { clearInterval(state._pollOferta); state._pollOferta = null; }
-    // encerra tudo do passageiro
     pararPolling(); pararCanaisPassageiro();
     await supabase.auth.signOut();
     mostrarToast('Sessão encerrada');
@@ -939,14 +970,12 @@
       $('user-mini-av').textContent = initials(nome);
       $('user-nome').textContent = primeiroNome;
       $('user-logado').classList.remove('hidden');
+      $('btn-sair-header').classList.remove('hidden'); // mostra botão Sair
       state.motoqueiroCadastro = await buscarMeuCadastroMotoqueiro();
       atualizarUIMotoqueiro();
       const favsBackend = await carregarFavoritosDoBackend();
       if (favsBackend.length > 0) { favoritos = favsBackend; renderFavoritos(); }
-      if (state.pickup) {
-        carregarMotoqueirosNoMapaDebounced();
-      }
-      // se o motoqueiro já estava online, religa heartbeat
+      if (state.pickup) carregarMotoqueirosNoMapaDebounced();
       if (state.motoqueiroCadastro?.status === 'aprovado' && state.motoqueiroCadastro?.disponivel) {
         iniciarHeartbeat();
         ouvirMinhasOfertas();
@@ -955,6 +984,7 @@
       state.user = null; state.profile = null; state.motoqueiroCadastro = null;
       $('btn-conta').innerHTML = '👤 Entrar';
       $('user-logado').classList.add('hidden');
+      $('btn-sair-header').classList.add('hidden'); // esconde botão Sair
       limparMotoqueirosDoMapa();
       atualizarUIMotoqueiro();
     }
@@ -1466,7 +1496,6 @@
         'Analisando distância e avaliação'
       );
 
-      // se a própria RPC já ofertou para alguém, mostra o nome
       if (resp.oferta?.ofertado) {
         atualizarTextoBusca('Enviando solicitação...', 'Aguardando resposta do motoqueiro');
       }
@@ -1479,7 +1508,6 @@
       escutarCorrida(state.corridaId);
       iniciarPolling(state.corridaId);
 
-      // timeout geral de 3 min
       state.timeoutSemAceite = setTimeout(async () => {
         if (!state.corridaId) return;
         await supabase.rpc('cancelar_corrida', { p_corrida_id: state.corridaId, p_por: 'timeout' });
@@ -1512,35 +1540,29 @@
       case 'oferecida':
         await mostrarOferecendo(c);
         break;
-
       case 'aceita':
         if (!state.motoqueiroAtual) {
           await carregarMotoqueiroReal(c);
           pararPolling();
         }
         break;
-
       case 'chegou':
         mostrarToast('🏍 Motoqueiro no local! Mostre o código.', 'success');
         if ($('dr-eta')) $('dr-eta').textContent = 'Chegou!';
         break;
-
       case 'em_andamento':
         mostrarToast('Boa viagem! 🛵', 'success');
         trocarBotaoParaEmAndamento(c);
         break;
-
       case 'finalizada':
         pararPolling();
         pararCanaisPassageiro();
         abrirModalPagamento(c);
         break;
-
       case 'cancelada':
         mostrarToast('Corrida cancelada', 'error');
         resetCorrida();
         break;
-
       case 'sem_motoqueiro':
         mostrarToast('Nenhum motoqueiro disponível. Tente novamente.', 'error');
         resetCorrida();
@@ -1563,7 +1585,6 @@
     );
   }
 
-  // >>> OTIMIZAÇÃO #1: polling de 3s → 15s + colunas mínimas
   function iniciarPolling(corridaId) {
     pararPolling();
     state.pollTimer = setInterval(async () => {
@@ -1609,7 +1630,6 @@
     $('dr-placa').textContent   = mot.moto_placa || '---';
     $('codigo-embarque').textContent = (corrida.codigo_embarque || '----').split('').join(' ');
 
-    // botão cancelar volta a ficar ativo
     const btnNova = $('btn-nova');
     btnNova.disabled = false;
     btnNova.className = 'mt-4 w-full bg-zinc-100 rounded-2xl py-4 font-bold text-[13px] text-zinc-600';
@@ -1631,7 +1651,6 @@
     rastrearMotoqueiroRealtime(mot.id, corrida.origem_lat, corrida.origem_lng);
   }
 
-  // >>> OTIMIZAÇÃO #5: ignora updates de posição duplicados
   function rastrearMotoqueiroRealtime(motoqueiroId, alvoLat, alvoLng) {
     if (state.canalMotoPos) supabase.removeChannel(state.canalMotoPos);
     let ultimoLat = null, ultimoLng = null;
@@ -1641,7 +1660,6 @@
         { event: 'UPDATE', schema: 'public', table: 'motoqueiros', filter: `id=eq.${motoqueiroId}` },
         ({ new: m }) => {
           if (!m?.lat || !m?.lng || !markerMoto) return;
-          // ignora updates que não mudaram a posição (ex: nota_media, total_corridas)
           if (m.lat === ultimoLat && m.lng === ultimoLng) return;
           ultimoLat = m.lat; ultimoLng = m.lng;
 
@@ -1832,7 +1850,6 @@
     btnToggle.textContent = c.disponivel ? 'Ficar offline' : 'Ficar online';
   }
 
-  // >>> OTIMIZAÇÃO #2: heartbeat de 10s → 30s
   function iniciarHeartbeat() {
     pararHeartbeat();
     const ping = () => {
@@ -1879,7 +1896,6 @@
     );
   });
 
-  /* -------- ouve ofertas direcionadas para mim -------- */
   function ouvirMinhasOfertas() {
     const meuMotId = state.motoqueiroCadastro?.id;
     if (!meuMotId) return;
@@ -1899,7 +1915,6 @@
         })
       .subscribe();
 
-    // >>> OTIMIZAÇÃO #3: polling de 3s → 15s + colunas mínimas
     if (state._pollOferta) clearInterval(state._pollOferta);
     state._pollOferta = setInterval(async () => {
       if (!state.motoqueiroCadastro?.disponivel || state.ofertaAtual || state.corridaAtual) return;
@@ -1916,7 +1931,6 @@
     }, 15000);
   }
 
-  /* -------- MODAL DE OFERTA -------- */
   function abrirModalOferta(c) {
     state.ofertaAtual = c;
     const el = $('modal-oferta');
@@ -1986,7 +2000,6 @@
     catch (e) { console.warn(e); }
   });
 
-  /* -------- ouve updates da corrida aceita -------- */
   function ouvirMinhaCorrida(corridaId) {
     if (state.canalMinhaCorrida) supabase.removeChannel(state.canalMinhaCorrida);
     state.canalMinhaCorrida = supabase
@@ -2006,7 +2019,6 @@
       .subscribe();
   }
 
-  /* -------- tela: aceita (indo buscar) -------- */
   function renderCorridaEmAndamento(data) {
     const box = $('ofertas-box');
     box.innerHTML = `
@@ -2039,7 +2051,6 @@
     };
   }
 
-  /* -------- tela: aguardando código -------- */
   function pedirCodigoEmbarque(data) {
     const box = $('ofertas-box');
     box.innerHTML = `
@@ -2071,7 +2082,6 @@
     };
   }
 
-  /* -------- tela: em rota -------- */
   function renderCorridaRodando(c) {
     const box = $('ofertas-box');
     box.innerHTML = `
@@ -2100,8 +2110,6 @@
     ouvirMinhasOfertas();
   }
 
-  /* -------- pins de motoqueiros no mapa (estética) -------- */
-  // >>> OTIMIZAÇÃO #4: raio 5km, limite 10 + debounce
   const carregarMotoqueirosNoMapaDebounced = debounce(carregarMotoqueirosNoMapa, 3000);
 
   async function carregarMotoqueirosNoMapa() {
@@ -2239,6 +2247,7 @@
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     if (modoMapaAtivo) desativarModoMapa(true);
+    else if (!$('modal-admin-senha').classList.contains('hidden')) fecharModalSenhaAdmin();
     else if (!$('modal-admin').classList.contains('hidden')) fecharAdmin();
     else if (!$('modal-fav').classList.contains('hidden')) fecharModalFav();
     else if (!modalAuth.classList.contains('hidden')) fecharAuth();
@@ -2246,7 +2255,7 @@
   });
 
   /* =========================================================
-     ADMIN
+     ADMIN — proteção por senha + validação no banco
      ========================================================= */
   const modalAdmin = $('modal-admin');
   function abrirAdmin() {
@@ -2259,6 +2268,46 @@
     modalAdmin.classList.add('hidden');
     modalAdmin.classList.remove('flex');
   }
+
+  function abrirModalSenhaAdmin() {
+    const m = $('modal-admin-senha');
+    m.classList.remove('hidden'); m.classList.add('flex');
+    $('admin-senha-input').value = '';
+    $('admin-senha-erro').classList.add('hidden');
+    setTimeout(() => $('admin-senha-input').focus(), 150);
+  }
+  function fecharModalSenhaAdmin() {
+    const m = $('modal-admin-senha');
+    m.classList.add('hidden'); m.classList.remove('flex');
+  }
+  function validarSenhaAdmin() {
+    const v = $('admin-senha-input').value;
+    if (v === SENHA_ADMIN) {
+      fecharModalSenhaAdmin();
+      abrirAdmin();
+    } else {
+      $('admin-senha-erro').classList.remove('hidden');
+      $('admin-senha-input').value = '';
+      $('admin-senha-input').focus();
+      setTimeout(() => $('admin-senha-erro').classList.add('hidden'), 2500);
+    }
+  }
+
+  $('btn-admin-senha-cancelar').addEventListener('click', fecharModalSenhaAdmin);
+  $('btn-admin-senha-entrar').addEventListener('click', validarSenhaAdmin);
+  $('admin-senha-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') validarSenhaAdmin(); });
+  $('modal-admin-senha').addEventListener('click', (e) => {
+    if (e.target === $('modal-admin-senha')) fecharModalSenhaAdmin();
+  });
+
+  // Botão Admin: exige login + ser admin no banco + senha
+  $('btn-admin').addEventListener('click', async () => {
+    if (!state.user) { mostrarToast('Faça login primeiro', 'error'); abrirAuth('login'); return; }
+    const { data: ehAdmin, error } = await supabase.rpc('sou_admin');
+    if (error) { mostrarToast('Erro ao verificar permissão', 'error'); return; }
+    if (!ehAdmin) { mostrarToast('Você não tem permissão de admin', 'error'); return; }
+    abrirModalSenhaAdmin();
+  });
 
   document.querySelectorAll('.admin-tab').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -2283,7 +2332,6 @@
     });
   });
 
-  $('btn-admin').addEventListener('click', abrirAdmin);
   $('btn-fechar-admin').addEventListener('click', fecharAdmin);
 
   async function carregarPendentes() {
@@ -2442,7 +2490,6 @@
     map.invalidateSize();
   }, 200));
 
-  // >>> OTIMIZAÇÃO #6: pausa polling/heartbeat quando a aba está em background
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
@@ -2453,13 +2500,17 @@
       if (state.corridaId) iniciarPolling(state.corridaId);
       if (state.motoqueiroCadastro?.status === 'aprovado' && state.motoqueiroCadastro?.disponivel) {
         iniciarHeartbeat();
-        ouvirMinhasOfertas();
+        ouvrirMinhasOfertasSafe();
       }
       console.log('[Egress] aba visível → polling religado');
     }
   });
 
-  // limpa heartbeat ao fechar a aba
+  // helper para não quebrar se a aba voltar antes de ter motoqueiro
+  function ouvrirMinhasOfertasSafe() {
+    try { ouvirMinhasOfertas(); } catch (_) {}
+  }
+
   window.addEventListener('beforeunload', () => {
     pararHeartbeat();
   });
