@@ -22,7 +22,6 @@
   .shadow-premium-lg{box-shadow:0 20px 60px rgba(0,0,0,.22),0 8px 24px rgba(0,0,0,.12)}
   .no-scrollbar::-webkit-scrollbar{display:none}
   .no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
-
   .mk-origem{width:18px;height:18px;border-radius:50%;background:#FF6A00;border:3px solid #fff;box-shadow:0 4px 12px rgba(255,106,0,.5)}
   .mk-dest{width:14px;height:14px;background:#0A0A0A;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.4)}
   .mk-eu{width:22px;height:22px;border-radius:50%;background:#1E88E5;border:3px solid #fff;box-shadow:0 4px 16px rgba(30,136,229,.6);position:relative}
@@ -32,7 +31,6 @@
   @keyframes halo{0%{transform:scale(.7);opacity:.8}100%{transform:scale(1.5);opacity:0}}
   .moto-pin .core{width:44px;height:44px;border-radius:50%;background:#0A0A0A;border:3px solid #fff;box-shadow:0 6px 20px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:20px}
   .moto-pin .halo{position:absolute;inset:-8px;border-radius:50%;background:rgba(255,106,0,.22);animation:halo 2s infinite}
-
   .input-premium{transition:all .2s cubic-bezier(.2,.8,.2,1)}
   .input-premium:focus-within{border-color:#FF6A00;box-shadow:0 0 0 4px rgba(255,106,0,.12);background:#fff}
   .op-card{transition:all .25s cubic-bezier(.2,.8,.2,1)}
@@ -41,12 +39,10 @@
   .ico-btn.sel{border-color:#FF6A00;background:#FFF7ED}
   .auth-tab{padding:10px 16px;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;border:0;background:transparent;font-family:inherit;color:#71717a}
   .auth-tab.on{background:#0A0A0A;color:#fff}
-
   .toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%) translateY(20px);background:#0A0A0A;color:#fff;padding:12px 20px;border-radius:100px;font-size:13px;font-weight:700;box-shadow:0 12px 32px rgba(0,0,0,.35);opacity:0;transition:all .3s cubic-bezier(.2,.8,.2,1);z-index:3000;pointer-events:none;max-width:90vw;text-align:center}
   .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
   .toast.error{background:#DC2626}
   .toast.success{background:#059669}
-
   .leaflet-container{font-family:inherit;background:#0A0A0A}
   .leaflet-control-attribution{font-size:9px!important;background:rgba(255,255,255,.7)!important;border-radius:6px;padding:2px 6px!important}
 </style>
@@ -58,30 +54,30 @@
 
 <header class="absolute top-0 inset-x-0 z-[900] p-4 md:p-6 flex justify-between items-start pointer-events-none" style="padding-top:max(1rem,env(safe-area-inset-top))">
   <div class="pointer-events-auto flex items-center gap-2">
-    <div class="glass shadow-premium rounded-full px-4 py-[10px] flex items-center gap-2.5" aria-label="MotoJá Premium">
+    <div class="glass shadow-premium rounded-full px-4 py-[10px] flex items-center gap-2.5">
       <div class="w-8 h-8 rounded-full bg-[#FF6A00] flex items-center justify-center text-white font-extrabold text-[15px] sora">M</div>
       <span class="sora font-extrabold text-[16px] tracking-[-0.02em] text-black">MotoJá</span>
       <span class="ml-1 text-[9px] font-bold tracking-[0.14em] text-white bg-black rounded-full px-2 py-0.5">PREMIUM</span>
     </div>
   </div>
   <div class="pointer-events-auto flex gap-2 flex-wrap justify-end max-w-[70%]">
-    <button id="btn-localizar" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold hover:scale-[1.02] active:scale-[0.98] transition" aria-label="Localizar minha posição">📍 Onde estou</button>
-    <button id="btn-conta" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold" aria-label="Abrir conta">👤 Entrar</button>
-    <button id="btn-abrir-cadastro-moto" type="button" class="bg-black text-white shadow-premium-lg rounded-full px-5 py-2.5 text-[13px] font-bold hover:bg-zinc-900 transition" aria-label="Cadastro de motoqueiro">🪪 Sou Motoqueiro</button>
+    <button id="btn-localizar" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold hover:scale-[1.02] active:scale-[0.98] transition">📍 Onde estou</button>
+    <button id="btn-conta" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold">👤 Entrar</button>
+    <button id="btn-abrir-cadastro-moto" type="button" class="bg-black text-white shadow-premium-lg rounded-full px-5 py-2.5 text-[13px] font-bold hover:bg-zinc-900 transition">🪪 Sou Motoqueiro</button>
   </div>
 </header>
 
-<div id="loc-banner" class="absolute top-[84px] left-1/2 -translate-x-1/2 z-[950] glass shadow-premium-lg rounded-full px-5 py-3 flex items-center gap-3 text-[13px] font-semibold max-w-[92%] transition-opacity" role="status" aria-live="polite">
+<div id="loc-banner" class="absolute top-[84px] left-1/2 -translate-x-1/2 z-[950] glass shadow-premium-lg rounded-full px-5 py-3 flex items-center gap-3 text-[13px] font-semibold max-w-[92%] transition-opacity">
   <div id="loc-spinner" class="w-4 h-4 border-2 border-zinc-200 border-t-[#FF6A00] rounded-full animate-[spin_.8s_linear_infinite] flex-shrink-0"></div>
   <span id="loc-texto" class="text-zinc-800">Localizando você com precisão premium...</span>
   <button id="loc-acao" type="button" class="hidden ml-2 bg-black text-white rounded-full px-3 py-1 text-[11px] font-bold">Tentar</button>
 </div>
 
 <main id="sheet" class="absolute left-0 right-0 bottom-0 z-[1000] md:left-6 md:bottom-6 md:right-auto md:w-[420px] glass shadow-premium-lg rounded-t-[28px] md:rounded-[28px] border border-white/60 flex flex-col max-h-[84dvh] md:max-h-[calc(100dvh-100px)] overflow-hidden" style="padding-bottom:env(safe-area-inset-bottom,0px)">
-  <div class="h-[5px] w-10 bg-black/10 rounded-full mx-auto mt-3 md:hidden flex-shrink-0" aria-hidden="true"></div>
+  <div class="h-[5px] w-10 bg-black/10 rounded-full mx-auto mt-3 md:hidden flex-shrink-0"></div>
   <div class="flex-1 overflow-y-auto no-scrollbar p-6 pb-8">
 
-    <section id="step-destino" aria-label="Escolher destino">
+    <section id="step-destino">
       <div id="user-logado" class="hidden mb-4">
         <div class="bg-zinc-900 text-white rounded-full px-3 py-2 flex items-center gap-3 text-[13px]">
           <div id="user-mini-av" class="w-8 h-8 rounded-full bg-[#FF6A00] flex items-center justify-center font-extrabold text-xs">--</div>
@@ -89,23 +85,32 @@
           <button id="btn-logout" type="button" class="ml-auto text-zinc-400 underline text-[11px]">Sair</button>
         </div>
       </div>
+      <div id="painel-motoqueiro" class="hidden mb-4">
+        <div class="bg-black text-white rounded-2xl p-4 flex items-center gap-3">
+          <div class="text-2xl">🏍</div>
+          <div class="flex-1">
+            <div class="sora font-bold text-[13px]">Modo Motoqueiro</div>
+            <div id="moto-status-texto" class="text-[11px] text-white/60">Status: —</div>
+          </div>
+          <button id="btn-toggle-online" type="button" class="bg-[#FF6A00] text-white rounded-full px-3 py-1.5 text-[11px] font-bold">Ficar online</button>
+        </div>
+      </div>
       <div class="flex items-start justify-between mb-5">
         <div>
           <h1 class="sora font-extrabold text-[28px] leading-[0.95] tracking-[-0.04em] text-black">Para onde<br><span class="text-zinc-400">vamos hoje?</span></h1>
           <p id="pickup-info" class="mt-3 text-[13px] text-zinc-500 leading-snug">📍 Detectando embarque premium...</p>
         </div>
-        <div class="w-12 h-12 rounded-2xl bg-black flex items-center justify-center text-xl" aria-hidden="true">🏍</div>
+        <div class="w-12 h-12 rounded-2xl bg-black flex items-center justify-center text-xl">🏍</div>
       </div>
       <div class="input-premium bg-zinc-100 border-2 border-transparent rounded-2xl px-4 py-4 flex items-center gap-3">
-        <div class="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center text-[13px]" aria-hidden="true">●</div>
+        <div class="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center text-[13px]">●</div>
         <div class="flex-1">
           <label for="destino-input" class="text-[10px] font-bold tracking-[0.12em] text-zinc-400 uppercase">Destino</label>
-          <input id="destino-input" type="search" class="w-full bg-transparent outline-none text-[16px] font-semibold placeholder:text-zinc-400 text-black" placeholder="Para onde? Shopping, trabalho..." autocomplete="off" enterkeyhint="search">
+          <input id="destino-input" type="search" class="w-full bg-transparent outline-none text-[16px] font-semibold placeholder:text-zinc-400 text-black" placeholder="Para onde? Shopping, trabalho..." autocomplete="off">
         </div>
-        <div class="text-zinc-300" aria-hidden="true">⌕</div>
+        <div class="text-zinc-300">⌕</div>
       </div>
-      <div id="sugestoes" class="mt-2" role="listbox" aria-label="Sugestões de endereço"></div>
-
+      <div id="sugestoes" class="mt-2"></div>
       <div class="mt-6">
         <div class="flex items-center justify-between mb-3">
           <div class="text-[11px] font-bold tracking-[0.12em] text-zinc-400 uppercase">Meus favoritos</div>
@@ -113,9 +118,8 @@
         </div>
         <div id="favoritos-lista" class="grid grid-cols-2 gap-2"></div>
       </div>
-
       <div class="mt-6 bg-black rounded-[20px] p-4 flex items-center gap-3 text-white">
-        <div class="w-10 h-10 rounded-full bg-[#FF6A00] flex items-center justify-center" aria-hidden="true">⚡</div>
+        <div class="w-10 h-10 rounded-full bg-[#FF6A00] flex items-center justify-center">⚡</div>
         <div class="flex-1">
           <div class="sora font-bold text-[13px]">MotoJá Premium ativo</div>
           <div class="text-[11px] text-white/60">Motos novas, capacete higienizado, seguro incluso</div>
@@ -124,8 +128,8 @@
       </div>
     </section>
 
-    <section id="step-opcoes" class="hidden" aria-label="Confirmar corrida">
-      <button id="btn-voltar" type="button" class="mb-4 w-9 h-9 rounded-full bg-zinc-100 flex items-center justify-center" aria-label="Voltar">←</button>
+    <section id="step-opcoes" class="hidden">
+      <button id="btn-voltar" type="button" class="mb-4 w-9 h-9 rounded-full bg-zinc-100 flex items-center justify-center">←</button>
       <h2 class="sora font-extrabold text-[22px] tracking-[-0.03em]">Confirmar corrida</h2>
       <div id="rota-resumo" class="mt-3 bg-zinc-100 rounded-full px-4 py-2.5 flex items-center gap-2 text-[12px] font-medium text-zinc-600"></div>
       <div id="lista-opcoes" class="mt-5 space-y-3"></div>
@@ -133,20 +137,20 @@
       <div class="mt-3 text-center text-[11px] text-zinc-400">Preço final • sem surpresas</div>
     </section>
 
-    <section id="step-buscando" class="hidden text-center py-8" aria-label="Buscando motoqueiro" aria-live="polite">
+    <section id="step-buscando" class="hidden text-center py-8">
       <div class="relative w-[120px] h-[120px] mx-auto">
         <div class="absolute inset-0 rounded-full border-[3px] border-zinc-100"></div>
         <div class="absolute inset-0 rounded-full border-[3px] border-t-[#FF6A00] border-r-transparent border-b-transparent border-l-transparent animate-[spin_1s_linear_infinite]"></div>
-        <div class="absolute inset-[20px] rounded-full bg-black flex items-center justify-center text-3xl" aria-hidden="true">🏍</div>
+        <div class="absolute inset-[20px] rounded-full bg-black flex items-center justify-center text-3xl">🏍</div>
       </div>
       <h3 class="sora font-extrabold text-[20px] mt-8">Conectando ao melhor<br>motoqueiro perto de você</h3>
       <p class="text-[13px] text-zinc-500 mt-3 leading-relaxed">Analisando avaliação, distância<br>e tempo em tempo real</p>
       <button id="btn-cancelar-busca" type="button" class="mt-10 w-full bg-white border border-zinc-200 rounded-2xl py-4 font-bold text-[14px]">Cancelar busca</button>
     </section>
 
-    <section id="step-motorista" class="hidden" aria-label="Motoqueiro a caminho">
+    <section id="step-motorista" class="hidden">
       <div class="bg-black text-white rounded-full px-4 py-2 flex items-center justify-center gap-2 text-[11px] font-bold tracking-wide mb-5">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true"></span> RASTREAMENTO PREMIUM ATIVO
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> RASTREAMENTO PREMIUM ATIVO
       </div>
       <div class="flex items-center gap-4">
         <div class="relative">
@@ -165,7 +169,7 @@
         </div>
       </div>
       <div class="mt-6 bg-black rounded-[20px] p-5 flex items-center gap-5 text-white relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-32 h-32 bg-[#FF6A00]/20 blur-[30px] rounded-full" aria-hidden="true"></div>
+        <div class="absolute top-0 right-0 w-32 h-32 bg-[#FF6A00]/20 blur-[30px] rounded-full"></div>
         <div>
           <div id="dr-eta" class="sora font-extrabold text-[36px] leading-none text-[#FF6A00]">— min</div>
           <div class="text-[10px] tracking-[0.12em] font-bold text-white/50 uppercase mt-1">Tempo estimado</div>
@@ -178,10 +182,10 @@
           <div id="codigo-embarque" class="sora font-extrabold text-[28px] tracking-[0.2em] mt-1">— — — —</div>
           <div class="text-[11px] text-zinc-500 mt-1">Mostre ao motoqueiro</div>
         </div>
-        <div class="w-14 h-14 rounded-2xl bg-black text-white flex items-center justify-center sora font-bold" aria-hidden="true">MJ</div>
+        <div class="w-14 h-14 rounded-2xl bg-black text-white flex items-center justify-center sora font-bold">MJ</div>
       </div>
       <div class="mt-4 bg-white border border-zinc-200 rounded-[20px] p-4 flex items-center gap-4">
-        <div class="w-12 h-12 rounded-2xl bg-zinc-900 flex items-center justify-center text-2xl" aria-hidden="true">🏍</div>
+        <div class="w-12 h-12 rounded-2xl bg-zinc-900 flex items-center justify-center text-2xl">🏍</div>
         <div class="flex-1">
           <div id="dr-moto" class="sora font-bold text-[14px]">—</div>
           <div id="dr-detalhe" class="text-[11px] text-zinc-500 mt-0.5">—</div>
@@ -189,16 +193,15 @@
         <div id="dr-placa" class="bg-white border-2 border-black rounded-lg px-2.5 py-1 font-extrabold text-[12px] tracking-widest">---</div>
       </div>
       <div class="grid grid-cols-3 gap-2 mt-4">
-        <button type="button" class="bg-white border border-zinc-200 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition"><span aria-hidden="true">📞</span><span class="text-[11px] font-bold">Ligar</span></button>
-        <button type="button" class="bg-white border border-zinc-200 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition"><span aria-hidden="true">💬</span><span class="text-[11px] font-bold">Chat</span></button>
-        <button type="button" class="bg-white border border-zinc-200 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition"><span aria-hidden="true">🆘</span><span class="text-[11px] font-bold">Emergência</span></button>
+        <button type="button" class="bg-white border border-zinc-200 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition"><span>📞</span><span class="text-[11px] font-bold">Ligar</span></button>
+        <button type="button" class="bg-white border border-zinc-200 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition"><span>💬</span><span class="text-[11px] font-bold">Chat</span></button>
+        <button type="button" class="bg-white border border-zinc-200 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition"><span>🆘</span><span class="text-[11px] font-bold">Emergência</span></button>
       </div>
       <button id="btn-nova" type="button" class="mt-4 w-full bg-zinc-100 rounded-2xl py-4 font-bold text-[13px] text-zinc-600">Cancelar corrida</button>
     </section>
   </div>
 </main>
-
-<div id="modal-auth" class="fixed inset-0 z-[2200] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4" role="dialog" aria-modal="true">
+<div id="modal-auth" class="fixed inset-0 z-[2200] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
   <div class="bg-white rounded-[28px] w-full max-w-[420px] shadow-premium-lg overflow-hidden" onclick="event.stopPropagation()">
     <div class="p-6 pb-4">
       <div class="flex items-center justify-between mb-5">
@@ -212,50 +215,47 @@
         <button type="button" id="tab-login" class="auth-tab on flex-1">Entrar</button>
         <button type="button" id="tab-signup" class="auth-tab flex-1">Criar conta</button>
       </div>
-
       <form id="form-login" class="space-y-4">
         <div>
-          <label for="login-email" class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">E-mail</label>
+          <label class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">E-mail</label>
           <input id="login-email" type="email" required class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="voce@email.com" autocomplete="email">
         </div>
         <div>
-          <label for="login-senha" class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Senha</label>
+          <label class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Senha</label>
           <input id="login-senha" type="password" required class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="••••••••" autocomplete="current-password">
         </div>
-        <button type="submit" id="btn-login-submit" class="w-full bg-black text-white rounded-2xl py-4 font-bold sora text-[15px] hover:bg-zinc-900 transition active:scale-[0.98]">Entrar</button>
+        <button type="submit" id="btn-login-submit" class="w-full bg-black text-white rounded-2xl py-4 font-bold sora text-[15px] hover:bg-zinc-900 transition">Entrar</button>
       </form>
-
       <form id="form-signup" class="space-y-4 hidden">
         <div>
-          <label for="signup-nome" class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Nome completo</label>
+          <label class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Nome completo</label>
           <input id="signup-nome" type="text" required class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="Ex: Maria Oliveira" autocomplete="name">
         </div>
         <div>
-          <label for="signup-email" class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">E-mail</label>
+          <label class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">E-mail</label>
           <input id="signup-email" type="email" required class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="voce@email.com" autocomplete="email">
         </div>
         <div>
-          <label for="signup-senha" class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Senha</label>
+          <label class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Senha</label>
           <input id="signup-senha" type="password" required minlength="6" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
         </div>
         <div>
-          <label for="signup-telefone" class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Telefone (opcional)</label>
+          <label class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Telefone (opcional)</label>
           <input id="signup-telefone" type="tel" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="(11) 99999-9999">
         </div>
-        <button type="submit" id="btn-signup-submit" class="w-full bg-[#FF6A00] text-white rounded-2xl py-4 font-bold sora text-[15px] hover:bg-[#e55a00] transition active:scale-[0.98]">Criar conta</button>
-        <p class="text-[11px] text-zinc-500 text-center leading-snug">Ao criar conta, você aceita os Termos e a Política de Privacidade.</p>
+        <button type="submit" id="btn-signup-submit" class="w-full bg-[#FF6A00] text-white rounded-2xl py-4 font-bold sora text-[15px] hover:bg-[#e55a00] transition">Criar conta</button>
       </form>
     </div>
   </div>
 </div>
 
-<div id="modal-moto" class="fixed inset-0 z-[2000] bg-white hidden flex-col" role="dialog" aria-modal="true" aria-labelledby="titulo-moto">
+<div id="modal-moto" class="fixed inset-0 z-[2000] bg-white hidden flex-col">
   <div class="sticky top-0 bg-white/90 backdrop-blur-xl border-b px-6 py-4 flex items-center justify-between" style="padding-top:max(1rem,env(safe-area-inset-top))">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-full bg-[#FF6A00] text-white flex items-center justify-center font-bold" aria-hidden="true">🪪</div>
+      <div class="w-9 h-9 rounded-full bg-[#FF6A00] text-white flex items-center justify-center font-bold">🪪</div>
       <h2 id="titulo-moto" class="sora font-extrabold text-[18px]">Seja Motoqueiro Premium</h2>
     </div>
-    <button id="btn-fechar-moto" type="button" class="w-9 h-9 rounded-full bg-zinc-100 flex items-center justify-center" aria-label="Fechar">✕</button>
+    <button id="btn-fechar-moto" type="button" class="w-9 h-9 rounded-full bg-zinc-100 flex items-center justify-center">✕</button>
   </div>
   <div class="h-1 bg-zinc-100"><div class="h-full flex gap-1 p-1" id="moto-progress">
     <div class="bar flex-1 rounded-full bg-zinc-200"></div>
@@ -267,15 +267,15 @@
     <div class="form-step" data-step="1">
       <h3 class="sora font-extrabold text-[20px]">Dados pessoais</h3>
       <div class="grid gap-4 mt-6">
-        <input id="moto-nome" type="text" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="Nome completo" autocomplete="name">
+        <input id="moto-nome" type="text" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="Nome completo">
         <div class="grid grid-cols-2 gap-3">
-          <input id="moto-cpf" type="text" inputmode="numeric" maxlength="14" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="CPF">
+          <input id="moto-cpf" type="text" maxlength="14" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="CPF">
           <input id="moto-nasc" type="date" class="rounded-2xl border border-zinc-200 px-4 py-3.5">
         </div>
-        <input id="moto-email" type="email" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="E-mail" autocomplete="email">
+        <input id="moto-email" type="email" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="E-mail">
         <div class="grid grid-cols-2 gap-3">
           <input id="moto-whats" type="tel" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="WhatsApp">
-          <input id="moto-cep" type="text" inputmode="numeric" maxlength="9" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="CEP">
+          <input id="moto-cep" type="text" maxlength="9" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="CEP">
         </div>
       </div>
     </div>
@@ -300,20 +300,26 @@
     </div>
     <div class="form-step hidden" data-step="3">
       <h3 class="sora font-extrabold text-[20px]">Documentos</h3>
-      <p class="text-[13px] text-zinc-500 mt-1 mb-4">Toque para marcar como enviado (simulação)</p>
+      <p class="text-[13px] text-zinc-500 mt-1 mb-4">Toque para escolher o arquivo (foto ou PDF)</p>
       <div class="grid gap-3 mt-2">
-        <div class="upload border-2 border-dashed border-zinc-200 rounded-2xl p-5 text-center cursor-pointer hover:border-black transition select-none" data-doc="cnh">
-          <div class="text-2xl" aria-hidden="true">🪪</div>
+        <label class="upload border-2 border-dashed border-zinc-200 rounded-2xl p-5 text-center cursor-pointer hover:border-black transition select-none" data-doc="cnh">
+          <input type="file" accept="image/*,.pdf" class="hidden" data-file="cnh">
+          <div class="text-2xl">🪪</div>
           <div class="font-bold text-[13px] mt-1">CNH A ou AB com EAR</div>
-        </div>
-        <div class="upload border-2 border-dashed border-zinc-200 rounded-2xl p-5 text-center cursor-pointer hover:border-black transition select-none" data-doc="crlv">
-          <div class="text-2xl" aria-hidden="true">📋</div>
+          <div class="text-[11px] text-zinc-500 mt-1" data-status="cnh">Não enviado</div>
+        </label>
+        <label class="upload border-2 border-dashed border-zinc-200 rounded-2xl p-5 text-center cursor-pointer hover:border-black transition select-none" data-doc="crlv">
+          <input type="file" accept="image/*,.pdf" class="hidden" data-file="crlv">
+          <div class="text-2xl">📋</div>
           <div class="font-bold text-[13px] mt-1">CRLV vigente</div>
-        </div>
-        <div class="upload border-2 border-dashed border-zinc-200 rounded-2xl p-5 text-center cursor-pointer hover:border-black transition select-none" data-doc="selfie">
-          <div class="text-2xl" aria-hidden="true">🤳</div>
+          <div class="text-[11px] text-zinc-500 mt-1" data-status="crlv">Não enviado</div>
+        </label>
+        <label class="upload border-2 border-dashed border-zinc-200 rounded-2xl p-5 text-center cursor-pointer hover:border-black transition select-none" data-doc="selfie">
+          <input type="file" accept="image/*" class="hidden" data-file="selfie">
+          <div class="text-2xl">🤳</div>
           <div class="font-bold text-[13px] mt-1">Selfie com CNH</div>
-        </div>
+          <div class="text-[11px] text-zinc-500 mt-1" data-status="selfie">Não enviado</div>
+        </label>
       </div>
     </div>
     <div class="form-step hidden" data-step="4">
@@ -331,7 +337,7 @@
     </div>
     <div class="form-step hidden" data-step="5">
       <div class="text-center py-16">
-        <div class="w-20 h-20 rounded-full bg-black text-white text-3xl flex items-center justify-center mx-auto mb-6" aria-hidden="true">✓</div>
+        <div class="w-20 h-20 rounded-full bg-black text-white text-3xl flex items-center justify-center mx-auto mb-6">✓</div>
         <h3 class="sora font-extrabold text-[24px]">Cadastro enviado</h3>
         <p class="text-zinc-500 mt-2">Análise em até 48h úteis.</p>
         <p class="mt-4 text-[12px]">Protocolo <strong id="protocolo-moto">MJ-000000</strong></p>
@@ -344,28 +350,28 @@
   </div>
 </div>
 
-<div id="modal-fav" class="fixed inset-0 z-[2100] bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="titulo-fav">
+<div id="modal-fav" class="fixed inset-0 z-[2100] bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4">
   <div class="bg-white rounded-[24px] w-full max-w-[420px] p-6 shadow-premium-lg" onclick="event.stopPropagation()">
     <div class="flex items-center justify-between mb-5">
-      <h3 id="titulo-fav" class="sora font-extrabold text-[18px]">Novo favorito</h3>
-      <button id="btn-fechar-fav" type="button" class="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-[13px]" aria-label="Fechar">✕</button>
+      <h3 class="sora font-extrabold text-[18px]">Novo favorito</h3>
+      <button id="btn-fechar-fav" type="button" class="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-[13px]">✕</button>
     </div>
     <div class="space-y-4">
       <div>
-        <label for="fav-nome" class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Nome do lugar</label>
-        <input id="fav-nome" type="text" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="Ex: Casa, Trabalho, Academia" maxlength="40">
+        <label class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Nome do lugar</label>
+        <input id="fav-nome" type="text" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="Ex: Casa, Trabalho" maxlength="40">
       </div>
       <div>
-        <label for="fav-endereco" class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Endereço</label>
+        <label class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Endereço</label>
         <input id="fav-endereco" type="search" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="Digite o endereço" autocomplete="off">
-        <div id="fav-sugestoes" class="mt-2 max-h-[180px] overflow-y-auto no-scrollbar" role="listbox"></div>
+        <div id="fav-sugestoes" class="mt-2 max-h-[180px] overflow-y-auto no-scrollbar"></div>
         <div id="fav-selecionado" class="hidden mt-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 flex items-center gap-2 text-[12px] text-emerald-700 font-medium">
-          <span aria-hidden="true">✓</span><span id="fav-sel-txt" class="truncate"></span>
+          <span>✓</span><span id="fav-sel-txt" class="truncate"></span>
         </div>
       </div>
       <div>
         <span class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Ícone</span>
-        <div class="grid grid-cols-8 gap-2 mt-2" id="fav-icones" role="group" aria-label="Escolher ícone">
+        <div class="grid grid-cols-8 gap-2 mt-2" id="fav-icones">
           <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🏠">🏠</button>
           <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🏢">🏢</button>
           <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🎓">🎓</button>
@@ -382,7 +388,6 @@
 </div>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -469,20 +474,13 @@
   function esconderBanner() { $('loc-banner').classList.add('hidden'); }
 
   /* =========================================================
-     🆕 VIÉS GEOGRÁFICO — helper compartilhado
-     ---------------------------------------------------------
-     Gera o parâmetro viewbox para o Nominatim, limitando
-     os resultados a um raio ao redor da posição do usuário.
-     O parâmetro 'bounded=1' força os resultados a ficarem
-     DENTRO do retângulo.
+     VIÉS GEOGRÁFICO
      ========================================================= */
   function montarViewbox(raioGraus = 0.15) {
     if (!state.pickup) return '';
     const { lat, lng } = state.pickup;
-    const left   = lng - raioGraus;
-    const right  = lng + raioGraus;
-    const top    = lat + raioGraus;
-    const bottom = lat - raioGraus;
+    const left = lng - raioGraus, right = lng + raioGraus;
+    const top = lat + raioGraus, bottom = lat - raioGraus;
     return `&viewbox=${left},${top},${right},${bottom}&bounded=1`;
   }
 
@@ -509,15 +507,26 @@
       html: `<div class="moto-pin relative" style="transform:rotate(${dir}deg)"><div class="halo absolute inset-0"></div><div class="core relative z-10">🏍</div></div><div style="position:absolute;top:46px;left:50%;transform:translateX(-50%);background:#0A0A0A;color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;white-space:nowrap">${eta} min</div>`
     });
   }
+  function criarIconeMotoSimples(nome) {
+    return L.divIcon({
+      className: '', iconSize: [40, 40], iconAnchor: [20, 20],
+      html: `<div style="width:40px;height:40px;border-radius:50%;background:#FF6A00;border:3px solid #fff;box-shadow:0 4px 12px rgba(255,106,0,.5);display:flex;align-items:center;justify-content:center;font-size:18px" title="${nome}">🏍</div>`
+    });
+  }
 
   let markerOrigem = null, markerDestino = null, markerMoto = null;
   let linhaRota = null, linhaRotaGlow = null, marcadorEu = null;
+  const markersMotoqueiros = new Map();
 
   function limparRotaVisual() {
     if (markerDestino) { map.removeLayer(markerDestino); markerDestino = null; }
     if (markerMoto) { map.removeLayer(markerMoto); markerMoto = null; }
     if (linhaRota) { map.removeLayer(linhaRota); linhaRota = null; }
     if (linhaRotaGlow) { map.removeLayer(linhaRotaGlow); linhaRotaGlow = null; }
+  }
+  function limparMotoqueirosDoMapa() {
+    markersMotoqueiros.forEach(m => map.removeLayer(m));
+    markersMotoqueiros.clear();
   }
 
   /* =========================================================
@@ -526,8 +535,10 @@
   const state = {
     pickup: null, destino: null, rota: null, opcao: null,
     user: null, profile: null,
+    motoqueiroCadastro: null,
     motoPos: null, motoAlvo: null, motoDir: 0, motoTimer: null, motoAtivo: false,
-    buscaAbort: null, favAbort: null
+    buscaAbort: null, favAbort: null,
+    gpsTimer: null, realtimeChannel: null
   };
 
   const CATEGORIA_MOTO = { id: 'moto', nome: 'Moto', desc: 'Corrida premium de moto', icone: '🏍', base: 4, porKm: 1.6, espera: 3 };
@@ -547,19 +558,100 @@
   }
 
   /* =========================================================
+     HELPERS SUPABASE
+     ========================================================= */
+  async function buscarMotoqueirosProximos(lat, lng, raioKm = 5, limite = 10) {
+    try {
+      const { data, error } = await supabase.rpc('buscar_motoqueiros_proximos', {
+        p_lat: lat, p_lng: lng, p_raio_km: raioKm, p_limite: limite
+      });
+      if (error) throw error;
+      return data || [];
+    } catch (e) { console.warn('[MotoJá] buscar motoqueiros:', e.message); return []; }
+  }
+  async function atualizarMinhaPosicao(lat, lng, disponivel = true) {
+    try {
+      const { error } = await supabase.rpc('atualizar_posicao_motoqueiro', {
+        p_lat: lat, p_lng: lng, p_disponivel: disponivel
+      });
+      if (error) throw error;
+      return true;
+    } catch (e) { console.warn('[MotoJá] atualizar posição:', e.message); return false; }
+  }
+  async function criarCorridaBackend(origem, destino, distancia, duracao, preco) {
+    const { data, error } = await supabase.rpc('criar_corrida', {
+      p_origem_nome: origem.nome, p_origem_lat: origem.lat, p_origem_lng: origem.lng,
+      p_destino_nome: destino.nome, p_destino_lat: destino.lat, p_destino_lng: destino.lng,
+      p_distancia_km: distancia, p_duracao_min: duracao, p_preco_total: preco
+    });
+    if (error) throw error;
+    return data;
+  }
+  async function buscarMeuCadastroMotoqueiro() {
+    if (!state.user) return null;
+    const { data, error } = await supabase
+      .from('motoqueiros')
+      .select('id, status, moto_marca, moto_modelo, moto_placa, disponivel, nota_media, total_corridas')
+      .eq('profile_id', state.user.id).maybeSingle();
+    if (error) return null;
+    return data;
+  }
+  async function salvarCadastroMotoqueiro(dados) {
+    if (!state.user) throw new Error('Faça login primeiro');
+    const { data, error } = await supabase
+      .from('motoqueiros')
+      .upsert({
+        profile_id: state.user.id, status: 'pendente',
+        moto_marca: dados.marca, moto_modelo: dados.modelo,
+        moto_ano: parseInt(dados.ano) || null, moto_cor: dados.cor,
+        moto_placa: dados.placa, moto_cc: parseInt(dados.cc) || null
+      }, { onConflict: 'profile_id' }).select().single();
+    if (error) throw error;
+    return data;
+  }
+  async function uploadDocumento(motoqueiroId, tipo, arquivo) {
+    if (!state.user) throw new Error('Faça login primeiro');
+    const ext = (arquivo.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `${state.user.id}/${motoqueiroId}/${tipo}.${ext}`;
+    const { error: errUpload } = await supabase.storage
+      .from('documentos')
+      .upload(path, arquivo, { upsert: true, contentType: arquivo.type });
+    if (errUpload) throw errUpload;
+    await supabase.from('documentos').insert({
+      motoqueiro_id: motoqueiroId, tipo, url_storage: path, status: 'enviado'
+    });
+    return path;
+  }
+  async function carregarFavoritosDoBackend() {
+    if (!state.user) return [];
+    const { data, error } = await supabase.from('favoritos').select('id, nome, lat, lng, icone, endereco').order('criado_em', { ascending: false });
+    if (error) return [];
+    return data || [];
+  }
+  async function salvarFavoritoNoBackend(fav) {
+    if (!state.user) return null;
+    const { data, error } = await supabase.from('favoritos').insert({
+      profile_id: state.user.id, nome: fav.nome, lat: fav.lat, lng: fav.lng, icone: fav.icone, endereco: fav.endereco
+    }).select().single();
+    if (error) throw error;
+    return data;
+  }
+  async function deletarFavoritoDoBackend(id) {
+    if (!state.user) return false;
+    const { error } = await supabase.from('favoritos').delete().eq('id', id);
+    return !error;
+  }
+
+  /* =========================================================
      AUTENTICAÇÃO — UI
      ========================================================= */
   const modalAuth = $('modal-auth');
   function abrirAuth(aba = 'login') {
-    modalAuth.classList.remove('hidden');
-    modalAuth.classList.add('flex');
-    trocarAba(aba);
+    modalAuth.classList.remove('hidden'); modalAuth.classList.add('flex'); trocarAba(aba);
   }
   function fecharAuth() {
-    modalAuth.classList.add('hidden');
-    modalAuth.classList.remove('flex');
-    $('form-login').reset();
-    $('form-signup').reset();
+    modalAuth.classList.add('hidden'); modalAuth.classList.remove('flex');
+    $('form-login').reset(); $('form-signup').reset();
   }
   function trocarAba(aba) {
     const isLogin = aba === 'login';
@@ -574,11 +666,8 @@
   modalAuth.addEventListener('click', e => { if (e.target === modalAuth) fecharAuth(); });
 
   $('btn-conta').addEventListener('click', () => {
-    if (state.user) {
-      if (confirm('Deseja sair da conta?')) fazerLogout();
-    } else {
-      abrirAuth('login');
-    }
+    if (state.user) { if (confirm('Deseja sair da conta?')) fazerLogout(); }
+    else abrirAuth('login');
   });
 
   /* =========================================================
@@ -598,6 +687,7 @@
     return data;
   }
   async function fazerLogout() {
+    pararGPS();
     await supabase.auth.signOut();
     mostrarToast('Sessão encerrada');
   }
@@ -606,12 +696,10 @@
       const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
       if (error && error.code !== 'PGRST116') throw error;
       return data;
-    } catch (e) {
-      console.warn('Erro ao carregar profile:', e);
-      return null;
-    }
+    } catch (e) { return null; }
   }
-  function atualizarUIUsuario(user, profile) {
+
+  async function atualizarUIUsuario(user, profile) {
     if (user) {
       state.user = user;
       state.profile = profile;
@@ -621,11 +709,23 @@
       $('user-mini-av').textContent = initials(nome);
       $('user-nome').textContent = primeiroNome;
       $('user-logado').classList.remove('hidden');
+
+      state.motoqueiroCadastro = await buscarMeuCadastroMotoqueiro();
+      atualizarUIMotoqueiro();
+
+      const favsBackend = await carregarFavoritosDoBackend();
+      if (favsBackend.length > 0) { favoritos = favsBackend; renderFavoritos(); }
+
+      if (state.pickup) {
+        carregarMotoqueirosNoMapa();
+        inscreverRealtimeMotoqueiros();
+      }
     } else {
-      state.user = null;
-      state.profile = null;
+      state.user = null; state.profile = null; state.motoqueiroCadastro = null;
       $('btn-conta').innerHTML = '👤 Entrar';
       $('user-logado').classList.add('hidden');
+      limparMotoqueirosDoMapa();
+      atualizarUIMotoqueiro();
     }
   }
 
@@ -633,13 +733,10 @@
     console.log('[Auth]', event);
     if (session?.user) {
       const profile = await carregarProfile(session.user.id);
-      atualizarUIUsuario(session.user, profile);
-      if (event === 'SIGNED_IN') {
-        fecharAuth();
-        mostrarToast('✓ Bem-vindo!', 'success');
-      }
+      await atualizarUIUsuario(session.user, profile);
+      if (event === 'SIGNED_IN') { fecharAuth(); mostrarToast('✓ Bem-vindo!', 'success'); }
     } else {
-      atualizarUIUsuario(null, null);
+      await atualizarUIUsuario(null, null);
     }
   });
 
@@ -647,7 +744,7 @@
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
       const profile = await carregarProfile(session.user.id);
-      atualizarUIUsuario(session.user, profile);
+      await atualizarUIUsuario(session.user, profile);
     }
   })();
 
@@ -663,17 +760,11 @@
     const senha = $('login-senha').value;
     if (!isValidEmail(email)) { mostrarToast('E-mail inválido', 'error'); return; }
     if (senha.length < 6) { mostrarToast('Senha muito curta', 'error'); return; }
-    const textoOriginal = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = 'Entrando...';
-    try {
-      await fazerLogin(email, senha);
-    } catch (err) {
-      console.error(err);
-      const msg = err.message === 'Invalid login credentials' ? 'E-mail ou senha incorretos' : err.message;
-      mostrarToast(msg, 'error');
-      btn.disabled = false;
-      btn.textContent = textoOriginal;
+    const txt = btn.textContent; btn.disabled = true; btn.textContent = 'Entrando...';
+    try { await fazerLogin(email, senha); }
+    catch (err) {
+      mostrarToast(err.message === 'Invalid login credentials' ? 'E-mail ou senha incorretos' : err.message, 'error');
+      btn.disabled = false; btn.textContent = txt;
     }
   });
 
@@ -687,23 +778,16 @@
     if (nome.length < 3) { mostrarToast('Informe seu nome completo', 'error'); return; }
     if (!isValidEmail(email)) { mostrarToast('E-mail inválido', 'error'); return; }
     if (senha.length < 6) { mostrarToast('Senha deve ter pelo menos 6 caracteres', 'error'); return; }
-    const textoOriginal = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = 'Criando conta...';
+    const txt = btn.textContent; btn.disabled = true; btn.textContent = 'Criando conta...';
     try {
       const data = await fazerCadastro(nome, email, senha, telefone);
-      if (!data.session) {
-        mostrarToast('Verifique seu e-mail para confirmar', 'success');
-        fecharAuth();
-      }
+      if (!data.session) { mostrarToast('Verifique seu e-mail para confirmar', 'success'); fecharAuth(); }
     } catch (err) {
-      console.error(err);
       let msg = err.message;
       if (msg.includes('already registered')) msg = 'E-mail já cadastrado';
       else if (msg.includes('Password')) msg = 'Senha muito fraca';
       mostrarToast(msg, 'error');
-      btn.disabled = false;
-      btn.textContent = textoOriginal;
+      btn.disabled = false; btn.textContent = txt;
     }
   });
 
@@ -735,18 +819,12 @@
 
   function obterLocalizacaoReal() {
     if (!navigator.geolocation) {
-      mostrarBanner('Navegador sem GPS', 'erro', 'Padrão', () => {
-        definirPickup(-23.5615, -46.6560, 'Av. Paulista, 1578');
-        esconderBanner();
-      });
+      mostrarBanner('Navegador sem GPS', 'erro', 'Padrão', () => { definirPickup(-23.5615, -46.6560, 'Av. Paulista, 1578'); esconderBanner(); });
       return;
     }
     const isSecure = location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname);
     if (!isSecure) {
-      mostrarBanner('⚠ Use HTTPS para GPS', 'erro', 'Padrão', () => {
-        definirPickup(-23.5615, -46.6560, 'Av. Paulista');
-        esconderBanner();
-      });
+      mostrarBanner('⚠ Use HTTPS para GPS', 'erro', 'Padrão', () => { definirPickup(-23.5615, -46.6560, 'Av. Paulista'); esconderBanner(); });
       return;
     }
     mostrarBanner('Localizando com precisão premium...', 'info');
@@ -755,6 +833,7 @@
         await definirPickup(pos.coords.latitude, pos.coords.longitude, null, true);
         mostrarBanner('📍 Você está aqui', 'sucesso');
         setTimeout(esconderBanner, 2500);
+        if (state.user) { carregarMotoqueirosNoMapa(); inscreverRealtimeMotoqueiros(); }
       },
       (err) => {
         const msg = err.code === 1 ? 'Permissão negada. Ative o GPS.' : 'GPS indisponível';
@@ -780,17 +859,13 @@
   });
 
   /* =========================================================
-     BUSCA DE DESTINO — COM VIÉS GEOGRÁFICO
+     BUSCA DE DESTINO
      ========================================================= */
   let resAtuais = [];
   const buscarDestino = debounce(async (q) => {
     if (state.buscaAbort) state.buscaAbort.abort();
-    const ac = new AbortController();
-    state.buscaAbort = ac;
-
-    // 🆕 Viés geográfico (~15 km ao redor do usuário)
+    const ac = new AbortController(); state.buscaAbort = ac;
     const viewboxParam = montarViewbox(0.15);
-
     try {
       const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=8&countrycodes=br&addressdetails=1${viewboxParam}`;
       const r = await fetch(url, { signal: ac.signal, headers: { 'Accept-Language': 'pt-BR' } });
@@ -798,9 +873,7 @@
       resAtuais = await r.json();
       renderSug(resAtuais);
     } catch (e) {
-      if (e.name !== 'AbortError') {
-        $('sugestoes').innerHTML = '<div class="p-3 text-zinc-400 text-[13px]">Erro ao buscar.</div>';
-      }
+      if (e.name !== 'AbortError') $('sugestoes').innerHTML = '<div class="p-3 text-zinc-400 text-[13px]">Erro ao buscar.</div>';
     }
   }, 400);
 
@@ -818,7 +891,7 @@
     }
     $('sugestoes').innerHTML = lista.map((it, i) => {
       const p = it.display_name.split(',');
-      return `<div class="sugestao flex gap-3 p-3 hover:bg-zinc-100 rounded-2xl cursor-pointer transition" data-i="${i}" role="option" tabindex="0">
+      return `<div class="sugestao flex gap-3 p-3 hover:bg-zinc-100 rounded-2xl cursor-pointer transition" data-i="${i}">
         <div class="w-9 h-9 rounded-full bg-zinc-100 flex items-center justify-center">📍</div>
         <div class="min-w-0 flex-1">
           <div class="font-bold text-[13px] truncate">${p[0]}</div>
@@ -827,12 +900,10 @@
       </div>`;
     }).join('');
     $$('.sugestao').forEach(el => {
-      const pick = () => {
+      el.addEventListener('click', () => {
         const it = resAtuais[+el.dataset.i];
         if (it) escolherDestino(+it.lat, +it.lon, it.display_name.split(',').slice(0, 2).join(',').trim());
-      };
-      el.addEventListener('click', pick);
-      el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+      });
     });
   }
 
@@ -859,7 +930,7 @@
           <div class="sora font-bold text-[13px] mt-1 truncate pr-5">${f.nome}</div>
           <div class="text-[11px] text-zinc-500 truncate">${f.endereco || 'Toque para ir'}</div>
         </button>
-        <button type="button" class="fav-del absolute top-2 right-2 w-6 h-6 rounded-full bg-zinc-100 hover:bg-red-100 hover:text-red-600 text-zinc-500 text-[11px] flex items-center justify-center transition" data-del="${f.id}" title="Remover">✕</button>
+        <button type="button" class="fav-del absolute top-2 right-2 w-6 h-6 rounded-full bg-zinc-100 hover:bg-red-100 hover:text-red-600 text-zinc-500 text-[11px] flex items-center justify-center transition" data-del="${f.id}">✕</button>
       </div>
     `).join('');
     el.querySelectorAll('.fav-card').forEach(btn => {
@@ -869,9 +940,11 @@
       });
     });
     el.querySelectorAll('.fav-del').forEach(btn => {
-      btn.addEventListener('click', e => {
+      btn.addEventListener('click', async e => {
         e.stopPropagation();
-        favoritos = favoritos.filter(x => x.id !== btn.dataset.del);
+        const id = btn.dataset.del;
+        if (state.user) await deletarFavoritoDoBackend(id);
+        favoritos = favoritos.filter(x => x.id !== id);
         salvarFavoritosLS();
         renderFavoritos();
         mostrarToast('Favorito removido');
@@ -881,30 +954,20 @@
 
   const modalFav = $('modal-fav');
   let favLatLng = null;
-
   function abrirModalFav() {
-    modalFav.classList.remove('hidden');
-    modalFav.classList.add('flex');
-    $('fav-nome').value = '';
-    $('fav-endereco').value = '';
-    $('fav-sugestoes').innerHTML = '';
-    $('fav-selecionado').classList.add('hidden');
-    favLatLng = null;
+    modalFav.classList.remove('hidden'); modalFav.classList.add('flex');
+    $('fav-nome').value = ''; $('fav-endereco').value = ''; $('fav-sugestoes').innerHTML = '';
+    $('fav-selecionado').classList.add('hidden'); favLatLng = null;
     $$('#fav-icones .ico-btn').forEach((b, i) => b.classList.toggle('sel', i === 0));
     $('btn-salvar-fav').disabled = true;
     $('btn-salvar-fav').className = 'mt-6 w-full bg-zinc-200 text-zinc-400 rounded-2xl py-4 font-bold sora transition';
     setTimeout(() => $('fav-nome').focus(), 200);
   }
-  function fecharModalFav() {
-    modalFav.classList.add('hidden');
-    modalFav.classList.remove('flex');
-    if (state.favAbort) state.favAbort.abort();
-  }
+  function fecharModalFav() { modalFav.classList.add('hidden'); modalFav.classList.remove('flex'); if (state.favAbort) state.favAbort.abort(); }
 
   $('btn-add-favorito').addEventListener('click', abrirModalFav);
   $('btn-fechar-fav').addEventListener('click', fecharModalFav);
   modalFav.addEventListener('click', e => { if (e.target === modalFav) fecharModalFav(); });
-
   $$('#fav-icones .ico-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       $$('#fav-icones .ico-btn').forEach(b => b.classList.remove('sel'));
@@ -912,17 +975,10 @@
     });
   });
 
-  /* =========================================================
-     BUSCA DE FAVORITO — COM VIÉS GEOGRÁFICO
-     ========================================================= */
   const buscarFav = debounce(async (q) => {
     if (state.favAbort) state.favAbort.abort();
-    const ac = new AbortController();
-    state.favAbort = ac;
-
-    // 🆕 Viés geográfico
+    const ac = new AbortController(); state.favAbort = ac;
     const viewboxParam = montarViewbox(0.15);
-
     try {
       const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=8&countrycodes=br&addressdetails=1${viewboxParam}`;
       const r = await fetch(url, { signal: ac.signal, headers: { 'Accept-Language': 'pt-BR' } });
@@ -950,9 +1006,7 @@
           validarFav();
         });
       });
-    } catch (e) {
-      if (e.name !== 'AbortError') $('fav-sugestoes').innerHTML = '';
-    }
+    } catch (e) { if (e.name !== 'AbortError') $('fav-sugestoes').innerHTML = ''; }
   }, 400);
 
   $('fav-endereco').addEventListener('input', () => {
@@ -974,13 +1028,23 @@
   }
   $('fav-nome').addEventListener('input', validarFav);
 
-  $('btn-salvar-fav').addEventListener('click', () => {
+  $('btn-salvar-fav').addEventListener('click', async () => {
     if (!favLatLng || $('btn-salvar-fav').disabled) return;
     const nome = $('fav-nome').value.trim();
     const icoBtn = document.querySelector('#fav-icones .ico-btn.sel');
     const icone = icoBtn ? icoBtn.dataset.ico : '⭐';
     const endereco = $('fav-endereco').value.trim();
-    favoritos.push({ id: 'fav_' + Date.now(), nome, lat: favLatLng.lat, lng: favLatLng.lng, icone, endereco });
+    const favLocal = { id: 'fav_' + Date.now(), nome, lat: favLatLng.lat, lng: favLatLng.lng, icone, endereco };
+
+    // Se logado, salva no backend
+    if (state.user) {
+      try {
+        const salvo = await salvarFavoritoNoBackend(favLocal);
+        if (salvo) favLocal.id = salvo.id;
+      } catch (e) { console.warn('Erro ao salvar no backend:', e); }
+    }
+
+    favoritos.push(favLocal);
     salvarFavoritosLS();
     renderFavoritos();
     fecharModalFav();
@@ -988,7 +1052,7 @@
   });
 
   /* =========================================================
-     DESTINO → ROTA → CONFIRMAÇÃO
+     DESTINO → ROTA
      ========================================================= */
   async function escolherDestino(lat, lng, nome) {
     if (!state.pickup) { mostrarToast('Aguarde o GPS', 'error'); return; }
@@ -1056,7 +1120,7 @@
 
     const btn = $('btn-confirmar');
     btn.disabled = false;
-    btn.className = 'mt-5 w-full bg-black text-white rounded-2xl py-[18px] font-bold sora text-[15px] shadow-premium hover:bg-zinc-900 transition active:scale-[0.98]';
+    btn.className = 'mt-5 w-full bg-black text-white rounded-2xl py-[18px] font-bold sora text-[15px] shadow-premium hover:bg-zinc-900 transition';
     btn.textContent = `Confirmar • ${formatMoney(preco)}`;
   }
 
@@ -1065,10 +1129,34 @@
      ========================================================= */
   let buscaTimeout = null;
 
-  $('btn-confirmar').addEventListener('click', () => {
+  $('btn-confirmar').addEventListener('click', async () => {
     if (!state.opcao || $('btn-confirmar').disabled) return;
     $('btn-confirmar').disabled = true;
     mostrarPasso('buscando');
+
+    // Se logado, tenta criar corrida no backend
+    if (state.user && state.pickup && state.destino) {
+      try {
+        const preco = CATEGORIA_MOTO.base + CATEGORIA_MOTO.porKm * state.rota.distancia;
+        const corridaId = await criarCorridaBackend(
+          state.pickup, state.destino,
+          state.rota.distancia, state.rota.duracao, preco
+        );
+        console.log('[MotoJá] Corrida criada:', corridaId);
+      } catch (e) {
+        console.warn('[MotoJá] Não foi possível criar corrida no backend:', e.message);
+      }
+    }
+
+    // 🆕 Tenta achar motoqueiro real próximo
+    if (state.pickup) {
+      const proximos = await buscarMotoqueirosProximos(state.pickup.lat, state.pickup.lng, 5, 5);
+      if (proximos.length > 0) {
+        console.log('[MotoJá] Motoqueiros reais encontrados:', proximos.length);
+        // Aqui poderíamos usar dados reais em vez do simulado
+      }
+    }
+
     buscaTimeout = setTimeout(encontrarMotoqueiro, 2800);
   });
 
@@ -1125,8 +1213,7 @@
       if (markerMoto) { markerMoto.setLatLng([nl, nl2]); markerMoto.setIcon(criarIconeMoto(state.motoDir, eta)); }
       $('dr-eta').textContent = eta + ' min';
       if (d < 0.03) {
-        clearInterval(state.motoTimer);
-        state.motoAtivo = false;
+        clearInterval(state.motoTimer); state.motoAtivo = false;
         $('dr-eta').textContent = 'Chegou!';
         mostrarToast('Motoqueiro chegou!', 'success');
       }
@@ -1134,7 +1221,7 @@
   }
 
   /* =========================================================
-     CANCELAR / VOLTAR
+     RESET
      ========================================================= */
   function resetCorrida() {
     if (state.motoTimer) clearInterval(state.motoTimer);
@@ -1147,7 +1234,6 @@
     mostrarPasso('destino');
   }
   $('btn-nova').addEventListener('click', resetCorrida);
-
   $('btn-voltar').addEventListener('click', () => {
     limparRotaVisual();
     state.destino = state.rota = state.opcao = null;
@@ -1158,11 +1244,110 @@
   });
 
   /* =========================================================
-     MODAL MOTOQUEIRO
+     PAINEL DO MOTOQUEIRO (ONLINE / GPS)
+     ========================================================= */
+  function atualizarUIMotoqueiro() {
+    const painel = $('painel-motoqueiro');
+    const btnToggle = $('btn-toggle-online');
+    const texto = $('moto-status-texto');
+
+    if (!state.motoqueiroCadastro) { painel.classList.add('hidden'); return; }
+
+    painel.classList.remove('hidden');
+    const c = state.motoqueiroCadastro;
+
+    if (c.status !== 'aprovado') {
+      texto.textContent = `Status: ${c.status} · Aguarde aprovação`;
+      btnToggle.disabled = true;
+      btnToggle.className = 'bg-zinc-500 text-white rounded-full px-3 py-1.5 text-[11px] font-bold cursor-not-allowed';
+      btnToggle.textContent = 'Aguardando';
+      return;
+    }
+
+    texto.textContent = `Status: aprovado · ${c.disponivel ? 'Online' : 'Offline'}`;
+    btnToggle.disabled = false;
+    btnToggle.className = c.disponivel
+      ? 'bg-red-500 text-white rounded-full px-3 py-1.5 text-[11px] font-bold'
+      : 'bg-[#FF6A00] text-white rounded-full px-3 py-1.5 text-[11px] font-bold';
+    btnToggle.textContent = c.disponivel ? 'Ficar offline' : 'Ficar online';
+  }
+
+  function iniciarGPS() {
+    if (state.gpsTimer) clearInterval(state.gpsTimer);
+    const enviar = () => {
+      if (!state.motoqueiroCadastro) return;
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        await atualizarMinhaPosicao(pos.coords.latitude, pos.coords.longitude, true);
+      }, () => {}, { enableHighAccuracy: true, timeout: 8000 });
+    };
+    enviar();
+    state.gpsTimer = setInterval(enviar, 10000); // a cada 10s
+  }
+
+  function pararGPS() {
+    if (state.gpsTimer) { clearInterval(state.gpsTimer); state.gpsTimer = null; }
+  }
+
+  $('btn-toggle-online').addEventListener('click', async () => {
+    if (!state.motoqueiroCadastro) return;
+    const c = state.motoqueiroCadastro;
+    const novoEstado = !c.disponivel;
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const ok = await atualizarMinhaPosicao(pos.coords.latitude, pos.coords.longitude, novoEstado);
+        if (ok) {
+          c.disponivel = novoEstado;
+          state.motoqueiroCadastro = c;
+          atualizarUIMotoqueiro();
+          if (novoEstado) { iniciarGPS(); mostrarToast('🟢 Você está online!', 'success'); }
+          else { pararGPS(); mostrarToast('🔴 Você está offline'); }
+        } else {
+          mostrarToast('Erro ao atualizar status', 'error');
+        }
+      },
+      () => mostrarToast('Ative o GPS para ficar online', 'error'),
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  });
+
+  /* =========================================================
+     MAPA COM MOTOQUEIROS REAIS (Realtime)
+     ========================================================= */
+  async function carregarMotoqueirosNoMapa() {
+    if (!state.pickup) return;
+    const lista = await buscarMotoqueirosProximos(state.pickup.lat, state.pickup.lng, 10, 20);
+    limparMotoqueirosDoMapa();
+
+    lista.forEach(m => {
+      const marker = L.marker([m.lat, m.lng], { icon: criarIconeMotoSimples(m.nome) })
+        .addTo(map)
+        .bindPopup(`<b>${m.nome}</b><br>${m.moto_marca || ''} ${m.moto_modelo || ''}<br>${m.distancia_km} km`);
+      markersMotoqueiros.set(m.id, marker);
+    });
+
+    console.log('[MotoJá] Motoqueiros no mapa:', lista.length);
+  }
+
+  function inscreverRealtimeMotoqueiros() {
+    if (state.realtimeChannel) supabase.removeChannel(state.realtimeChannel);
+    state.realtimeChannel = supabase.channel('motoqueiros-online')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'motoqueiros' }, (payload) => {
+        const m = payload.new;
+        if (!m || !m.localizacao) return;
+        // Não temos lat/lng direto no payload (é geography), então recarrega
+        carregarMotoqueirosNoMapa();
+      })
+      .subscribe();
+  }
+
+  /* =========================================================
+     MODAL MOTOQUEIRO — CADASTRO NO BACKEND
      ========================================================= */
   const modalMoto = $('modal-moto');
   let etapaMoto = 1;
   const checksMoto = {};
+  const arquivosMoto = { cnh: null, crlv: null, selfie: null };
 
   function goMoto(n) {
     etapaMoto = n;
@@ -1190,53 +1375,86 @@
     });
   });
 
-  modalMoto.querySelectorAll('.upload').forEach(u => {
-    u.addEventListener('click', () => {
-      u.classList.add('!border-emerald-500', '!bg-emerald-50');
-      u.dataset.done = '1';
+  // Upload de arquivos
+  modalMoto.querySelectorAll('input[type="file"]').forEach(input => {
+    input.addEventListener('change', (e) => {
+      const tipo = input.dataset.file;
+      const file = e.target.files[0];
+      if (!file) return;
+      arquivosMoto[tipo] = file;
+      const statusEl = modalMoto.querySelector(`[data-status="${tipo}"]`);
+      if (statusEl) { statusEl.textContent = '✓ ' + file.name.slice(0, 25); statusEl.className = 'text-[11px] text-emerald-600 mt-1 font-bold'; }
+      const wrap = input.closest('.upload');
+      if (wrap) wrap.classList.add('!border-emerald-500', '!bg-emerald-50');
     });
   });
 
   function abrirMoto() {
+    if (!state.user) { mostrarToast('Faça login para ser motoqueiro', 'error'); abrirAuth('login'); return; }
     Object.keys(checksMoto).forEach(k => delete checksMoto[k]);
+    Object.keys(arquivosMoto).forEach(k => arquivosMoto[k] = null);
     modalMoto.querySelectorAll('.check-item').forEach(c => {
       c.classList.remove('!border-black');
       const b = c.querySelector('.box');
       b.classList.remove('!bg-black', '!text-white');
       b.innerHTML = '';
     });
-    modalMoto.querySelectorAll('.upload').forEach(u => {
-      u.classList.remove('!border-emerald-500', '!bg-emerald-50');
-      delete u.dataset.done;
-    });
-    modalMoto.classList.remove('hidden');
-    modalMoto.classList.add('flex');
+    modalMoto.querySelectorAll('.upload').forEach(u => u.classList.remove('!border-emerald-500', '!bg-emerald-50'));
+    modalMoto.querySelectorAll('[data-status]').forEach(el => { el.textContent = 'Não enviado'; el.className = 'text-[11px] text-zinc-500 mt-1'; });
+    modalMoto.querySelectorAll('input[type="file"]').forEach(i => i.value = '');
+    modalMoto.classList.remove('hidden'); modalMoto.classList.add('flex');
     goMoto(1);
   }
-  function fecharMoto() {
-    modalMoto.classList.add('hidden');
-    modalMoto.classList.remove('flex');
-  }
+  function fecharMoto() { modalMoto.classList.add('hidden'); modalMoto.classList.remove('flex'); }
 
   $('btn-abrir-cadastro-moto').addEventListener('click', abrirMoto);
   $('btn-fechar-moto').addEventListener('click', fecharMoto);
   $('btn-moto-voltar').addEventListener('click', () => { if (etapaMoto > 1) goMoto(etapaMoto - 1); });
-  $('btn-moto-proximo').addEventListener('click', () => {
+  $('btn-moto-proximo').addEventListener('click', async () => {
     if (etapaMoto === 5) { fecharMoto(); return; }
     if (etapaMoto === 4) {
       if (!checksMoto.auth || !checksMoto.capacete) { mostrarToast('Aceite as declarações', 'error'); return; }
-      $('protocolo-moto').textContent = 'MJ-' + String(Math.floor(100000 + Math.random() * 900000));
-      mostrarToast('Cadastro enviado!', 'success');
-      goMoto(5);
+      const btn = $('btn-moto-proximo');
+      const txt = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Enviando...';
+      try {
+        const dados = {
+          marca: $('moto-marca').value,
+          modelo: $('moto-modelo').value.trim(),
+          ano: $('moto-ano').value,
+          cor: $('moto-cor').value.trim(),
+          placa: $('moto-placa').value.toUpperCase().trim(),
+          cc: $('moto-cc').value
+        };
+        const motoqueiro = await salvarCadastroMotoqueiro(dados);
+
+        // Upload de documentos
+        for (const tipo of ['cnh', 'crlv', 'selfie']) {
+          if (arquivosMoto[tipo]) {
+            try { await uploadDocumento(motoqueiro.id, tipo, arquivosMoto[tipo]); }
+            catch (e) { console.warn('Erro upload', tipo, e); }
+          }
+        }
+
+        state.motoqueiroCadastro = motoqueiro;
+        atualizarUIMotoqueiro();
+        $('protocolo-moto').textContent = 'MJ-' + String(Math.floor(100000 + Math.random() * 900000));
+        mostrarToast('Cadastro enviado!', 'success');
+        goMoto(5);
+      } catch (e) {
+        console.error(e);
+        mostrarToast('Erro ao salvar: ' + e.message, 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = txt;
+      }
       return;
     }
     if (etapaMoto === 2 && (!$('moto-marca').value || !$('moto-modelo').value.trim())) {
       mostrarToast('Preencha marca e modelo', 'error'); return;
     }
     if (etapaMoto === 3) {
-      const docs = modalMoto.querySelectorAll('.upload');
-      if (!Array.from(docs).every(d => d.dataset.done === '1')) {
-        mostrarToast('Marque todos os documentos', 'error'); return;
+      if (!arquivosMoto.cnh || !arquivosMoto.crlv || !arquivosMoto.selfie) {
+        mostrarToast('Envie os 3 documentos', 'error'); return;
       }
     }
     goMoto(etapaMoto + 1);
@@ -1272,3 +1490,4 @@
 </script>
 </body>
 </html>
+
