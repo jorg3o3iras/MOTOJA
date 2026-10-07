@@ -390,32 +390,29 @@
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-/* MotoJa - script unico, sem arquivo externo */
+/* =========================================================
+   MotoJa - script unico
+   ========================================================= */
 (function () {
   'use strict';
 
-  /* =========================================================
-     1. SUPABASE — BLOCO PROTEGIDO CONTRA DUPLICACAO
-     ========================================================= */
-  window.MJ_SUPABASE_URL = 'https://jskwwxhnvcrsamcvwgcv.supabase.co';
-  window.MJ_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impza3d3eGhudmNyc2FtY3Z3Z2N2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzNDM5MjksImV4cCI6MjEwNjkxOTkyOX0.iXvIcVZBDWlOrRYDkMgj0e5agWX6T2D4Y9yjc2ZDldY';
+  /* 1. SUPABASE - protegido contra duplicacao */
+  window.MJ_URL = 'https://jskwwxhnvcrsamcvwgcv.supabase.co';
+  window.MJ_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impza3d3eGhudmNyc2FtY3Z3Z2N2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzNDM5MjksImV4cCI6MjEwNjkxOTkyOX0.iXvIcVZBDWlOrRYDkMgj0e5agWX6T2D4Y9yjc2ZDldY';
 
-  // Se ja foi criado (outro script), reaproveita. Senao cria.
-  if (!window.mjSupabase) {
-    window.mjSupabase = window.supabase.createClient(window.MJ_SUPABASE_URL, window.MJ_SUPABASE_KEY, {
+  if (!window.__mjSupabase) {
+    window.__mjSupabase = window.supabase.createClient(window.MJ_URL, window.MJ_KEY, {
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
     });
   }
-  const supabase = window.mjSupabase;
+  const supabase = window.__mjSupabase;
 
-  console.log('[MotoJa] Supabase conectado', !!supabase);
-
-  /* =========================================================
-     2. UTILITARIOS
-     ========================================================= */
+  /* 2. UTILITARIOS */
   const $ = (id) => document.getElementById(id);
-  const $$ = (sel, root = document) => Array.from((root || document).querySelectorAll(sel));
+  const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
   const STORAGE = { FAV: 'mj_favoritos_v2' };
 
   function haversine(a, b) {
@@ -444,35 +441,31 @@
   }
   function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
-  /* =========================================================
-     3. TOAST & BANNER
-     ========================================================= */
+  /* 3. TOAST & BANNER */
   let toastTimer = null;
-  function mostrarToast(msg, tipo = 'info') {
+  function mostrarToast(msg, tipo) {
+    tipo = tipo || 'info';
     const t = $('toast');
-    if (!t) return;
     t.textContent = msg;
     t.className = 'toast on' + (tipo === 'error' ? ' error' : tipo === 'success' ? ' success' : '');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => t.classList.remove('on'), 2400);
   }
-  function mostrarBanner(txt, tipo = 'info', acao = null, cb = null) {
+  function mostrarBanner(txt, tipo, acao, cb) {
+    tipo = tipo || 'info';
     const b = $('loc-banner');
-    if (!b) return;
     b.classList.remove('hidden');
     $('loc-texto').textContent = txt;
     const spinner = $('loc-spinner');
-    if (spinner) spinner.style.display = tipo === 'info' ? '' : 'none';
+    spinner.style.display = tipo === 'info' ? '' : 'none';
     const btn = $('loc-acao');
     if (acao) { btn.textContent = acao; btn.classList.remove('hidden'); btn.onclick = cb; }
     else { btn.classList.add('hidden'); btn.onclick = null; }
   }
-  function esconderBanner() { const b = $('loc-banner'); if (b) b.classList.add('hidden'); }
+  function esconderBanner() { $('loc-banner').classList.add('hidden'); }
 
-  /* =========================================================
-     4. MAPA
-     ========================================================= */
-  const map = L.map('map', { zoomControl: false, attributionControl: true }).setView([-23.5615, -46.6560], 15);
+  /* 4. MAPA - MESMA CONFIG DA VERSAO QUE FUNCIONAVA */
+  const map = L.map('map', { zoomControl: false, attributionControl: true }).setView([-23.5615, -46.6560], 13);
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
     maxZoom: 19, attribution: 'Esri'
   }).addTo(map);
@@ -503,9 +496,7 @@
     if (linhaRotaGlow) { map.removeLayer(linhaRotaGlow); linhaRotaGlow = null; }
   }
 
-  /* =========================================================
-     5. ESTADO
-     ========================================================= */
+  /* 5. ESTADO */
   const state = {
     pickup: null, destino: null, rota: null, opcao: null,
     user: null, profile: null,
@@ -523,9 +514,7 @@
     if (el) el.classList.remove('hidden');
   }
 
-  /* =========================================================
-     6. AUTENTICACAO
-     ========================================================= */
+  /* 6. AUTENTICACAO */
   const modalAuth = $('modal-auth');
 
   function abrirAuth(aba) {
@@ -545,24 +534,24 @@
     $('form-signup').classList.toggle('hidden', isLogin);
   }
 
-  $('tab-login').addEventListener('click', () => trocarAba('login'));
-  $('tab-signup').addEventListener('click', () => trocarAba('signup'));
+  $('tab-login').addEventListener('click', function(){ trocarAba('login'); });
+  $('tab-signup').addEventListener('click', function(){ trocarAba('signup'); });
   $('btn-fechar-auth').addEventListener('click', fecharAuth);
-  modalAuth.addEventListener('click', e => { if (e.target === modalAuth) fecharAuth(); });
+  modalAuth.addEventListener('click', function(e){ if (e.target === modalAuth) fecharAuth(); });
 
-  $('btn-conta').addEventListener('click', () => {
+  $('btn-conta').addEventListener('click', function(){
     if (state.user) { if (confirm('Deseja sair da conta?')) fazerLogout(); }
     else abrirAuth('login');
   });
 
   async function fazerLogin(email, senha) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email, password: senha });
     if (error) throw error;
     return data;
   }
   async function fazerCadastro(nome, email, senha, telefone) {
     const { data, error } = await supabase.auth.signUp({
-      email, password: senha,
+      email: email, password: senha,
       options: { data: { nome_completo: nome, telefone: telefone || '' } }
     });
     if (error) throw error;
@@ -596,7 +585,7 @@
     }
   }
 
-  supabase.auth.onAuthStateChange(async (event, session) => {
+  supabase.auth.onAuthStateChange(async function(event, session) {
     console.log('[Auth]', event);
     if (session && session.user) {
       const profile = await carregarProfile(session.user.id);
@@ -607,7 +596,7 @@
     }
   });
 
-  (async () => {
+  (async function() {
     const { data: { session } } = await supabase.auth.getSession();
     if (session && session.user) {
       const profile = await carregarProfile(session.user.id);
@@ -617,7 +606,7 @@
 
   $('btn-logout').addEventListener('click', fazerLogout);
 
-  $('form-login').addEventListener('submit', async (e) => {
+  $('form-login').addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = $('btn-login-submit');
     const email = $('login-email').value.trim();
@@ -632,7 +621,7 @@
     }
   });
 
-  $('form-signup').addEventListener('submit', async (e) => {
+  $('form-signup').addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = $('btn-signup-submit');
     const nome = $('signup-nome').value.trim();
@@ -655,33 +644,31 @@
     }
   });
 
-  /* =========================================================
-     7. GEOLOCALIZACAO
-     ========================================================= */
+  /* 7. GEOLOCALIZACAO */
   function obterLocalizacaoReal() {
     if (!navigator.geolocation) {
-      mostrarBanner('Navegador sem GPS', 'erro', 'Padrao', () => {
+      mostrarBanner('Navegador sem GPS', 'erro', 'Padrao', function(){
         definirPickup(-23.5615, -46.6560, 'Av. Paulista, 1578'); esconderBanner();
       });
       return;
     }
     const isSecure = location.protocol === 'https:' || ['localhost', '127.0.0.1'].indexOf(location.hostname) >= 0;
     if (!isSecure) {
-      mostrarBanner('Use HTTPS para GPS', 'erro', 'Padrao', () => {
+      mostrarBanner('Use HTTPS para GPS', 'erro', 'Padrao', function(){
         definirPickup(-23.5615, -46.6560, 'Av. Paulista'); esconderBanner();
       });
       return;
     }
     mostrarBanner('Localizando com precisao premium...', 'info');
     navigator.geolocation.getCurrentPosition(
-      async (pos) => {
+      async function(pos) {
         await definirPickup(pos.coords.latitude, pos.coords.longitude, null, true);
         mostrarBanner('Voce esta aqui', 'sucesso');
         setTimeout(esconderBanner, 2500);
       },
-      (err) => {
+      function(err) {
         const msg = err.code === 1 ? 'Permissao negada. Ative o GPS.' : 'GPS indisponivel';
-        mostrarBanner(msg, 'erro', 'Tentar', () => obterLocalizacaoReal());
+        mostrarBanner(msg, 'erro', 'Tentar', function(){ obterLocalizacaoReal(); });
         if (!state.pickup) definirPickup(-23.5615, -46.6560, 'Av. Paulista, 1578 (padrao)');
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
@@ -711,25 +698,23 @@
     if (!state.destino) map.flyTo([lat, lng], 15, { duration: 1.2 });
   }
 
-  $('btn-localizar').addEventListener('click', () => {
+  $('btn-localizar').addEventListener('click', function(){
     if (!navigator.geolocation) { obterLocalizacaoReal(); return; }
     navigator.geolocation.getCurrentPosition(
-      async (p) => {
+      async function(p) {
         await definirPickup(p.coords.latitude, p.coords.longitude, null, true);
         map.flyTo([p.coords.latitude, p.coords.longitude], 16, { duration: 1 });
         mostrarBanner('Local atualizado', 'sucesso');
         setTimeout(esconderBanner, 2000);
       },
-      () => obterLocalizacaoReal(),
+      function(){ obterLocalizacaoReal(); },
       { enableHighAccuracy: true, timeout: 8000 }
     );
   });
 
-  /* =========================================================
-     8. BUSCA DE DESTINO
-     ========================================================= */
+  /* 8. BUSCA DE DESTINO */
   let resAtuais = [];
-  const buscarDestino = debounce(async (q) => {
+  const buscarDestino = debounce(async function(q) {
     if (state.buscaAbort) state.buscaAbort.abort();
     const ac = new AbortController(); state.buscaAbort = ac;
     try {
@@ -743,7 +728,7 @@
     }
   }, 400);
 
-  $('destino-input').addEventListener('input', () => {
+  $('destino-input').addEventListener('input', function(){
     const q = $('destino-input').value.trim();
     if (q.length < 3) { $('sugestoes').innerHTML = ''; return; }
     $('sugestoes').innerHTML = '<div class="p-3 text-zinc-400 text-[13px]">Buscando...</div>';
@@ -755,24 +740,22 @@
       $('sugestoes').innerHTML = '<div class="p-3 text-zinc-400 text-[13px]">Nenhum resultado.</div>';
       return;
     }
-    $('sugestoes').innerHTML = lista.map((it, i) => {
+    $('sugestoes').innerHTML = lista.map(function(it, i) {
       const p = it.display_name.split(',');
       return '<div class="sugestao flex gap-3 p-3 hover:bg-zinc-100 rounded-2xl cursor-pointer transition" data-i="' + i + '">' +
         '<div class="w-9 h-9 rounded-full bg-zinc-100 flex items-center justify-center">📍</div>' +
         '<div class="min-w-0 flex-1"><div class="font-bold text-[13px] truncate">' + p[0] + '</div>' +
         '<div class="text-[11px] text-zinc-500 truncate">' + p.slice(1, 3).join(',') + '</div></div></div>';
     }).join('');
-    $$('.sugestao').forEach(el => {
-      el.addEventListener('click', () => {
+    $$('.sugestao').forEach(function(el) {
+      el.addEventListener('click', function() {
         const it = resAtuais[+el.dataset.i];
         if (it) escolherDestino(+it.lat, +it.lon, it.display_name.split(',').slice(0, 2).join(',').trim());
       });
     });
   }
 
-  /* =========================================================
-     9. FAVORITOS
-     ========================================================= */
+  /* 9. FAVORITOS */
   let favoritos = [];
   try { favoritos = JSON.parse(localStorage.getItem(STORAGE.FAV) || '[]'); if (!Array.isArray(favoritos)) favoritos = []; } catch (_) { favoritos = []; }
   function salvarFavoritosLS() { try { localStorage.setItem(STORAGE.FAV, JSON.stringify(favoritos)); } catch (_) {} }
@@ -783,24 +766,25 @@
       el.innerHTML = '<div class="col-span-2 text-center py-6 px-4 rounded-2xl border-2 border-dashed border-zinc-200"><div class="text-2xl mb-1">📌</div><div class="text-[12px] text-zinc-500 leading-snug">Salve seus destinos favoritos<br>para acessar com um toque</div></div>';
       return;
     }
-    el.innerHTML = favoritos.map(f => '<div class="relative group">' +
-      '<button type="button" class="fav-card w-full bg-white border border-zinc-200 rounded-2xl px-4 py-3 text-left hover:border-black hover:shadow-lg" data-id="' + f.id + '">' +
-      '<div class="text-[18px]">' + f.icone + '</div>' +
-      '<div class="sora font-bold text-[13px] mt-1 truncate pr-5">' + f.nome + '</div>' +
-      '<div class="text-[11px] text-zinc-500 truncate">' + (f.endereco || 'Toque para ir') + '</div></button>' +
-      '<button type="button" class="fav-del absolute top-2 right-2 w-6 h-6 rounded-full bg-zinc-100 hover:bg-red-100 hover:text-red-600 text-zinc-500 text-[11px] flex items-center justify-center" data-del="' + f.id + '">✕</button></div>'
-    ).join('');
-    el.querySelectorAll('.fav-card').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const f = favoritos.find(x => x.id === btn.dataset.id);
+    el.innerHTML = favoritos.map(function(f) {
+      return '<div class="relative group">' +
+        '<button type="button" class="fav-card w-full bg-white border border-zinc-200 rounded-2xl px-4 py-3 text-left hover:border-black hover:shadow-lg" data-id="' + f.id + '">' +
+        '<div class="text-[18px]">' + f.icone + '</div>' +
+        '<div class="sora font-bold text-[13px] mt-1 truncate pr-5">' + f.nome + '</div>' +
+        '<div class="text-[11px] text-zinc-500 truncate">' + (f.endereco || 'Toque para ir') + '</div></button>' +
+        '<button type="button" class="fav-del absolute top-2 right-2 w-6 h-6 rounded-full bg-zinc-100 hover:bg-red-100 hover:text-red-600 text-zinc-500 text-[11px] flex items-center justify-center" data-del="' + f.id + '">✕</button></div>';
+    }).join('');
+    el.querySelectorAll('.fav-card').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        const f = favoritos.find(function(x){ return x.id === btn.dataset.id; });
         if (f) escolherDestino(f.lat, f.lng, f.nome);
       });
     });
-    el.querySelectorAll('.fav-del').forEach(btn => {
-      btn.addEventListener('click', e => {
+    el.querySelectorAll('.fav-del').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
         e.stopPropagation();
         const id = btn.dataset.del;
-        favoritos = favoritos.filter(x => x.id !== id);
+        favoritos = favoritos.filter(function(x){ return x.id !== id; });
         salvarFavoritosLS();
         renderFavoritos();
         mostrarToast('Favorito removido');
@@ -815,37 +799,37 @@
     modalFav.classList.remove('hidden'); modalFav.classList.add('flex');
     $('fav-nome').value = ''; $('fav-endereco').value = ''; $('fav-sugestoes').innerHTML = '';
     $('fav-selecionado').classList.add('hidden'); favLatLng = null;
-    $$('#fav-icones .ico-btn').forEach((b, i) => b.classList.toggle('sel', i === 0));
+    $$('#fav-icones .ico-btn').forEach(function(b, i){ b.classList.toggle('sel', i === 0); });
     $('btn-salvar-fav').disabled = true;
     $('btn-salvar-fav').className = 'mt-6 w-full bg-zinc-200 text-zinc-400 rounded-2xl py-4 font-bold sora transition';
-    setTimeout(() => $('fav-nome').focus(), 200);
+    setTimeout(function(){ $('fav-nome').focus(); }, 200);
   }
-  function fecharModalFav() { modalFav.classList.add('hidden'); modalFav.classList.remove('flex'); if (state.favAbort) state.favAbort.abort(); }
+  function fecharModalFav() { modalFav.classList.add('hidden'); modalFav.classList.remove('flex'); }
 
   $('btn-add-favorito').addEventListener('click', abrirModalFav);
   $('btn-fechar-fav').addEventListener('click', fecharModalFav);
-  modalFav.addEventListener('click', e => { if (e.target === modalFav) fecharModalFav(); });
-  $$('#fav-icones .ico-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      $$('#fav-icones .ico-btn').forEach(b => b.classList.remove('sel'));
+  modalFav.addEventListener('click', function(e){ if (e.target === modalFav) fecharModalFav(); });
+  $$('#fav-icones .ico-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      $$('#fav-icones .ico-btn').forEach(function(b){ b.classList.remove('sel'); });
       btn.classList.add('sel');
     });
   });
 
-  const buscarFav = debounce(async (q) => {
+  const buscarFav = debounce(async function(q) {
     try {
       const url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(q) + '&limit=8&countrycodes=br';
       const r = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
       const favRes = await r.json();
-      $('fav-sugestoes').innerHTML = favRes.map((it, i) => {
+      $('fav-sugestoes').innerHTML = favRes.map(function(it, i) {
         const p = it.display_name.split(',');
         return '<div class="fav-sug flex gap-3 p-2.5 hover:bg-zinc-100 rounded-xl cursor-pointer transition" data-i="' + i + '">' +
           '<div class="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-[13px]">📍</div>' +
           '<div class="min-w-0 flex-1"><div class="font-bold text-[12px] truncate">' + p[0] + '</div>' +
           '<div class="text-[10px] text-zinc-500 truncate">' + p.slice(1, 3).join(',') + '</div></div></div>';
       }).join('');
-      $$('.fav-sug').forEach(el => {
-        el.addEventListener('click', () => {
+      $$('.fav-sug').forEach(function(el) {
+        el.addEventListener('click', function() {
           const it = favRes[+el.dataset.i];
           if (!it) return;
           favLatLng = { lat: +it.lat, lng: +it.lon };
@@ -860,7 +844,7 @@
     } catch (e) {}
   }, 400);
 
-  $('fav-endereco').addEventListener('input', () => {
+  $('fav-endereco').addEventListener('input', function() {
     const q = $('fav-endereco').value.trim();
     favLatLng = null;
     $('fav-selecionado').classList.add('hidden');
@@ -879,7 +863,7 @@
   }
   $('fav-nome').addEventListener('input', validarFav);
 
-  $('btn-salvar-fav').addEventListener('click', () => {
+  $('btn-salvar-fav').addEventListener('click', function() {
     if (!favLatLng || $('btn-salvar-fav').disabled) return;
     const nome = $('fav-nome').value.trim();
     const icoBtn = document.querySelector('#fav-icones .ico-btn.sel');
@@ -892,9 +876,7 @@
     mostrarToast('Favorito salvo!', 'success');
   });
 
-  /* =========================================================
-     10. DESTINO -> ROTA
-     ========================================================= */
+  /* 10. DESTINO -> ROTA */
   async function escolherDestino(lat, lng, nome) {
     if (!state.pickup) { mostrarToast('Aguarde o GPS', 'error'); return; }
     state.destino = { lat: lat, lng: lng, nome: nome };
@@ -928,7 +910,7 @@
       const j = await r.json();
       if (j.code !== 'Ok' || !j.routes || !j.routes[0]) throw new Error('OSRM');
       return {
-        coords: j.routes[0].geometry.coordinates.map(c => [c[1], c[0]]),
+        coords: j.routes[0].geometry.coordinates.map(function(c){ return [c[1], c[0]]; }),
         distancia: j.routes[0].distance / 1000,
         duracao: j.routes[0].duration / 60
       };
@@ -959,19 +941,17 @@
     btn.textContent = 'Confirmar - ' + formatMoney(preco);
   }
 
-  /* =========================================================
-     11. CONFIRMAR -> BUSCAR -> MOTOQUEIRO
-     ========================================================= */
+  /* 11. CONFIRMAR -> BUSCAR -> MOTOQUEIRO */
   let buscaTimeout = null;
 
-  $('btn-confirmar').addEventListener('click', () => {
+  $('btn-confirmar').addEventListener('click', function() {
     if (!state.opcao || $('btn-confirmar').disabled) return;
     $('btn-confirmar').disabled = true;
     mostrarPasso('buscando');
     buscaTimeout = setTimeout(encontrarMotoqueiro, 2800);
   });
 
-  $('btn-cancelar-busca').addEventListener('click', () => {
+  $('btn-cancelar-busca').addEventListener('click', function() {
     clearTimeout(buscaTimeout);
     state.destino = state.rota = state.opcao = null;
     limparRotaVisual();
@@ -1018,7 +998,7 @@
     mostrarPasso('motorista');
 
     if (state.motoTimer) clearInterval(state.motoTimer);
-    state.motoTimer = setInterval(() => {
+    state.motoTimer = setInterval(function() {
       if (!state.motoAtivo) return;
       const a = state.motoPos, b = state.motoAlvo;
       const nl = a.lat + (b.lat - a.lat) * 0.25;
@@ -1037,9 +1017,7 @@
     }, 1500);
   }
 
-  /* =========================================================
-     12. RESET
-     ========================================================= */
+  /* 12. RESET */
   function resetCorrida() {
     if (state.motoTimer) clearInterval(state.motoTimer);
     state.motoAtivo = false;
@@ -1051,7 +1029,7 @@
     mostrarPasso('destino');
   }
   $('btn-nova').addEventListener('click', resetCorrida);
-  $('btn-voltar').addEventListener('click', () => {
+  $('btn-voltar').addEventListener('click', function() {
     limparRotaVisual();
     state.destino = state.rota = state.opcao = null;
     $('destino-input').value = '';
@@ -1060,18 +1038,16 @@
     mostrarPasso('destino');
   });
 
-  /* =========================================================
-     13. MODAL MOTOQUEIRO
-     ========================================================= */
+  /* 13. MODAL MOTOQUEIRO */
   const modalMoto = $('modal-moto');
   let etapaMoto = 1;
   const checksMoto = {};
 
   function goMoto(n) {
     etapaMoto = n;
-    modalMoto.querySelectorAll('.form-step').forEach(s => s.classList.toggle('hidden', +s.dataset.step !== n));
+    modalMoto.querySelectorAll('.form-step').forEach(function(s){ s.classList.toggle('hidden', +s.dataset.step !== n); });
     $('titulo-moto').textContent = ['Cadastro de Motoqueiro','Dados da sua moto','Envio de documentos','Confirmacoes finais','Cadastro enviado'][n-1] || 'Cadastro';
-    modalMoto.querySelectorAll('.bar').forEach((b, i) => {
+    modalMoto.querySelectorAll('.bar').forEach(function(b, i) {
       b.className = 'bar flex-1 rounded-full ' + (i < Math.min(n, 4) ? 'bg-[#FF6A00]' : 'bg-zinc-200');
     });
     const bv = $('btn-moto-voltar'), bp = $('btn-moto-proximo');
@@ -1080,8 +1056,8 @@
     modalMoto.scrollTop = 0;
   }
 
-  modalMoto.querySelectorAll('.check-item').forEach(c => {
-    c.addEventListener('click', () => {
+  modalMoto.querySelectorAll('.check-item').forEach(function(c) {
+    c.addEventListener('click', function() {
       const key = c.dataset.check;
       const on = !checksMoto[key];
       checksMoto[key] = on;
@@ -1094,8 +1070,8 @@
   });
 
   function abrirMoto() {
-    Object.keys(checksMoto).forEach(k => delete checksMoto[k]);
-    modalMoto.querySelectorAll('.check-item').forEach(c => {
+    Object.keys(checksMoto).forEach(function(k){ delete checksMoto[k]; });
+    modalMoto.querySelectorAll('.check-item').forEach(function(c) {
       c.classList.remove('!border-black');
       const b = c.querySelector('.box');
       b.classList.remove('!bg-black', '!text-white');
@@ -1108,8 +1084,8 @@
 
   $('btn-abrir-cadastro-moto').addEventListener('click', abrirMoto);
   $('btn-fechar-moto').addEventListener('click', fecharMoto);
-  $('btn-moto-voltar').addEventListener('click', () => { if (etapaMoto > 1) goMoto(etapaMoto - 1); });
-  $('btn-moto-proximo').addEventListener('click', () => {
+  $('btn-moto-voltar').addEventListener('click', function(){ if (etapaMoto > 1) goMoto(etapaMoto - 1); });
+  $('btn-moto-proximo').addEventListener('click', function() {
     if (etapaMoto === 5) { fecharMoto(); return; }
     if (etapaMoto === 4) {
       if (!checksMoto.auth || !checksMoto.capacete) { mostrarToast('Aceite as declaracoes', 'error'); return; }
@@ -1121,20 +1097,18 @@
     goMoto(etapaMoto + 1);
   });
 
-  document.addEventListener('keydown', e => {
+  document.addEventListener('keydown', function(e) {
     if (e.key !== 'Escape') return;
     if (!$('modal-fav').classList.contains('hidden')) fecharModalFav();
     else if (!modalAuth.classList.contains('hidden')) fecharAuth();
     else if (!modalMoto.classList.contains('hidden')) fecharMoto();
   });
 
-  /* =========================================================
-     14. INICIALIZACAO
-     ========================================================= */
+  /* 14. INICIALIZACAO */
   renderFavoritos();
   obterLocalizacaoReal();
 
-  window.addEventListener('resize', debounce(() => {
+  window.addEventListener('resize', debounce(function() {
     const desktop = window.innerWidth >= 768;
     Object.assign(mapPad, desktop
       ? { paddingTopLeft: [460, 80], paddingBottomRight: [60, 60] }
@@ -1142,7 +1116,7 @@
     map.invalidateSize();
   }, 200));
 
-  console.log('[MotoJa] Inicializado com sucesso');
+  console.log('[MotoJa] Inicializado');
 })();
 </script>
 </body>
