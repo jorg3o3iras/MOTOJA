@@ -62,6 +62,37 @@
   .admin-stat{background:#fff;border:1px solid #e4e4e7;border-radius:16px;padding:16px}
   .admin-stat .valor{font-family:'Sora',sans-serif;font-weight:800;font-size:26px;line-height:1;color:#0A0A0A}
   .admin-stat .rotulo{font-size:11px;color:#71717a;text-transform:uppercase;font-weight:700;letter-spacing:0.5px;margin-top:6px}
+
+  /* =========================================================
+     MODO NOTURNO
+     ========================================================= */
+  body.modo-escuro{background:#0A0A0A;color:#f4f4f5}
+  body.modo-escuro .glass{background:rgba(24,24,27,.92);color:#f4f4f5}
+  body.modo-escuro .sora,
+  body.modo-escuro h1,
+  body.modo-escuro h2,
+  body.modo-escuro h3{color:#f4f4f5}
+  body.modo-escuro .text-black{color:#f4f4f5 !important}
+  body.modo-escuro .text-zinc-400,
+  body.modo-escuro .text-zinc-500{color:#a1a1aa !important}
+  body.modo-escuro .bg-zinc-100,
+  body.modo-escuro .bg-zinc-50{background:#27272a !important;color:#f4f4f5 !important}
+  body.modo-escuro .bg-white{background:#18181b !important;color:#f4f4f5 !important}
+  body.modo-escuro .border-zinc-200,
+  body.modo-escuro .border-zinc-100{border-color:#3f3f46 !important}
+  body.modo-escuro input,
+  body.modo-escuro select{background:#27272a !important;color:#f4f4f5 !important;border-color:#3f3f46 !important}
+  body.modo-escuro input::placeholder{color:#71717a !important}
+  body.modo-escuro .fav-card,
+  body.modo-escuro .sugestao{background:#18181b;color:#f4f4f5}
+  body.modo-escuro .sugestao:hover,
+  body.modo-escuro .fav-card:hover{background:#27272a !important}
+  body.modo-escuro .admin-card,
+  body.modo-escuro .admin-stat{background:#18181b;border-color:#3f3f46;color:#f4f4f5}
+  body.modo-escuro .admin-tab,
+  body.modo-escuro .admin-filtro{background:#27272a;color:#a1a1aa;border-color:#3f3f46}
+  body.modo-escuro .admin-tab.on,
+  body.modo-escuro .admin-filtro.on{background:#f4f4f5;color:#0A0A0A}
 </style>
 </head>
 <body class="h-[100dvh] w-screen bg-[#0A0A0A] relative antialiased">
@@ -79,9 +110,10 @@
   </div>
   <div class="pointer-events-auto flex gap-2 flex-wrap justify-end max-w-[70%]">
     <button id="btn-localizar" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold hover:scale-[1.02] active:scale-[0.98] transition">📍 Onde estou</button>
+    <button id="btn-tema" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold" title="Alternar tema">🌙</button>
     <button id="btn-conta" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold">👤 Entrar</button>
     <button id="btn-abrir-cadastro-moto" type="button" class="bg-black text-white shadow-premium-lg rounded-full px-5 py-2.5 text-[13px] font-bold hover:bg-zinc-900 transition">🪪 Sou Motoqueiro</button>
-    <button id="btn-admin" type="button" class="hidden glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold">🔧 Admin</button>
+    <button id="btn-admin" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold">🔧 Admin</button>
   </div>
 </header>
 
@@ -798,18 +830,11 @@
         inscreverRealtimeMotoqueiros();
       }
 
-      // Verifica se é admin
-      try {
-        const { data } = await supabase.rpc('is_admin');
-        if (data === true) $('btn-admin').classList.remove('hidden');
-        else $('btn-admin').classList.add('hidden');
-      } catch (e) { $('btn-admin').classList.add('hidden'); }
-
+      // Admin: botão sempre visível agora (sem verificacao)
     } else {
       state.user = null; state.profile = null; state.motoqueiroCadastro = null;
       $('btn-conta').innerHTML = '👤 Entrar';
       $('user-logado').classList.add('hidden');
-      $('btn-admin').classList.add('hidden');
       limparMotoqueirosDoMapa();
       atualizarUIMotoqueiro();
     }
@@ -1776,6 +1801,41 @@
     } catch (e) {
       mostrarToast('Erro: ' + e.message, 'error');
     }
+  }
+
+  /* =========================================================
+     MODO NOTURNO
+     ========================================================= */
+  const TEMA_KEY = 'mj_tema';
+
+  function aplicarTema(tema) {
+    const body = document.body;
+    const btn = $('btn-tema');
+    if (tema === 'escuro') {
+      body.classList.add('modo-escuro');
+      if (btn) btn.textContent = '☀️';
+    } else {
+      body.classList.remove('modo-escuro');
+      if (btn) btn.textContent = '🌙';
+    }
+  }
+
+  function alternarTema() {
+    const atual = localStorage.getItem(TEMA_KEY) || 'claro';
+    const novo = atual === 'claro' ? 'escuro' : 'claro';
+    localStorage.setItem(TEMA_KEY, novo);
+    aplicarTema(novo);
+    mostrarToast(novo === 'escuro' ? '🌙 Modo noturno ativado' : '☀️ Modo claro ativado');
+  }
+
+  (function() {
+    const salvo = localStorage.getItem(TEMA_KEY) || 'claro';
+    aplicarTema(salvo);
+  })();
+
+  const btnTema = $('btn-tema');
+  if (btnTema) {
+    btnTema.addEventListener('click', alternarTema);
   }
 
   /* =========================================================
