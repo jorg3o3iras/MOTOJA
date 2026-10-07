@@ -23,7 +23,6 @@
   .no-scrollbar::-webkit-scrollbar{display:none}
   .no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
 
-  /* Markers */
   .mk-origem{width:18px;height:18px;border-radius:50%;background:#FF6A00;border:3px solid #fff;box-shadow:0 4px 12px rgba(255,106,0,.5)}
   .mk-dest{width:14px;height:14px;background:#0A0A0A;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.4)}
   .mk-eu{width:22px;height:22px;border-radius:50%;background:#1E88E5;border:3px solid #fff;box-shadow:0 4px 16px rgba(30,136,229,.6);position:relative}
@@ -40,24 +39,23 @@
   .op-card.sel{background:#0A0A0A;color:#fff;border-color:#0A0A0A;transform:scale(1.02);box-shadow:0 12px 32px rgba(0,0,0,.25)}
   .fav-card{transition:all .2s cubic-bezier(.2,.8,.2,1)}
   .ico-btn.sel{border-color:#FF6A00;background:#FFF7ED}
+  .auth-tab{padding:10px 16px;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;border:0;background:transparent;font-family:inherit;color:#71717a}
+  .auth-tab.on{background:#0A0A0A;color:#fff}
 
   .toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%) translateY(20px);background:#0A0A0A;color:#fff;padding:12px 20px;border-radius:100px;font-size:13px;font-weight:700;box-shadow:0 12px 32px rgba(0,0,0,.35);opacity:0;transition:all .3s cubic-bezier(.2,.8,.2,1);z-index:3000;pointer-events:none;max-width:90vw;text-align:center}
   .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
   .toast.error{background:#DC2626}
   .toast.success{background:#059669}
 
-  /* Leaflet overrides */
   .leaflet-container{font-family:inherit;background:#0A0A0A}
   .leaflet-control-attribution{font-size:9px!important;background:rgba(255,255,255,.7)!important;border-radius:6px;padding:2px 6px!important}
 </style>
 </head>
 <body class="h-[100dvh] w-screen bg-[#0A0A0A] relative antialiased">
 
-<!-- MAPA -->
 <div id="map" class="absolute inset-0 z-0" role="application" aria-label="Mapa da corrida"></div>
 <div class="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-b from-black/10 via-transparent to-black/5"></div>
 
-<!-- TOP BAR -->
 <header class="absolute top-0 inset-x-0 z-[900] p-4 md:p-6 flex justify-between items-start pointer-events-none" style="padding-top:max(1rem,env(safe-area-inset-top))">
   <div class="pointer-events-auto flex items-center gap-2">
     <div class="glass shadow-premium rounded-full px-4 py-[10px] flex items-center gap-2.5" aria-label="MotoJá Premium">
@@ -68,24 +66,21 @@
   </div>
   <div class="pointer-events-auto flex gap-2 flex-wrap justify-end max-w-[70%]">
     <button id="btn-localizar" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold hover:scale-[1.02] active:scale-[0.98] transition" aria-label="Localizar minha posição">📍 Onde estou</button>
-    <button id="btn-abrir-cadastro-user" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold" aria-label="Abrir conta">👤 Conta</button>
+    <button id="btn-conta" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold" aria-label="Abrir conta">👤 Entrar</button>
     <button id="btn-abrir-cadastro-moto" type="button" class="bg-black text-white shadow-premium-lg rounded-full px-5 py-2.5 text-[13px] font-bold hover:bg-zinc-900 transition" aria-label="Cadastro de motoqueiro">🪪 Sou Motoqueiro</button>
   </div>
 </header>
 
-<!-- BANNER DE STATUS -->
 <div id="loc-banner" class="absolute top-[84px] left-1/2 -translate-x-1/2 z-[950] glass shadow-premium-lg rounded-full px-5 py-3 flex items-center gap-3 text-[13px] font-semibold max-w-[92%] transition-opacity" role="status" aria-live="polite">
   <div id="loc-spinner" class="w-4 h-4 border-2 border-zinc-200 border-t-[#FF6A00] rounded-full animate-[spin_.8s_linear_infinite] flex-shrink-0"></div>
   <span id="loc-texto" class="text-zinc-800">Localizando você com precisão premium...</span>
   <button id="loc-acao" type="button" class="hidden ml-2 bg-black text-white rounded-full px-3 py-1 text-[11px] font-bold">Tentar</button>
 </div>
 
-<!-- BOTTOM SHEET -->
 <main id="sheet" class="absolute left-0 right-0 bottom-0 z-[1000] md:left-6 md:bottom-6 md:right-auto md:w-[420px] glass shadow-premium-lg rounded-t-[28px] md:rounded-[28px] border border-white/60 flex flex-col max-h-[84dvh] md:max-h-[calc(100dvh-100px)] overflow-hidden" style="padding-bottom:env(safe-area-inset-bottom,0px)">
   <div class="h-[5px] w-10 bg-black/10 rounded-full mx-auto mt-3 md:hidden flex-shrink-0" aria-hidden="true"></div>
   <div class="flex-1 overflow-y-auto no-scrollbar p-6 pb-8">
 
-    <!-- STEP: DESTINO -->
     <section id="step-destino" aria-label="Escolher destino">
       <div id="user-logado" class="hidden mb-4">
         <div class="bg-zinc-900 text-white rounded-full px-3 py-2 flex items-center gap-3 text-[13px]">
@@ -111,7 +106,6 @@
       </div>
       <div id="sugestoes" class="mt-2" role="listbox" aria-label="Sugestões de endereço"></div>
 
-      <!-- FAVORITOS -->
       <div class="mt-6">
         <div class="flex items-center justify-between mb-3">
           <div class="text-[11px] font-bold tracking-[0.12em] text-zinc-400 uppercase">Meus favoritos</div>
@@ -130,7 +124,6 @@
       </div>
     </section>
 
-    <!-- STEP: OPÇÕES -->
     <section id="step-opcoes" class="hidden" aria-label="Confirmar corrida">
       <button id="btn-voltar" type="button" class="mb-4 w-9 h-9 rounded-full bg-zinc-100 flex items-center justify-center" aria-label="Voltar">←</button>
       <h2 class="sora font-extrabold text-[22px] tracking-[-0.03em]">Confirmar corrida</h2>
@@ -140,7 +133,6 @@
       <div class="mt-3 text-center text-[11px] text-zinc-400">Preço final • sem surpresas</div>
     </section>
 
-    <!-- STEP: BUSCANDO -->
     <section id="step-buscando" class="hidden text-center py-8" aria-label="Buscando motoqueiro" aria-live="polite">
       <div class="relative w-[120px] h-[120px] mx-auto">
         <div class="absolute inset-0 rounded-full border-[3px] border-zinc-100"></div>
@@ -152,7 +144,6 @@
       <button id="btn-cancelar-busca" type="button" class="mt-10 w-full bg-white border border-zinc-200 rounded-2xl py-4 font-bold text-[14px]">Cancelar busca</button>
     </section>
 
-    <!-- STEP: MOTORISTA -->
     <section id="step-motorista" class="hidden" aria-label="Motoqueiro a caminho">
       <div class="bg-black text-white rounded-full px-4 py-2 flex items-center justify-center gap-2 text-[11px] font-bold tracking-wide mb-5">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true"></span> RASTREAMENTO PREMIUM ATIVO
@@ -198,99 +189,66 @@
         <div id="dr-placa" class="bg-white border-2 border-black rounded-lg px-2.5 py-1 font-extrabold text-[12px] tracking-widest">---</div>
       </div>
       <div class="grid grid-cols-3 gap-2 mt-4">
-        <button type="button" class="bg-white border border-zinc-200 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition" aria-label="Ligar para o motoqueiro"><span aria-hidden="true">📞</span><span class="text-[11px] font-bold">Ligar</span></button>
-        <button type="button" class="bg-white border border-zinc-200 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition" aria-label="Abrir chat"><span aria-hidden="true">💬</span><span class="text-[11px] font-bold">Chat</span></button>
-        <button type="button" class="bg-white border border-zinc-200 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition" aria-label="Emergência"><span aria-hidden="true">🆘</span><span class="text-[11px] font-bold">Emergência</span></button>
+        <button type="button" class="bg-white border border-zinc-200 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition"><span aria-hidden="true">📞</span><span class="text-[11px] font-bold">Ligar</span></button>
+        <button type="button" class="bg-white border border-zinc-200 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition"><span aria-hidden="true">💬</span><span class="text-[11px] font-bold">Chat</span></button>
+        <button type="button" class="bg-white border border-zinc-200 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition"><span aria-hidden="true">🆘</span><span class="text-[11px] font-bold">Emergência</span></button>
       </div>
       <button id="btn-nova" type="button" class="mt-4 w-full bg-zinc-100 rounded-2xl py-4 font-bold text-[13px] text-zinc-600">Cancelar corrida</button>
     </section>
   </div>
 </main>
 
-<!-- MODAL: CADASTRO PASSAGEIRO -->
-<div id="modal-user" class="fixed inset-0 z-[2000] bg-white hidden flex-col" role="dialog" aria-modal="true" aria-labelledby="titulo-user">
-  <div class="sticky top-0 bg-white/90 backdrop-blur-xl border-b border-zinc-100 px-6 py-4 flex items-center justify-between" style="padding-top:max(1rem,env(safe-area-inset-top))">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center font-bold" aria-hidden="true">👤</div>
-      <h2 id="titulo-user" class="sora font-extrabold text-[18px]">Criar conta</h2>
-    </div>
-    <button id="btn-fechar-user" type="button" class="w-9 h-9 rounded-full bg-zinc-100 flex items-center justify-center" aria-label="Fechar">✕</button>
-  </div>
-  <div class="h-1 bg-zinc-100"><div class="h-full flex gap-1 p-1" id="user-progress">
-    <div class="bar flex-1 rounded-full bg-zinc-200"></div>
-    <div class="bar flex-1 rounded-full bg-zinc-200"></div>
-    <div class="bar flex-1 rounded-full bg-zinc-200"></div>
-  </div></div>
-  <div class="flex-1 overflow-y-auto px-6 py-8 max-w-[520px] mx-auto w-full">
-    <div class="form-step" data-step="1">
-      <h3 class="sora font-extrabold text-[20px]">Seus dados</h3>
-      <p class="text-[13px] text-zinc-500 mt-1 mb-6">Rápido e seguro, padrão premium.</p>
-      <div class="space-y-4">
-        <div>
-          <label for="user-nome-input" class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Nome completo</label>
-          <input id="user-nome-input" type="text" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 font-medium outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="Ex: Maria Oliveira" autocomplete="name">
+<div id="modal-auth" class="fixed inset-0 z-[2200] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4" role="dialog" aria-modal="true">
+  <div class="bg-white rounded-[28px] w-full max-w-[420px] shadow-premium-lg overflow-hidden" onclick="event.stopPropagation()">
+    <div class="p-6 pb-4">
+      <div class="flex items-center justify-between mb-5">
+        <div class="flex items-center gap-2">
+          <div class="w-9 h-9 rounded-full bg-[#FF6A00] flex items-center justify-center text-white font-extrabold sora">M</div>
+          <h3 class="sora font-extrabold text-[18px]">Sua conta</h3>
         </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label for="user-cpf" class="text-[10px] font-bold uppercase text-zinc-500">CPF</label>
-            <input id="user-cpf" type="text" inputmode="numeric" maxlength="14" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="000.000.000-00" autocomplete="off">
-          </div>
-          <div>
-            <label for="user-nasc" class="text-[10px] font-bold uppercase text-zinc-500">Nascimento</label>
-            <input id="user-nasc" type="date" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5" max="">
-          </div>
-        </div>
-        <div>
-          <label for="user-email" class="text-[10px] font-bold uppercase text-zinc-500">E-mail</label>
-          <input id="user-email" type="email" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="voce@email.com" autocomplete="email">
-        </div>
+        <button id="btn-fechar-auth" type="button" class="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-[13px]">✕</button>
       </div>
-    </div>
-    <div class="form-step hidden" data-step="2">
-      <h3 class="sora font-extrabold text-[20px]">Contato</h3>
-      <div class="space-y-4 mt-6">
+      <div class="flex gap-2 bg-zinc-100 rounded-full p-1 mb-5">
+        <button type="button" id="tab-login" class="auth-tab on flex-1">Entrar</button>
+        <button type="button" id="tab-signup" class="auth-tab flex-1">Criar conta</button>
+      </div>
+
+      <form id="form-login" class="space-y-4">
         <div>
-          <label for="user-cel" class="text-[10px] font-bold uppercase text-zinc-500">Celular</label>
-          <input id="user-cel" type="tel" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="(11) 99999-9999" autocomplete="tel">
-        </div>
-        <div>
-          <label for="user-cep" class="text-[10px] font-bold uppercase text-zinc-500">CEP</label>
-          <input id="user-cep" type="text" inputmode="numeric" maxlength="9" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="00000-000" autocomplete="postal-code">
+          <label for="login-email" class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">E-mail</label>
+          <input id="login-email" type="email" required class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="voce@email.com" autocomplete="email">
         </div>
         <div>
-          <label for="user-end" class="text-[10px] font-bold uppercase text-zinc-500">Endereço</label>
-          <input id="user-end" type="text" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="Rua, número, bairro" autocomplete="street-address">
+          <label for="login-senha" class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Senha</label>
+          <input id="login-senha" type="password" required class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="••••••••" autocomplete="current-password">
         </div>
-      </div>
-    </div>
-    <div class="form-step hidden" data-step="3">
-      <h3 class="sora font-extrabold text-[20px]">Confirmações</h3>
-      <div class="mt-6 space-y-3">
-        <div class="check-item flex gap-3 p-4 rounded-2xl border border-zinc-200 cursor-pointer select-none" data-check="maior">
-          <div class="box w-5 h-5 rounded-full border-2 border-zinc-300 flex items-center justify-center flex-shrink-0"></div>
-          <div class="text-[13px]">Confirmo que os dados são verdadeiros e sou maior de 18 anos</div>
+        <button type="submit" id="btn-login-submit" class="w-full bg-black text-white rounded-2xl py-4 font-bold sora text-[15px] hover:bg-zinc-900 transition active:scale-[0.98]">Entrar</button>
+      </form>
+
+      <form id="form-signup" class="space-y-4 hidden">
+        <div>
+          <label for="signup-nome" class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Nome completo</label>
+          <input id="signup-nome" type="text" required class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="Ex: Maria Oliveira" autocomplete="name">
         </div>
-        <div class="check-item flex gap-3 p-4 rounded-2xl border border-zinc-200 cursor-pointer select-none" data-check="termos">
-          <div class="box w-5 h-5 rounded-full border-2 border-zinc-300 flex items-center justify-center flex-shrink-0"></div>
-          <div class="text-[13px]">Aceito os Termos de Uso e Política de Privacidade Premium</div>
+        <div>
+          <label for="signup-email" class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">E-mail</label>
+          <input id="signup-email" type="email" required class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="voce@email.com" autocomplete="email">
         </div>
-      </div>
+        <div>
+          <label for="signup-senha" class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Senha</label>
+          <input id="signup-senha" type="password" required minlength="6" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+        </div>
+        <div>
+          <label for="signup-telefone" class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Telefone (opcional)</label>
+          <input id="signup-telefone" type="tel" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="(11) 99999-9999">
+        </div>
+        <button type="submit" id="btn-signup-submit" class="w-full bg-[#FF6A00] text-white rounded-2xl py-4 font-bold sora text-[15px] hover:bg-[#e55a00] transition active:scale-[0.98]">Criar conta</button>
+        <p class="text-[11px] text-zinc-500 text-center leading-snug">Ao criar conta, você aceita os Termos e a Política de Privacidade.</p>
+      </form>
     </div>
-    <div class="form-step hidden" data-step="4">
-      <div class="text-center py-16">
-        <div class="w-20 h-20 rounded-full bg-emerald-500 text-white text-3xl flex items-center justify-center mx-auto mb-6" aria-hidden="true">✓</div>
-        <h3 class="sora font-extrabold text-[24px]">Bem-vindo ao Premium</h3>
-        <p class="text-zinc-500 mt-2 text-[14px]">Sua conta está pronta. Boa corrida!</p>
-      </div>
-    </div>
-  </div>
-  <div class="border-t border-zinc-100 p-4 flex gap-3 bg-white" style="padding-bottom:max(1rem,env(safe-area-inset-bottom))">
-    <button id="btn-user-voltar" type="button" class="flex-[0_0_100px] rounded-2xl bg-zinc-100 py-4 font-bold text-[14px]">Voltar</button>
-    <button id="btn-user-proximo" type="button" class="flex-1 rounded-2xl bg-black text-white py-4 font-bold text-[14px]">Continuar →</button>
   </div>
 </div>
 
-<!-- MODAL: CADASTRO MOTOQUEIRO -->
 <div id="modal-moto" class="fixed inset-0 z-[2000] bg-white hidden flex-col" role="dialog" aria-modal="true" aria-labelledby="titulo-moto">
   <div class="sticky top-0 bg-white/90 backdrop-blur-xl border-b px-6 py-4 flex items-center justify-between" style="padding-top:max(1rem,env(safe-area-inset-top))">
     <div class="flex items-center gap-3">
@@ -327,12 +285,8 @@
         <div class="grid grid-cols-2 gap-3">
           <select id="moto-marca" class="rounded-2xl border border-zinc-200 px-4 py-3.5 bg-white">
             <option value="">Marca</option>
-            <option>Honda</option>
-            <option>Yamaha</option>
-            <option>BMW</option>
-            <option>Royal Enfield</option>
-            <option>Kawasaki</option>
-            <option>Suzuki</option>
+            <option>Honda</option><option>Yamaha</option><option>BMW</option>
+            <option>Royal Enfield</option><option>Kawasaki</option><option>Suzuki</option>
           </select>
           <input id="moto-ano" type="number" min="2010" max="2026" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="Ano">
         </div>
@@ -390,7 +344,6 @@
   </div>
 </div>
 
-<!-- MODAL: NOVO FAVORITO -->
 <div id="modal-fav" class="fixed inset-0 z-[2100] bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="titulo-fav">
   <div class="bg-white rounded-[24px] w-full max-w-[420px] p-6 shadow-premium-lg" onclick="event.stopPropagation()">
     <div class="flex items-center justify-between mb-5">
@@ -413,14 +366,14 @@
       <div>
         <span class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Ícone</span>
         <div class="grid grid-cols-8 gap-2 mt-2" id="fav-icones" role="group" aria-label="Escolher ícone">
-          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🏠" aria-label="Casa">🏠</button>
-          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🏢" aria-label="Trabalho">🏢</button>
-          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🎓" aria-label="Estudo">🎓</button>
-          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🛒" aria-label="Compras">🛒</button>
-          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🏥" aria-label="Saúde">🏥</button>
-          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="✈️" aria-label="Aeroporto">✈️</button>
-          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🍽️" aria-label="Restaurante">🍽️</button>
-          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="❤️" aria-label="Favorito">❤️</button>
+          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🏠">🏠</button>
+          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🏢">🏢</button>
+          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🎓">🎓</button>
+          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🛒">🛒</button>
+          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🏥">🏥</button>
+          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="✈️">✈️</button>
+          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🍽️">🍽️</button>
+          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="❤️">❤️</button>
         </div>
       </div>
     </div>
@@ -431,9 +384,24 @@
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function () {
   'use strict';
+
+  /* =========================================================
+     SUPABASE — CONFIGURAÇÃO
+     ========================================================= */
+  const SUPABASE_URL = 'https://jskwwxhnvcrsamcvwgcv.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impza3d3eGhudmNyc2FtY3Z3Z2N2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzNDM5MjksImV4cCI6MjEwNjkxOTkyOX0.iXvIcVZBDWlOrRYDkMgj0e5agWX6T2D4Y9yjc2ZDldY';
+
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  });
 
   /* =========================================================
      UTILITÁRIOS
@@ -441,10 +409,7 @@
   const $ = (id) => document.getElementById(id);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-  const STORAGE = {
-    FAV: 'mj_favoritos_v2',
-    USER: 'mj_user_v1'
-  };
+  const STORAGE = { FAV: 'mj_favoritos_v2' };
 
   function haversine(a, b) {
     const R = 6371;
@@ -467,55 +432,32 @@
 
   function debounce(fn, ms) {
     let t;
-    return (...args) => {
-      clearTimeout(t);
-      t = setTimeout(() => fn(...args), ms);
-    };
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
   }
 
-  function formatMoney(v) {
-    return 'R$ ' + v.toFixed(2).replace('.', ',');
-  }
+  function formatMoney(v) { return 'R$ ' + v.toFixed(2).replace('.', ','); }
 
   function initials(name) {
-    return (name || '')
-      .split(/\s+/)
-      .filter(Boolean)
-      .map(p => p[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase() || '--';
+    return (name || '').split(/\s+/).filter(Boolean).map(p => p[0]).join('').slice(0, 2).toUpperCase() || '--';
   }
 
   function maskCPF(v) {
     const d = v.replace(/\D/g, '').slice(0, 11);
-    return d
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    return d.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
   }
-
   function maskCEP(v) {
     const d = v.replace(/\D/g, '').slice(0, 8);
     return d.replace(/(\d{5})(\d)/, '$1-$2');
   }
-
   function maskPhone(v) {
     const d = v.replace(/\D/g, '').slice(0, 11);
-    if (d.length <= 10) {
-      return d.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').trim();
-    }
+    if (d.length <= 10) return d.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').trim();
     return d.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').trim();
   }
-
-  function isValidEmail(e) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
-  }
-
+  function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
   function isAdult(dateStr) {
     if (!dateStr) return false;
-    const birth = new Date(dateStr);
-    const today = new Date();
+    const birth = new Date(dateStr), today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
     const m = today.getMonth() - birth.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
@@ -541,31 +483,17 @@
     const spinner = $('loc-spinner');
     spinner.style.display = tipo === 'info' ? '' : 'none';
     const btn = $('loc-acao');
-    if (acao) {
-      btn.textContent = acao;
-      btn.classList.remove('hidden');
-      btn.onclick = cb;
-    } else {
-      btn.classList.add('hidden');
-      btn.onclick = null;
-    }
+    if (acao) { btn.textContent = acao; btn.classList.remove('hidden'); btn.onclick = cb; }
+    else { btn.classList.add('hidden'); btn.onclick = null; }
   }
-
-  function esconderBanner() {
-    $('loc-banner').classList.add('hidden');
-  }
+  function esconderBanner() { $('loc-banner').classList.add('hidden'); }
 
   /* =========================================================
      MAPA
      ========================================================= */
-  const map = L.map('map', {
-    zoomControl: false,
-    attributionControl: true
-  }).setView([-15.7939, -47.8828], 4);
-
+  const map = L.map('map', { zoomControl: false, attributionControl: true }).setView([-15.7939, -47.8828], 4);
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 19,
-    attribution: '© Esri'
+    maxZoom: 19, attribution: '© Esri'
   }).addTo(map);
 
   const isDesktop = window.innerWidth >= 768;
@@ -579,19 +507,13 @@
 
   function criarIconeMoto(dir, eta) {
     return L.divIcon({
-      className: '',
-      iconSize: [48, 58],
-      iconAnchor: [24, 30],
+      className: '', iconSize: [48, 58], iconAnchor: [24, 30],
       html: `<div class="moto-pin relative" style="transform:rotate(${dir}deg)"><div class="halo absolute inset-0"></div><div class="core relative z-10">🏍</div></div><div style="position:absolute;top:46px;left:50%;transform:translateX(-50%);background:#0A0A0A;color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;white-space:nowrap">${eta} min</div>`
     });
   }
 
-  let markerOrigem = null;
-  let markerDestino = null;
-  let markerMoto = null;
-  let linhaRota = null;
-  let linhaRotaGlow = null;
-  let marcadorEu = null;
+  let markerOrigem = null, markerDestino = null, markerMoto = null;
+  let linhaRota = null, linhaRotaGlow = null, marcadorEu = null;
 
   function limparRotaVisual() {
     if (markerDestino) { map.removeLayer(markerDestino); markerDestino = null; }
@@ -604,29 +526,13 @@
      ESTADO
      ========================================================= */
   const state = {
-    pickup: null,
-    destino: null,
-    rota: null,
-    opcao: null,
-    user: null,
-    motoPos: null,
-    motoAlvo: null,
-    motoDir: 0,
-    motoTimer: null,
-    motoAtivo: false,
-    buscaAbort: null,
-    favAbort: null
+    pickup: null, destino: null, rota: null, opcao: null,
+    user: null, profile: null,
+    motoPos: null, motoAlvo: null, motoDir: 0, motoTimer: null, motoAtivo: false,
+    buscaAbort: null, favAbort: null
   };
 
-  const CATEGORIA_MOTO = {
-    id: 'moto',
-    nome: 'Moto',
-    desc: 'Corrida premium de moto',
-    icone: '🏍',
-    base: 4,
-    porKm: 1.6,
-    espera: 3
-  };
+  const CATEGORIA_MOTO = { id: 'moto', nome: 'Moto', desc: 'Corrida premium de moto', icone: '🏍', base: 4, porKm: 1.6, espera: 3 };
 
   const MOTOQUEIROS = [
     { nome: 'João Almeida', moto: 'Honda CG 160 Titan', detalhe: 'Vermelha · 2022 · 160cc', placa: 'ABC1D23' },
@@ -643,20 +549,188 @@
   }
 
   /* =========================================================
+     AUTENTICAÇÃO — UI
+     ========================================================= */
+  const modalAuth = $('modal-auth');
+
+  function abrirAuth(aba = 'login') {
+    modalAuth.classList.remove('hidden');
+    modalAuth.classList.add('flex');
+    trocarAba(aba);
+  }
+  function fecharAuth() {
+    modalAuth.classList.add('hidden');
+    modalAuth.classList.remove('flex');
+    $('form-login').reset();
+    $('form-signup').reset();
+  }
+  function trocarAba(aba) {
+    const isLogin = aba === 'login';
+    $('tab-login').classList.toggle('on', isLogin);
+    $('tab-signup').classList.toggle('on', !isLogin);
+    $('form-login').classList.toggle('hidden', !isLogin);
+    $('form-signup').classList.toggle('hidden', isLogin);
+  }
+
+  $('tab-login').addEventListener('click', () => trocarAba('login'));
+  $('tab-signup').addEventListener('click', () => trocarAba('signup'));
+  $('btn-fechar-auth').addEventListener('click', fecharAuth);
+  modalAuth.addEventListener('click', e => { if (e.target === modalAuth) fecharAuth(); });
+
+  $('btn-conta').addEventListener('click', () => {
+    if (state.user) {
+      if (confirm('Deseja sair da conta?')) fazerLogout();
+    } else {
+      abrirAuth('login');
+    }
+  });
+
+  /* =========================================================
+     AUTENTICAÇÃO — FUNÇÕES
+     ========================================================= */
+  async function fazerLogin(email, senha) {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
+    if (error) throw error;
+    return data;
+  }
+
+  async function fazerCadastro(nome, email, senha, telefone) {
+    const { data, error } = await supabase.auth.signUp({
+      email, password: senha,
+      options: { data: { nome_completo: nome, telefone: telefone || '' } }
+    });
+    if (error) throw error;
+    return data;
+  }
+
+  async function fazerLogout() {
+    await supabase.auth.signOut();
+    mostrarToast('Sessão encerrada');
+  }
+
+  async function carregarProfile(userId) {
+    try {
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
+    } catch (e) {
+      console.warn('Erro ao carregar profile:', e);
+      return null;
+    }
+  }
+
+  function atualizarUIUsuario(user, profile) {
+    if (user) {
+      state.user = user;
+      state.profile = profile;
+      const nome = profile?.nome_completo || user.user_metadata?.nome_completo || user.email.split('@')[0];
+      const primeiroNome = nome.split(' ')[0];
+      $('btn-conta').innerHTML = `👤 ${primeiroNome}`;
+      $('user-mini-av').textContent = initials(nome);
+      $('user-nome').textContent = primeiroNome;
+      $('user-logado').classList.remove('hidden');
+    } else {
+      state.user = null;
+      state.profile = null;
+      $('btn-conta').innerHTML = '👤 Entrar';
+      $('user-logado').classList.add('hidden');
+    }
+  }
+
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    console.log('[Auth]', event);
+    if (session?.user) {
+      const profile = await carregarProfile(session.user.id);
+      atualizarUIUsuario(session.user, profile);
+      if (event === 'SIGNED_IN') {
+        fecharAuth();
+        mostrarToast('✓ Bem-vindo!', 'success');
+      }
+    } else {
+      atualizarUIUsuario(null, null);
+    }
+  });
+
+  (async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const profile = await carregarProfile(session.user.id);
+      atualizarUIUsuario(session.user, profile);
+    }
+  })();
+
+  $('btn-logout').addEventListener('click', fazerLogout);
+
+  /* =========================================================
+     FORMULÁRIOS DE AUTH
+     ========================================================= */
+  $('form-login').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = $('btn-login-submit');
+    const email = $('login-email').value.trim();
+    const senha = $('login-senha').value;
+
+    if (!isValidEmail(email)) { mostrarToast('E-mail inválido', 'error'); return; }
+    if (senha.length < 6) { mostrarToast('Senha muito curta', 'error'); return; }
+
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Entrando...';
+
+    try {
+      await fazerLogin(email, senha);
+    } catch (err) {
+      console.error(err);
+      const msg = err.message === 'Invalid login credentials' ? 'E-mail ou senha incorretos' : err.message;
+      mostrarToast(msg, 'error');
+      btn.disabled = false;
+      btn.textContent = textoOriginal;
+    }
+  });
+
+  $('form-signup').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = $('btn-signup-submit');
+    const nome = $('signup-nome').value.trim();
+    const email = $('signup-email').value.trim();
+    const senha = $('signup-senha').value;
+    const telefone = $('signup-telefone').value.trim();
+
+    if (nome.length < 3) { mostrarToast('Informe seu nome completo', 'error'); return; }
+    if (!isValidEmail(email)) { mostrarToast('E-mail inválido', 'error'); return; }
+    if (senha.length < 6) { mostrarToast('Senha deve ter pelo menos 6 caracteres', 'error'); return; }
+
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Criando conta...';
+
+    try {
+      const data = await fazerCadastro(nome, email, senha, telefone);
+      if (!data.session) {
+        mostrarToast('Verifique seu e-mail para confirmar', 'success');
+        fecharAuth();
+      }
+    } catch (err) {
+      console.error(err);
+      let msg = err.message;
+      if (msg.includes('already registered')) msg = 'E-mail já cadastrado';
+      else if (msg.includes('Password')) msg = 'Senha muito fraca';
+      mostrarToast(msg, 'error');
+      btn.disabled = false;
+      btn.textContent = textoOriginal;
+    }
+  });
+
+  /* =========================================================
      GEOCODING
      ========================================================= */
   async function geocodificarReverso(lat, lng) {
     try {
-      const r = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-        { headers: { 'Accept-Language': 'pt-BR' } }
-      );
-      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, { headers: { 'Accept-Language': 'pt-BR' } });
+      if (!r.ok) throw new Error('HTTP');
       const j = await r.json();
-      if (j?.display_name) {
-        return j.display_name.split(',').slice(0, 2).join(',').trim();
-      }
-    } catch (_) { /* silent */ }
+      if (j?.display_name) return j.display_name.split(',').slice(0, 2).join(',').trim();
+    } catch (_) {}
     return 'Local selecionado';
   }
 
@@ -681,10 +755,9 @@
       });
       return;
     }
-    const isSecure = location.protocol === 'https:' ||
-      ['localhost', '127.0.0.1'].includes(location.hostname);
+    const isSecure = location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname);
     if (!isSecure) {
-      mostrarBanner('⚠ Use HTTPS ou localhost para GPS', 'erro', 'Padrão', () => {
+      mostrarBanner('⚠ Use HTTPS para GPS', 'erro', 'Padrão', () => {
         definirPickup(-23.5615, -46.6560, 'Av. Paulista');
         esconderBanner();
       });
@@ -694,27 +767,20 @@
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         await definirPickup(pos.coords.latitude, pos.coords.longitude, null, true);
-        mostrarBanner('📍 Você está aqui — precisão alta', 'sucesso');
+        mostrarBanner('📍 Você está aqui', 'sucesso');
         setTimeout(esconderBanner, 2500);
       },
       (err) => {
-        const msg = err.code === 1
-          ? 'Permissão negada. Ative o GPS.'
-          : 'GPS indisponível';
+        const msg = err.code === 1 ? 'Permissão negada. Ative o GPS.' : 'GPS indisponível';
         mostrarBanner(msg, 'erro', 'Tentar', () => obterLocalizacaoReal());
-        if (!state.pickup) {
-          definirPickup(-23.5615, -46.6560, 'Av. Paulista, 1578 (padrão)');
-        }
+        if (!state.pickup) definirPickup(-23.5615, -46.6560, 'Av. Paulista, 1578 (padrão)');
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
     );
   }
 
   $('btn-localizar').addEventListener('click', () => {
-    if (!navigator.geolocation) {
-      obterLocalizacaoReal();
-      return;
-    }
+    if (!navigator.geolocation) { obterLocalizacaoReal(); return; }
     navigator.geolocation.getCurrentPosition(
       async (p) => {
         await definirPickup(p.coords.latitude, p.coords.longitude, null, true);
@@ -731,32 +797,23 @@
      BUSCA DE DESTINO
      ========================================================= */
   let resAtuais = [];
-
   const buscarDestino = debounce(async (q) => {
     if (state.buscaAbort) state.buscaAbort.abort();
     const ac = new AbortController();
     state.buscaAbort = ac;
     try {
-      const r = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5&countrycodes=br&addressdetails=1`,
-        { signal: ac.signal, headers: { 'Accept-Language': 'pt-BR' } }
-      );
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5&countrycodes=br&addressdetails=1`, { signal: ac.signal, headers: { 'Accept-Language': 'pt-BR' } });
       if (!r.ok) throw new Error('HTTP');
       resAtuais = await r.json();
       renderSug(resAtuais);
     } catch (e) {
-      if (e.name !== 'AbortError') {
-        $('sugestoes').innerHTML = '<div class="p-3 text-zinc-400 text-[13px]">Erro ao buscar. Tente de novo.</div>';
-      }
+      if (e.name !== 'AbortError') $('sugestoes').innerHTML = '<div class="p-3 text-zinc-400 text-[13px]">Erro ao buscar.</div>';
     }
   }, 400);
 
   $('destino-input').addEventListener('input', () => {
     const q = $('destino-input').value.trim();
-    if (q.length < 3) {
-      $('sugestoes').innerHTML = '';
-      return;
-    }
+    if (q.length < 3) { $('sugestoes').innerHTML = ''; return; }
     $('sugestoes').innerHTML = '<div class="p-3 text-zinc-400 text-[13px]">Buscando...</div>';
     buscarDestino(q);
   });
@@ -769,7 +826,7 @@
     $('sugestoes').innerHTML = lista.map((it, i) => {
       const p = it.display_name.split(',');
       return `<div class="sugestao flex gap-3 p-3 hover:bg-zinc-100 rounded-2xl cursor-pointer transition" data-i="${i}" role="option" tabindex="0">
-        <div class="w-9 h-9 rounded-full bg-zinc-100 flex items-center justify-center" aria-hidden="true">📍</div>
+        <div class="w-9 h-9 rounded-full bg-zinc-100 flex items-center justify-center">📍</div>
         <div class="min-w-0 flex-1">
           <div class="font-bold text-[13px] truncate">${p[0]}</div>
           <div class="text-[11px] text-zinc-500 truncate">${p.slice(1, 3).join(',')}</div>
@@ -790,24 +847,15 @@
      FAVORITOS
      ========================================================= */
   let favoritos = [];
-  try {
-    favoritos = JSON.parse(localStorage.getItem(STORAGE.FAV) || '[]');
-    if (!Array.isArray(favoritos)) favoritos = [];
-  } catch (_) {
-    favoritos = [];
-  }
+  try { favoritos = JSON.parse(localStorage.getItem(STORAGE.FAV) || '[]'); if (!Array.isArray(favoritos)) favoritos = []; } catch (_) { favoritos = []; }
 
-  function salvarFavoritosLS() {
-    try {
-      localStorage.setItem(STORAGE.FAV, JSON.stringify(favoritos));
-    } catch (_) { /* quota */ }
-  }
+  function salvarFavoritosLS() { try { localStorage.setItem(STORAGE.FAV, JSON.stringify(favoritos)); } catch (_) {} }
 
   function renderFavoritos() {
     const el = $('favoritos-lista');
     if (!favoritos.length) {
       el.innerHTML = `<div class="col-span-2 text-center py-6 px-4 rounded-2xl border-2 border-dashed border-zinc-200">
-        <div class="text-2xl mb-1" aria-hidden="true">📌</div>
+        <div class="text-2xl mb-1">📌</div>
         <div class="text-[12px] text-zinc-500 leading-snug">Salve seus destinos favoritos<br>para acessar com um toque</div>
       </div>`;
       return;
@@ -815,14 +863,13 @@
     el.innerHTML = favoritos.map(f => `
       <div class="relative group">
         <button type="button" class="fav-card w-full bg-white border border-zinc-200 rounded-2xl px-4 py-3 text-left hover:border-black hover:shadow-lg" data-id="${f.id}">
-          <div class="text-[18px]" aria-hidden="true">${f.icone}</div>
+          <div class="text-[18px]">${f.icone}</div>
           <div class="sora font-bold text-[13px] mt-1 truncate pr-5">${f.nome}</div>
           <div class="text-[11px] text-zinc-500 truncate">${f.endereco || 'Toque para ir'}</div>
         </button>
-        <button type="button" class="fav-del absolute top-2 right-2 w-6 h-6 rounded-full bg-zinc-100 hover:bg-red-100 hover:text-red-600 text-zinc-500 text-[11px] flex items-center justify-center transition" data-del="${f.id}" title="Remover" aria-label="Remover favorito">✕</button>
+        <button type="button" class="fav-del absolute top-2 right-2 w-6 h-6 rounded-full bg-zinc-100 hover:bg-red-100 hover:text-red-600 text-zinc-500 text-[11px] flex items-center justify-center transition" data-del="${f.id}" title="Remover">✕</button>
       </div>
     `).join('');
-
     el.querySelectorAll('.fav-card').forEach(btn => {
       btn.addEventListener('click', () => {
         const f = favoritos.find(x => x.id === btn.dataset.id);
@@ -840,7 +887,6 @@
     });
   }
 
-  /* Modal favorito */
   const modalFav = $('modal-fav');
   let favLatLng = null;
 
@@ -857,7 +903,6 @@
     $('btn-salvar-fav').className = 'mt-6 w-full bg-zinc-200 text-zinc-400 rounded-2xl py-4 font-bold sora transition';
     setTimeout(() => $('fav-nome').focus(), 200);
   }
-
   function fecharModalFav() {
     modalFav.classList.add('hidden');
     modalFav.classList.remove('flex');
@@ -880,15 +925,12 @@
     const ac = new AbortController();
     state.favAbort = ac;
     try {
-      const r = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5&countrycodes=br`,
-        { signal: ac.signal, headers: { 'Accept-Language': 'pt-BR' } }
-      );
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5&countrycodes=br`, { signal: ac.signal, headers: { 'Accept-Language': 'pt-BR' } });
       const favRes = await r.json();
       $('fav-sugestoes').innerHTML = favRes.map((it, i) => {
         const p = it.display_name.split(',');
-        return `<div class="fav-sug flex gap-3 p-2.5 hover:bg-zinc-100 rounded-xl cursor-pointer transition" data-i="${i}" role="option">
-          <div class="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-[13px]" aria-hidden="true">📍</div>
+        return `<div class="fav-sug flex gap-3 p-2.5 hover:bg-zinc-100 rounded-xl cursor-pointer transition" data-i="${i}">
+          <div class="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-[13px]">📍</div>
           <div class="min-w-0 flex-1">
             <div class="font-bold text-[12px] truncate">${p[0]}</div>
             <div class="text-[10px] text-zinc-500 truncate">${p.slice(1, 3).join(',')}</div>
@@ -918,10 +960,7 @@
     favLatLng = null;
     $('fav-selecionado').classList.add('hidden');
     validarFav();
-    if (q.length < 3) {
-      $('fav-sugestoes').innerHTML = '';
-      return;
-    }
+    if (q.length < 3) { $('fav-sugestoes').innerHTML = ''; return; }
     buscarFav(q);
   });
 
@@ -941,14 +980,7 @@
     const icoBtn = document.querySelector('#fav-icones .ico-btn.sel');
     const icone = icoBtn ? icoBtn.dataset.ico : '⭐';
     const endereco = $('fav-endereco').value.trim();
-    favoritos.push({
-      id: 'fav_' + Date.now(),
-      nome,
-      lat: favLatLng.lat,
-      lng: favLatLng.lng,
-      icone,
-      endereco
-    });
+    favoritos.push({ id: 'fav_' + Date.now(), nome, lat: favLatLng.lat, lng: favLatLng.lng, icone, endereco });
     salvarFavoritosLS();
     renderFavoritos();
     fecharModalFav();
@@ -959,16 +991,13 @@
      DESTINO → ROTA → CONFIRMAÇÃO
      ========================================================= */
   async function escolherDestino(lat, lng, nome) {
-    if (!state.pickup) {
-      mostrarToast('Aguarde o GPS localizar você', 'error');
-      return;
-    }
+    if (!state.pickup) { mostrarToast('Aguarde o GPS', 'error'); return; }
     state.destino = { lat, lng, nome };
     $('sugestoes').innerHTML = '';
     $('destino-input').value = nome;
     if (markerDestino) map.removeLayer(markerDestino);
     markerDestino = L.marker([lat, lng], { icon: iconeDestino }).addTo(map);
-    $('lista-opcoes').innerHTML = '<div class="p-8 text-center text-zinc-400">Calculando rota premium...</div>';
+    $('lista-opcoes').innerHTML = '<div class="p-8 text-center text-zinc-400">Calculando rota...</div>';
     $('rota-resumo').innerHTML = '';
     $('btn-confirmar').disabled = true;
     mostrarPasso('opcoes');
@@ -978,17 +1007,11 @@
 
     if (linhaRota) map.removeLayer(linhaRota);
     if (linhaRotaGlow) map.removeLayer(linhaRotaGlow);
-    linhaRota = L.polyline(rota.coords, {
-      color: '#0A0A0A',
-      weight: 5,
-      opacity: 0.9,
-      lineJoin: 'round',
-      dashArray: rota.aproximada ? '8,12' : null
-    }).addTo(map);
+    linhaRota = L.polyline(rota.coords, { color: '#0A0A0A', weight: 5, opacity: 0.9, lineJoin: 'round', dashArray: rota.aproximada ? '8,12' : null }).addTo(map);
     linhaRotaGlow = L.polyline(rota.coords, { color: '#FF6A00', weight: 2, opacity: 0.55 }).addTo(map);
     map.fitBounds(linhaRota.getBounds(), mapPad);
 
-    $('rota-resumo').innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true"></span>
+    $('rota-resumo').innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
       <span><b class="text-black">${Math.round(rota.duracao)} min</b> • ${rota.distancia.toFixed(1)} km</span>
       <span class="ml-auto truncate max-w-[140px]">${nome}</span>`;
     renderOpcaoUnica();
@@ -996,10 +1019,7 @@
 
   async function calcularRota(a, b) {
     try {
-      const r = await fetch(
-        `https://router.project-osrm.org/route/v1/driving/${a.lng},${a.lat};${b.lng},${b.lat}?overview=full&geometries=geojson`,
-        { signal: AbortSignal.timeout(8000) }
-      );
+      const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${a.lng},${a.lat};${b.lng},${b.lat}?overview=full&geometries=geojson`, { signal: AbortSignal.timeout(8000) });
       const j = await r.json();
       if (j.code !== 'Ok' || !j.routes?.[0]) throw new Error('OSRM');
       return {
@@ -1010,12 +1030,7 @@
       };
     } catch (_) {
       const d = haversine(a, b) * 1.25;
-      return {
-        coords: [[a.lat, a.lng], [b.lat, b.lng]],
-        distancia: d,
-        duracao: (d / 28) * 60,
-        aproximada: true
-      };
+      return { coords: [[a.lat, a.lng], [b.lat, b.lng]], distancia: d, duracao: (d / 28) * 60, aproximada: true };
     }
   }
 
@@ -1026,8 +1041,8 @@
     state.opcao = CATEGORIA_MOTO;
 
     $('lista-opcoes').innerHTML = `
-      <div class="op-card sel w-full flex items-center gap-4 p-5 rounded-[20px] border-2 border-black bg-black text-white" role="radio" aria-checked="true">
-        <div class="w-14 h-14 rounded-2xl bg-[#FF6A00] text-white flex items-center justify-center font-bold text-[22px]" aria-hidden="true">🏍</div>
+      <div class="op-card sel w-full flex items-center gap-4 p-5 rounded-[20px] border-2 border-black bg-black text-white">
+        <div class="w-14 h-14 rounded-2xl bg-[#FF6A00] text-white flex items-center justify-center font-bold text-[22px]">🏍</div>
         <div class="flex-1 min-w-0">
           <div class="sora font-extrabold text-[16px]">${CATEGORIA_MOTO.nome}</div>
           <div class="text-[12px] text-white/60 mt-0.5">${CATEGORIA_MOTO.desc}</div>
@@ -1084,20 +1099,14 @@
 
     const ang = Math.random() * Math.PI * 2;
     const dist = 0.006;
-    state.motoPos = {
-      lat: state.pickup.lat + Math.cos(ang) * dist,
-      lng: state.pickup.lng + Math.sin(ang) * dist * 1.2
-    };
+    state.motoPos = { lat: state.pickup.lat + Math.cos(ang) * dist, lng: state.pickup.lng + Math.sin(ang) * dist * 1.2 };
     state.motoAlvo = { lat: state.pickup.lat, lng: state.pickup.lng };
     state.motoDir = bearing(state.motoPos, state.motoAlvo);
     state.motoAtivo = true;
 
     if (markerMoto) map.removeLayer(markerMoto);
     const etaIni = Math.max(2, Math.round(haversine(state.motoPos, state.motoAlvo) * 60 / 25));
-    markerMoto = L.marker([state.motoPos.lat, state.motoPos.lng], {
-      icon: criarIconeMoto(state.motoDir, etaIni),
-      zIndexOffset: 1000
-    }).addTo(map);
+    markerMoto = L.marker([state.motoPos.lat, state.motoPos.lng], { icon: criarIconeMoto(state.motoDir, etaIni), zIndexOffset: 1000 }).addTo(map);
 
     const g = L.featureGroup([markerOrigem, markerMoto]);
     map.fitBounds(g.getBounds().pad(0.7), mapPad);
@@ -1106,18 +1115,14 @@
     if (state.motoTimer) clearInterval(state.motoTimer);
     state.motoTimer = setInterval(() => {
       if (!state.motoAtivo) return;
-      const a = state.motoPos;
-      const b = state.motoAlvo;
+      const a = state.motoPos, b = state.motoAlvo;
       const nl = a.lat + (b.lat - a.lat) * 0.25;
       const nl2 = a.lng + (b.lng - a.lng) * 0.25;
       state.motoDir = bearing(a, { lat: nl, lng: nl2 });
       state.motoPos = { lat: nl, lng: nl2 };
       const d = haversine(state.motoPos, b);
       const eta = Math.max(1, Math.round(d * 60 / 25));
-      if (markerMoto) {
-        markerMoto.setLatLng([nl, nl2]);
-        markerMoto.setIcon(criarIconeMoto(state.motoDir, eta));
-      }
+      if (markerMoto) { markerMoto.setLatLng([nl, nl2]); markerMoto.setIcon(criarIconeMoto(state.motoDir, eta)); }
       $('dr-eta').textContent = eta + ' min';
       if (d < 0.03) {
         clearInterval(state.motoTimer);
@@ -1154,279 +1159,111 @@
   });
 
   /* =========================================================
-     MODAIS DE CADASTRO
+     MODAL MOTOQUEIRO
      ========================================================= */
-  function setupModal(cfg) {
-    const modal = $(cfg.modalId);
-    let etapa = 1;
-    const checks = {};
+  const modalMoto = $('modal-moto');
+  let etapaMoto = 1;
+  const checksMoto = {};
 
-    function updateProgress(n) {
-      const bars = modal.querySelectorAll('.bar');
-      bars.forEach((b, i) => {
-        b.className = 'bar flex-1 rounded-full ' + (i < Math.min(n, cfg.totalEtapas) ? 'bg-[#FF6A00]' : 'bg-zinc-200');
-      });
-    }
-
-    function go(n) {
-      etapa = n;
-      modal.querySelectorAll('.form-step').forEach(s => {
-        s.classList.toggle('hidden', +s.dataset.step !== n);
-      });
-      $(cfg.tituloId).textContent = cfg.titulos[n - 1] || 'Cadastro';
-      updateProgress(n);
-
-      const bv = $(cfg.btnVoltarId);
-      const bp = $(cfg.btnProximoId);
-      bv.style.visibility = (n === 1 || n === cfg.totalEtapas + 1) ? 'hidden' : 'visible';
-      if (n === cfg.totalEtapas) {
-        bp.textContent = 'Enviar cadastro';
-      } else if (n === cfg.totalEtapas + 1) {
-        bp.textContent = 'Fechar';
-      } else {
-        bp.textContent = 'Continuar →';
-      }
-    }
-
-    // Checkboxes
-    modal.querySelectorAll('.check-item').forEach(c => {
-      c.addEventListener('click', () => {
-        const key = c.dataset.check;
-        const on = !checks[key];
-        checks[key] = on;
-        c.classList.toggle('!border-black', on);
-        const b = c.querySelector('.box');
-        b.classList.toggle('!bg-black', on);
-        b.classList.toggle('!text-white', on);
-        b.innerHTML = on ? '✓' : '';
-      });
+  function goMoto(n) {
+    etapaMoto = n;
+    modalMoto.querySelectorAll('.form-step').forEach(s => s.classList.toggle('hidden', +s.dataset.step !== n));
+    $('titulo-moto').textContent = ['Cadastro de Motoqueiro','Dados da sua moto','Envio de documentos','Confirmações finais','Cadastro enviado'][n-1] || 'Cadastro';
+    modalMoto.querySelectorAll('.bar').forEach((b, i) => {
+      b.className = 'bar flex-1 rounded-full ' + (i < Math.min(n, 4) ? 'bg-[#FF6A00]' : 'bg-zinc-200');
     });
+    const bv = $('btn-moto-voltar'), bp = $('btn-moto-proximo');
+    bv.style.visibility = (n === 1 || n === 5) ? 'hidden' : 'visible';
+    bp.textContent = n === 4 ? 'Enviar cadastro' : n === 5 ? 'Fechar' : 'Continuar →';
+    modalMoto.scrollTop = 0;
+  }
 
-    // Uploads (moto)
-    modal.querySelectorAll('.upload').forEach(u => {
-      u.addEventListener('click', () => {
-        u.classList.add('!border-emerald-500', '!bg-emerald-50');
-        u.dataset.done = '1';
-      });
+  modalMoto.querySelectorAll('.check-item').forEach(c => {
+    c.addEventListener('click', () => {
+      const key = c.dataset.check;
+      const on = !checksMoto[key];
+      checksMoto[key] = on;
+      c.classList.toggle('!border-black', on);
+      const b = c.querySelector('.box');
+      b.classList.toggle('!bg-black', on);
+      b.classList.toggle('!text-white', on);
+      b.innerHTML = on ? '✓' : '';
     });
-
-    return {
-      abrir() {
-        Object.keys(checks).forEach(k => delete checks[k]);
-        modal.querySelectorAll('.check-item').forEach(c => {
-          c.classList.remove('!border-black');
-          const b = c.querySelector('.box');
-          b.classList.remove('!bg-black', '!text-white');
-          b.innerHTML = '';
-        });
-        modal.querySelectorAll('.upload').forEach(u => {
-          u.classList.remove('!border-emerald-500', '!bg-emerald-50');
-          delete u.dataset.done;
-        });
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        go(1);
-      },
-      fechar() {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-      },
-      prox() {
-        if (etapa === cfg.totalEtapas + 1) {
-          modal.classList.add('hidden');
-          modal.classList.remove('flex');
-          return;
-        }
-        if (cfg.validate && !cfg.validate(etapa, checks)) return;
-        if (etapa === cfg.totalEtapas) {
-          if (cfg.onSucesso) cfg.onSucesso();
-          go(cfg.totalEtapas + 1);
-          return;
-        }
-        go(etapa + 1);
-      },
-      voltar() {
-        if (etapa > 1) go(etapa - 1);
-      },
-      getChecks: () => checks
-    };
-  }
-
-  // Validação passageiro
-  function validarUser(etapa, checks) {
-    if (etapa === 1) {
-      const nome = $('user-nome-input').value.trim();
-      const email = $('user-email').value.trim();
-      const nasc = $('user-nasc').value;
-      if (nome.length < 3) {
-        mostrarToast('Informe seu nome completo', 'error');
-        return false;
-      }
-      if (!isValidEmail(email)) {
-        mostrarToast('E-mail inválido', 'error');
-        return false;
-      }
-      if (!isAdult(nasc)) {
-        mostrarToast('É necessário ter 18 anos ou mais', 'error');
-        return false;
-      }
-    }
-    if (etapa === 2) {
-      const cel = $('user-cel').value.replace(/\D/g, '');
-      if (cel.length < 10) {
-        mostrarToast('Informe um celular válido', 'error');
-        return false;
-      }
-    }
-    if (etapa === 3) {
-      if (!checks.maior || !checks.termos) {
-        mostrarToast('Aceite as confirmações para continuar', 'error');
-        return false;
-      }
-    }
-    return true;
-  }
-
-  // Validação motoqueiro (leve)
-  function validarMoto(etapa, checks) {
-    if (etapa === 1) {
-      if (!$('moto-nome').value.trim()) {
-        mostrarToast('Informe o nome completo', 'error');
-        return false;
-      }
-    }
-    if (etapa === 2) {
-      if (!$('moto-marca').value || !$('moto-modelo').value.trim()) {
-        mostrarToast('Preencha marca e modelo da moto', 'error');
-        return false;
-      }
-    }
-    if (etapa === 3) {
-      const docs = $$('#modal-moto .upload');
-      if (!docs.every(d => d.dataset.done === '1')) {
-        mostrarToast('Marque todos os documentos como enviados', 'error');
-        return false;
-      }
-    }
-    if (etapa === 4) {
-      if (!checks.auth || !checks.capacete) {
-        mostrarToast('Aceite as declarações para continuar', 'error');
-        return false;
-      }
-    }
-    return true;
-  }
-
-  const modalUser = setupModal({
-    modalId: 'modal-user',
-    tituloId: 'titulo-user',
-    btnVoltarId: 'btn-user-voltar',
-    btnProximoId: 'btn-user-proximo',
-    totalEtapas: 3,
-    titulos: ['Criar conta', 'Contato e endereço', 'Confirmações', 'Conta criada'],
-    validate: validarUser,
-    onSucesso() {
-      const nome = $('user-nome-input').value.trim() || 'Passageiro';
-      state.user = {
-        nome,
-        email: $('user-email').value.trim(),
-        cpf: $('user-cpf').value.trim()
-      };
-      try {
-        localStorage.setItem(STORAGE.USER, JSON.stringify(state.user));
-      } catch (_) {}
-      $('user-mini-av').textContent = initials(nome);
-      $('user-nome').textContent = nome.split(' ')[0];
-      $('user-logado').classList.remove('hidden');
-      mostrarToast('✓ Conta criada!', 'success');
-    }
   });
 
-  const modalMoto = setupModal({
-    modalId: 'modal-moto',
-    tituloId: 'titulo-moto',
-    btnVoltarId: 'btn-moto-voltar',
-    btnProximoId: 'btn-moto-proximo',
-    totalEtapas: 4,
-    titulos: ['Cadastro de Motoqueiro', 'Dados da sua moto', 'Envio de documentos', 'Confirmações finais', 'Cadastro enviado'],
-    validate: validarMoto,
-    onSucesso() {
+  modalMoto.querySelectorAll('.upload').forEach(u => {
+    u.addEventListener('click', () => {
+      u.classList.add('!border-emerald-500', '!bg-emerald-50');
+      u.dataset.done = '1';
+    });
+  });
+
+  function abrirMoto() {
+    Object.keys(checksMoto).forEach(k => delete checksMoto[k]);
+    modalMoto.querySelectorAll('.check-item').forEach(c => {
+      c.classList.remove('!border-black');
+      const b = c.querySelector('.box');
+      b.classList.remove('!bg-black', '!text-white');
+      b.innerHTML = '';
+    });
+    modalMoto.querySelectorAll('.upload').forEach(u => {
+      u.classList.remove('!border-emerald-500', '!bg-emerald-50');
+      delete u.dataset.done;
+    });
+    modalMoto.classList.remove('hidden');
+    modalMoto.classList.add('flex');
+    goMoto(1);
+  }
+  function fecharMoto() {
+    modalMoto.classList.add('hidden');
+    modalMoto.classList.remove('flex');
+  }
+
+  $('btn-abrir-cadastro-moto').addEventListener('click', abrirMoto);
+  $('btn-fechar-moto').addEventListener('click', fecharMoto);
+  $('btn-moto-voltar').addEventListener('click', () => { if (etapaMoto > 1) goMoto(etapaMoto - 1); });
+  $('btn-moto-proximo').addEventListener('click', () => {
+    if (etapaMoto === 5) { fecharMoto(); return; }
+    if (etapaMoto === 4) {
+      if (!checksMoto.auth || !checksMoto.capacete) { mostrarToast('Aceite as declarações', 'error'); return; }
       $('protocolo-moto').textContent = 'MJ-' + String(Math.floor(100000 + Math.random() * 900000));
-      mostrarToast('Cadastro enviado com sucesso!', 'success');
+      mostrarToast('Cadastro enviado!', 'success');
+      goMoto(5);
+      return;
     }
+    if (etapaMoto === 2 && (!$('moto-marca').value || !$('moto-modelo').value.trim())) {
+      mostrarToast('Preencha marca e modelo', 'error'); return;
+    }
+    if (etapaMoto === 3) {
+      const docs = modalMoto.querySelectorAll('.upload');
+      if (!Array.from(docs).every(d => d.dataset.done === '1')) {
+        mostrarToast('Marque todos os documentos', 'error'); return;
+      }
+    }
+    goMoto(etapaMoto + 1);
   });
-
-  $('btn-abrir-cadastro-user').addEventListener('click', modalUser.abrir);
-  $('btn-fechar-user').addEventListener('click', modalUser.fechar);
-  $('btn-user-proximo').addEventListener('click', modalUser.prox);
-  $('btn-user-voltar').addEventListener('click', modalUser.voltar);
-
-  $('btn-logout').addEventListener('click', () => {
-    state.user = null;
-    try { localStorage.removeItem(STORAGE.USER); } catch (_) {}
-    $('user-logado').classList.add('hidden');
-    mostrarToast('Sessão encerrada');
-  });
-
-  $('btn-abrir-cadastro-moto').addEventListener('click', modalMoto.abrir);
-  $('btn-fechar-moto').addEventListener('click', modalMoto.fechar);
-  $('btn-moto-proximo').addEventListener('click', modalMoto.prox);
-  $('btn-moto-voltar').addEventListener('click', modalMoto.voltar);
 
   // Máscaras
-  $('user-cpf').addEventListener('input', e => { e.target.value = maskCPF(e.target.value); });
-  $('user-cep').addEventListener('input', e => { e.target.value = maskCEP(e.target.value); });
-  $('user-cel').addEventListener('input', e => { e.target.value = maskPhone(e.target.value); });
-  if ($('moto-cpf')) $('moto-cpf').addEventListener('input', e => { e.target.value = maskCPF(e.target.value); });
-  if ($('moto-cep')) $('moto-cep').addEventListener('input', e => { e.target.value = maskCEP(e.target.value); });
-  if ($('moto-whats')) $('moto-whats').addEventListener('input', e => { e.target.value = maskPhone(e.target.value); });
-  if ($('moto-placa')) $('moto-placa').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7); });
-
-  // max date = hoje - 18 anos
-  const maxNasc = new Date();
-  maxNasc.setFullYear(maxNasc.getFullYear() - 18);
-  $('user-nasc').max = maxNasc.toISOString().slice(0, 10);
-  if ($('moto-nasc')) $('moto-nasc').max = maxNasc.toISOString().slice(0, 10);
-
-  // ViaCEP
-  $('user-cep').addEventListener('blur', async () => {
-    const cep = $('user-cep').value.replace(/\D/g, '');
-    if (cep.length !== 8) return;
-    try {
-      const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-      const j = await r.json();
-      if (!j.erro) {
-        $('user-end').value = `${j.logradouro}, ${j.bairro} - ${j.localidade}/${j.uf}`;
-      }
-    } catch (_) {}
-  });
+  $('user-cpf') && $('user-cpf').addEventListener('input', e => { e.target.value = maskCPF(e.target.value); });
+  $('moto-cpf') && $('moto-cpf').addEventListener('input', e => { e.target.value = maskCPF(e.target.value); });
+  $('moto-cep') && $('moto-cep').addEventListener('input', e => { e.target.value = maskCEP(e.target.value); });
+  $('moto-whats') && $('moto-whats').addEventListener('input', e => { e.target.value = maskPhone(e.target.value); });
+  $('moto-placa') && $('moto-placa').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7); });
 
   // Escape fecha modais
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     if (!$('modal-fav').classList.contains('hidden')) fecharModalFav();
-    else if (!$('modal-user').classList.contains('hidden')) modalUser.fechar();
-    else if (!$('modal-moto').classList.contains('hidden')) modalMoto.fechar();
+    else if (!modalAuth.classList.contains('hidden')) fecharAuth();
+    else if (!modalMoto.classList.contains('hidden')) fecharMoto();
   });
 
   /* =========================================================
      INICIALIZAÇÃO
      ========================================================= */
-  // Restaurar usuário
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE.USER) || 'null');
-    if (saved?.nome) {
-      state.user = saved;
-      $('user-mini-av').textContent = initials(saved.nome);
-      $('user-nome').textContent = saved.nome.split(' ')[0];
-      $('user-logado').classList.remove('hidden');
-    }
-  } catch (_) {}
-
   renderFavoritos();
   obterLocalizacaoReal();
 
-  // Resize: atualizar padding do mapa
   window.addEventListener('resize', debounce(() => {
     const desktop = window.innerWidth >= 768;
     Object.assign(mapPad, desktop
