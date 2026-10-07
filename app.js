@@ -3,7 +3,7 @@
    ========================================================= */
 
 /* =========================================================
-   1. SUPABASE — CONFIGURAÇÃO
+   1. SUPABASE — CONFIGURACAO
    ========================================================= */
 const SUPABASE_URL = 'https://jskwwxhnvcrsamcvwgcv.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impza3d3eGhudmNyc2FtY3Z3Z2N2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzNDM5MjksImV4cCI6MjEwNjkxOTkyOX0.iXvIcVZBDWlOrRYDkMgj0e5agWX6T2D4Y9yjc2ZDldY';
@@ -13,7 +13,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 
 /* =========================================================
-   2. UTILITÁRIOS
+   2. UTILITARIOS
    ========================================================= */
 const $ = (id) => document.getElementById(id);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -30,10 +30,10 @@ function haversine(a, b) {
 }
 
 function bearing(a, b) {
-  const φ1 = a.lat * Math.PI / 180, φ2 = b.lat * Math.PI / 180;
-  const Δλ = (b.lng - a.lng) * Math.PI / 180;
-  const y = Math.sin(Δλ) * Math.cos(φ2);
-  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  const p1 = a.lat * Math.PI / 180, p2 = b.lat * Math.PI / 180;
+  const dL = (b.lng - a.lng) * Math.PI / 180;
+  const y = Math.sin(dL) * Math.cos(p2);
+  const x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dL);
   return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
 }
 
@@ -88,7 +88,7 @@ function mostrarBanner(txt, tipo = 'info', acao = null, cb = null) {
 function esconderBanner() { $('loc-banner').classList.add('hidden'); }
 
 /* =========================================================
-   4. VIÉS GEOGRÁFICO (busca com raio)
+   4. VIES GEOGRAFICO (busca com raio)
    ========================================================= */
 function montarViewbox(raioGraus = 0.15) {
   if (!state.pickup) return '';
@@ -103,7 +103,7 @@ function montarViewbox(raioGraus = 0.15) {
    ========================================================= */
 const map = L.map('map', { zoomControl: false, attributionControl: true }).setView([-15.7939, -47.8828], 4);
 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-  maxZoom: 19, attribution: '© Esri'
+  maxZoom: 19, attribution: 'Esri'
 }).addTo(map);
 
 const isDesktop = window.innerWidth >= 768;
@@ -162,11 +162,11 @@ const CATEGORIA_MOTO = {
 };
 
 const MOTOQUEIROS = [
-  { nome: 'João Almeida', moto: 'Honda CG 160 Titan', detalhe: 'Vermelha · 2022 · 160cc', placa: 'ABC1D23' },
-  { nome: 'Maria Souza', moto: 'Yamaha Factor 150', detalhe: 'Azul · 2023 · 150cc', placa: 'XYZ4E56' },
-  { nome: 'Carlos Pereira', moto: 'Honda XRE 300', detalhe: 'Preta · 2024 · 300cc', placa: 'QWE7R89' },
-  { nome: 'Ana Lima', moto: 'Yamaha Fazer 250', detalhe: 'Cinza · 2023 · 250cc', placa: 'JKL0M12' },
-  { nome: 'Rafael Costa', moto: 'Royal Enfield Hunter', detalhe: 'Verde · 2024 · 350cc', placa: 'POI3U45' }
+  { nome: 'Joao Almeida', moto: 'Honda CG 160 Titan', detalhe: 'Vermelha - 2022 - 160cc', placa: 'ABC1D23' },
+  { nome: 'Maria Souza', moto: 'Yamaha Factor 150', detalhe: 'Azul - 2023 - 150cc', placa: 'XYZ4E56' },
+  { nome: 'Carlos Pereira', moto: 'Honda XRE 300', detalhe: 'Preta - 2024 - 300cc', placa: 'QWE7R89' },
+  { nome: 'Ana Lima', moto: 'Yamaha Fazer 250', detalhe: 'Cinza - 2023 - 250cc', placa: 'JKL0M12' },
+  { nome: 'Rafael Costa', moto: 'Royal Enfield Hunter', detalhe: 'Verde - 2024 - 350cc', placa: 'POI3U45' }
 ];
 
 function mostrarPasso(n) {
@@ -185,7 +185,7 @@ async function buscarMotoqueirosProximos(lat, lng, raioKm = 5, limite = 10) {
     });
     if (error) throw error;
     return data || [];
-  } catch (e) { console.warn('[MotoJá] buscar motoqueiros:', e.message); return []; }
+  } catch (e) { console.warn('[MotoJa] buscar motoqueiros:', e.message); return []; }
 }
 
 async function atualizarMinhaPosicao(lat, lng, disponivel = true) {
@@ -195,7 +195,7 @@ async function atualizarMinhaPosicao(lat, lng, disponivel = true) {
     });
     if (error) throw error;
     return true;
-  } catch (e) { console.warn('[MotoJá] atualizar posição:', e.message); return false; }
+  } catch (e) { console.warn('[MotoJa] atualizar posicao:', e.message); return false; }
 }
 
 async function criarCorridaBackend(origem, destino, distancia, duracao, preco) {
@@ -219,7 +219,7 @@ async function buscarMeuCadastroMotoqueiro() {
 }
 
 async function salvarCadastroMotoqueiro(dados) {
-  if (!state.user) throw new Error('Faça login primeiro');
+  if (!state.user) throw new Error('Faca login primeiro');
   const { data, error } = await supabase
     .from('motoqueiros')
     .upsert({
@@ -233,7 +233,7 @@ async function salvarCadastroMotoqueiro(dados) {
 }
 
 async function uploadDocumento(motoqueiroId, tipo, arquivo) {
-  if (!state.user) throw new Error('Faça login primeiro');
+  if (!state.user) throw new Error('Faca login primeiro');
   const ext = (arquivo.name.split('.').pop() || 'jpg').toLowerCase();
   const path = `${state.user.id}/${motoqueiroId}/${tipo}.${ext}`;
   const { error: errUpload } = await supabase.storage
@@ -269,7 +269,7 @@ async function deletarFavoritoDoBackend(id) {
 }
 
 /* =========================================================
-   8. AUTENTICAÇÃO — UI
+   8. AUTENTICACAO - UI
    ========================================================= */
 const modalAuth = $('modal-auth');
 
@@ -303,7 +303,7 @@ $('btn-conta').addEventListener('click', () => {
 });
 
 /* =========================================================
-   9. AUTENTICAÇÃO — FUNÇÕES
+   9. AUTENTICACAO - FUNCOES
    ========================================================= */
 async function fazerLogin(email, senha) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
@@ -321,7 +321,7 @@ async function fazerCadastro(nome, email, senha, telefone) {
 async function fazerLogout() {
   pararGPS();
   await supabase.auth.signOut();
-  mostrarToast('Sessão encerrada');
+  mostrarToast('Sessao encerrada');
 }
 async function carregarProfile(userId) {
   try {
@@ -366,7 +366,7 @@ supabase.auth.onAuthStateChange(async (event, session) => {
   if (session?.user) {
     const profile = await carregarProfile(session.user.id);
     await atualizarUIUsuario(session.user, profile);
-    if (event === 'SIGNED_IN') { fecharAuth(); mostrarToast('✓ Bem-vindo!', 'success'); }
+    if (event === 'SIGNED_IN') { fecharAuth(); mostrarToast('Bem-vindo!', 'success'); }
   } else {
     await atualizarUIUsuario(null, null);
   }
@@ -383,14 +383,14 @@ supabase.auth.onAuthStateChange(async (event, session) => {
 $('btn-logout').addEventListener('click', fazerLogout);
 
 /* =========================================================
-   10. FORMULÁRIOS DE AUTH
+   10. FORMULARIOS DE AUTH
    ========================================================= */
 $('form-login').addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = $('btn-login-submit');
   const email = $('login-email').value.trim();
   const senha = $('login-senha').value;
-  if (!isValidEmail(email)) { mostrarToast('E-mail inválido', 'error'); return; }
+  if (!isValidEmail(email)) { mostrarToast('E-mail invalido', 'error'); return; }
   if (senha.length < 6) { mostrarToast('Senha muito curta', 'error'); return; }
   const txt = btn.textContent; btn.disabled = true; btn.textContent = 'Entrando...';
   try { await fazerLogin(email, senha); }
@@ -408,7 +408,7 @@ $('form-signup').addEventListener('submit', async (e) => {
   const senha = $('signup-senha').value;
   const telefone = $('signup-telefone').value.trim();
   if (nome.length < 3) { mostrarToast('Informe seu nome completo', 'error'); return; }
-  if (!isValidEmail(email)) { mostrarToast('E-mail inválido', 'error'); return; }
+  if (!isValidEmail(email)) { mostrarToast('E-mail invalido', 'error'); return; }
   if (senha.length < 6) { mostrarToast('Senha deve ter pelo menos 6 caracteres', 'error'); return; }
   const txt = btn.textContent; btn.disabled = true; btn.textContent = 'Criando conta...';
   try {
@@ -416,7 +416,7 @@ $('form-signup').addEventListener('submit', async (e) => {
     if (!data.session) { mostrarToast('Verifique seu e-mail para confirmar', 'success'); fecharAuth(); }
   } catch (err) {
     let msg = err.message;
-    if (msg.includes('already registered')) msg = 'E-mail já cadastrado';
+    if (msg.includes('already registered')) msg = 'E-mail ja cadastrado';
     else if (msg.includes('Password')) msg = 'Senha muito fraca';
     mostrarToast(msg, 'error');
     btn.disabled = false; btn.textContent = txt;
@@ -451,30 +451,30 @@ async function definirPickup(lat, lng, nome, real = false) {
 
 function obterLocalizacaoReal() {
   if (!navigator.geolocation) {
-    mostrarBanner('Navegador sem GPS', 'erro', 'Padrão', () => {
+    mostrarBanner('Navegador sem GPS', 'erro', 'Padrao', () => {
       definirPickup(-23.5615, -46.6560, 'Av. Paulista, 1578'); esconderBanner();
     });
     return;
   }
   const isSecure = location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname);
   if (!isSecure) {
-    mostrarBanner('⚠ Use HTTPS para GPS', 'erro', 'Padrão', () => {
+    mostrarBanner('Use HTTPS para GPS', 'erro', 'Padrao', () => {
       definirPickup(-23.5615, -46.6560, 'Av. Paulista'); esconderBanner();
     });
     return;
   }
-  mostrarBanner('Localizando com precisão premium...', 'info');
+  mostrarBanner('Localizando com precisao premium...', 'info');
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
       await definirPickup(pos.coords.latitude, pos.coords.longitude, null, true);
-      mostrarBanner('📍 Você está aqui', 'sucesso');
+      mostrarBanner('📍 Voce esta aqui', 'sucesso');
       setTimeout(esconderBanner, 2500);
       if (state.user) { carregarMotoqueirosNoMapa(); inscreverRealtimeMotoqueiros(); }
     },
     (err) => {
-      const msg = err.code === 1 ? 'Permissão negada. Ative o GPS.' : 'GPS indisponível';
+      const msg = err.code === 1 ? 'Permissao negada. Ative o GPS.' : 'GPS indisponivel';
       mostrarBanner(msg, 'erro', 'Tentar', () => obterLocalizacaoReal());
-      if (!state.pickup) definirPickup(-23.5615, -46.6560, 'Av. Paulista, 1578 (padrão)');
+      if (!state.pickup) definirPickup(-23.5615, -46.6560, 'Av. Paulista, 1578 (padrao)');
     },
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
   );
@@ -493,6 +493,7 @@ $('btn-localizar').addEventListener('click', () => {
     { enableHighAccuracy: true, timeout: 8000 }
   );
 });
+
 /* =========================================================
    12. BUSCA DE DESTINO
    ========================================================= */
@@ -515,13 +516,13 @@ const buscarDestino = debounce(async (q) => {
 $('destino-input').addEventListener('input', () => {
   const q = $('destino-input').value.trim();
   if (q.length < 3) { $('sugestoes').innerHTML = ''; return; }
-  $('sugestoes').innerHTML = '<div class="p-3 text-zinc-400 text-[13px]">Buscando perto de você...</div>';
+  $('sugestoes').innerHTML = '<div class="p-3 text-zinc-400 text-[13px]">Buscando perto de voce...</div>';
   buscarDestino(q);
 });
 
 function renderSug(lista) {
   if (!lista.length) {
-    $('sugestoes').innerHTML = '<div class="p-3 text-zinc-400 text-[13px]">Nenhum resultado perto de você.</div>';
+    $('sugestoes').innerHTML = '<div class="p-3 text-zinc-400 text-[13px]">Nenhum resultado perto de voce.</div>';
     return;
   }
   $('sugestoes').innerHTML = lista.map((it, i) => {
@@ -687,11 +688,11 @@ $('btn-salvar-fav').addEventListener('click', async () => {
   salvarFavoritosLS();
   renderFavoritos();
   fecharModalFav();
-  mostrarToast('⭐ Favorito salvo!', 'success');
+  mostrarToast('Favorito salvo!', 'success');
 });
 
 /* =========================================================
-   14. DESTINO → ROTA → CONFIRMAÇÃO
+   14. DESTINO - ROTA - CONFIRMACAO
    ========================================================= */
 async function escolherDestino(lat, lng, nome) {
   if (!state.pickup) { mostrarToast('Aguarde o GPS', 'error'); return; }
@@ -715,7 +716,7 @@ async function escolherDestino(lat, lng, nome) {
   map.fitBounds(linhaRota.getBounds(), mapPad);
 
   $('rota-resumo').innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-    <span><b class="text-black">${Math.round(rota.duracao)} min</b> • ${rota.distancia.toFixed(1)} km</span>
+    <span><b class="text-black">${Math.round(rota.duracao)} min</b> - ${rota.distancia.toFixed(1)} km</span>
     <span class="ml-auto truncate max-w-[140px]">${nome}</span>`;
   renderOpcaoUnica();
 }
@@ -749,7 +750,7 @@ function renderOpcaoUnica() {
       <div class="flex-1 min-w-0">
         <div class="sora font-extrabold text-[16px]">${CATEGORIA_MOTO.nome}</div>
         <div class="text-[12px] text-white/60 mt-0.5">${CATEGORIA_MOTO.desc}</div>
-        <div class="text-[11px] text-white/50 mt-1">Chega em ~${CATEGORIA_MOTO.espera} min • Viagem de ${tempo} min</div>
+        <div class="text-[11px] text-white/50 mt-1">Chega em ~${CATEGORIA_MOTO.espera} min - Viagem de ${tempo} min</div>
       </div>
       <div class="text-right">
         <div class="sora font-extrabold text-[20px] text-[#FF6A00]">${formatMoney(preco)}</div>
@@ -760,11 +761,11 @@ function renderOpcaoUnica() {
   const btn = $('btn-confirmar');
   btn.disabled = false;
   btn.className = 'mt-5 w-full bg-black text-white rounded-2xl py-[18px] font-bold sora text-[15px] shadow-premium hover:bg-zinc-900 transition';
-  btn.textContent = `Confirmar • ${formatMoney(preco)}`;
+  btn.textContent = `Confirmar - ${formatMoney(preco)}`;
 }
 
 /* =========================================================
-   15. CONFIRMAR → BUSCAR → MOTOQUEIRO
+   15. CONFIRMAR - BUSCAR - MOTOQUEIRO
    ========================================================= */
 let buscaTimeout = null;
 
@@ -773,7 +774,6 @@ $('btn-confirmar').addEventListener('click', async () => {
   $('btn-confirmar').disabled = true;
   mostrarPasso('buscando');
 
-  // Cria corrida no backend (se logado)
   if (state.user && state.pickup && state.destino) {
     try {
       const preco = CATEGORIA_MOTO.base + CATEGORIA_MOTO.porKm * state.rota.distancia;
@@ -781,17 +781,16 @@ $('btn-confirmar').addEventListener('click', async () => {
         state.pickup, state.destino,
         state.rota.distancia, state.rota.duracao, preco
       );
-      console.log('[MotoJá] Corrida criada:', corridaId);
+      console.log('[MotoJa] Corrida criada:', corridaId);
     } catch (e) {
-      console.warn('[MotoJá] Não foi possível criar corrida no backend:', e.message);
+      console.warn('[MotoJa] Nao foi possivel criar corrida no backend:', e.message);
     }
   }
 
-  // Tenta achar motoqueiro real próximo
   if (state.pickup) {
     const proximos = await buscarMotoqueirosProximos(state.pickup.lat, state.pickup.lng, 5, 5);
     if (proximos.length > 0) {
-      console.log('[MotoJá] Motoqueiros reais encontrados:', proximos.length);
+      console.log('[MotoJa] Motoqueiros reais encontrados:', proximos.length);
     }
   }
 
@@ -817,7 +816,7 @@ function encontrarMotoqueiro() {
   $('dr-avatar').textContent = ini;
   $('dr-nome').textContent = m.nome;
   $('dr-nota').textContent = '★ ' + nota;
-  $('dr-viagens').textContent = '· ' + viagens + ' corridas';
+  $('dr-viagens').textContent = '- ' + viagens + ' corridas';
   $('dr-moto').textContent = m.moto;
   $('dr-detalhe').textContent = m.detalhe;
   $('dr-placa').textContent = m.placa;
@@ -895,14 +894,14 @@ function atualizarUIMotoqueiro() {
   const c = state.motoqueiroCadastro;
 
   if (c.status !== 'aprovado') {
-    texto.textContent = `Status: ${c.status} · Aguarde aprovação`;
+    texto.textContent = `Status: ${c.status} - Aguarde aprovacao`;
     btnToggle.disabled = true;
     btnToggle.className = 'bg-zinc-500 text-white rounded-full px-3 py-1.5 text-[11px] font-bold cursor-not-allowed';
     btnToggle.textContent = 'Aguardando';
     return;
   }
 
-  texto.textContent = `Status: aprovado · ${c.disponivel ? 'Online' : 'Offline'}`;
+  texto.textContent = `Status: aprovado - ${c.disponivel ? 'Online' : 'Offline'}`;
   btnToggle.disabled = false;
   btnToggle.className = c.disponivel
     ? 'bg-red-500 text-white rounded-full px-3 py-1.5 text-[11px] font-bold'
@@ -938,8 +937,8 @@ $('btn-toggle-online').addEventListener('click', async () => {
         c.disponivel = novoEstado;
         state.motoqueiroCadastro = c;
         atualizarUIMotoqueiro();
-        if (novoEstado) { iniciarGPS(); mostrarToast('🟢 Você está online!', 'success'); }
-        else { pararGPS(); mostrarToast('🔴 Você está offline'); }
+        if (novoEstado) { iniciarGPS(); mostrarToast('Voce esta online!', 'success'); }
+        else { pararGPS(); mostrarToast('Voce esta offline'); }
       } else {
         mostrarToast('Erro ao atualizar status', 'error');
       }
@@ -964,7 +963,7 @@ async function carregarMotoqueirosNoMapa() {
     markersMotoqueiros.set(m.id, marker);
   });
 
-  console.log('[MotoJá] Motoqueiros no mapa:', lista.length);
+  console.log('[MotoJa] Motoqueiros no mapa:', lista.length);
 }
 
 function inscreverRealtimeMotoqueiros() {
@@ -979,7 +978,7 @@ function inscreverRealtimeMotoqueiros() {
 }
 
 /* =========================================================
-   19. MODAL MOTOQUEIRO — CADASTRO NO BACKEND
+   19. MODAL MOTOQUEIRO - CADASTRO NO BACKEND
    ========================================================= */
 const modalMoto = $('modal-moto');
 let etapaMoto = 1;
@@ -989,13 +988,13 @@ const arquivosMoto = { cnh: null, crlv: null, selfie: null };
 function goMoto(n) {
   etapaMoto = n;
   modalMoto.querySelectorAll('.form-step').forEach(s => s.classList.toggle('hidden', +s.dataset.step !== n));
-  $('titulo-moto').textContent = ['Cadastro de Motoqueiro','Dados da sua moto','Envio de documentos','Confirmações finais','Cadastro enviado'][n-1] || 'Cadastro';
+  $('titulo-moto').textContent = ['Cadastro de Motoqueiro','Dados da sua moto','Envio de documentos','Confirmacoes finais','Cadastro enviado'][n-1] || 'Cadastro';
   modalMoto.querySelectorAll('.bar').forEach((b, i) => {
     b.className = 'bar flex-1 rounded-full ' + (i < Math.min(n, 4) ? 'bg-[#FF6A00]' : 'bg-zinc-200');
   });
   const bv = $('btn-moto-voltar'), bp = $('btn-moto-proximo');
   bv.style.visibility = (n === 1 || n === 5) ? 'hidden' : 'visible';
-  bp.textContent = n === 4 ? 'Enviar cadastro' : n === 5 ? 'Fechar' : 'Continuar →';
+  bp.textContent = n === 4 ? 'Enviar cadastro' : n === 5 ? 'Fechar' : 'Continuar';
   modalMoto.scrollTop = 0;
 }
 
@@ -1019,14 +1018,14 @@ modalMoto.querySelectorAll('input[type="file"]').forEach(input => {
     if (!file) return;
     arquivosMoto[tipo] = file;
     const statusEl = modalMoto.querySelector(`[data-status="${tipo}"]`);
-    if (statusEl) { statusEl.textContent = '✓ ' + file.name.slice(0, 25); statusEl.className = 'text-[11px] text-emerald-600 mt-1 font-bold'; }
+    if (statusEl) { statusEl.textContent = 'OK ' + file.name.slice(0, 25); statusEl.className = 'text-[11px] text-emerald-600 mt-1 font-bold'; }
     const wrap = input.closest('.upload');
     if (wrap) wrap.classList.add('!border-emerald-500', '!bg-emerald-50');
   });
 });
 
 function abrirMoto() {
-  if (!state.user) { mostrarToast('Faça login para ser motoqueiro', 'error'); abrirAuth('login'); return; }
+  if (!state.user) { mostrarToast('Faca login para ser motoqueiro', 'error'); abrirAuth('login'); return; }
   Object.keys(checksMoto).forEach(k => delete checksMoto[k]);
   Object.keys(arquivosMoto).forEach(k => arquivosMoto[k] = null);
   modalMoto.querySelectorAll('.check-item').forEach(c => {
@@ -1036,7 +1035,7 @@ function abrirMoto() {
     b.innerHTML = '';
   });
   modalMoto.querySelectorAll('.upload').forEach(u => u.classList.remove('!border-emerald-500', '!bg-emerald-50'));
-  modalMoto.querySelectorAll('[data-status]').forEach(el => { el.textContent = 'Não enviado'; el.className = 'text-[11px] text-zinc-500 mt-1'; });
+  modalMoto.querySelectorAll('[data-status]').forEach(el => { el.textContent = 'Nao enviado'; el.className = 'text-[11px] text-zinc-500 mt-1'; });
   modalMoto.querySelectorAll('input[type="file"]').forEach(i => i.value = '');
   modalMoto.classList.remove('hidden'); modalMoto.classList.add('flex');
   goMoto(1);
@@ -1050,7 +1049,7 @@ $('btn-moto-voltar').addEventListener('click', () => { if (etapaMoto > 1) goMoto
 $('btn-moto-proximo').addEventListener('click', async () => {
   if (etapaMoto === 5) { fecharMoto(); return; }
   if (etapaMoto === 4) {
-    if (!checksMoto.auth || !checksMoto.capacete) { mostrarToast('Aceite as declarações', 'error'); return; }
+    if (!checksMoto.auth || !checksMoto.capacete) { mostrarToast('Aceite as declaracoes', 'error'); return; }
     const btn = $('btn-moto-proximo');
     const txt = btn.textContent;
     btn.disabled = true; btn.textContent = 'Enviando...';
@@ -1109,7 +1108,7 @@ document.addEventListener('keydown', e => {
 });
 
 /* =========================================================
-   20. INICIALIZAÇÃO
+   20. INICIALIZACAO
    ========================================================= */
 renderFavoritos();
 obterLocalizacaoReal();
