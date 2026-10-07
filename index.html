@@ -189,8 +189,8 @@
         <div class="absolute inset-0 rounded-full border-[3px] border-t-[#FF6A00] border-r-transparent border-b-transparent border-l-transparent animate-[spin_1s_linear_infinite]"></div>
         <div class="absolute inset-[20px] rounded-full bg-black flex items-center justify-center text-3xl">🏍</div>
       </div>
-      <h3 class="sora font-extrabold text-[20px] mt-8">Conectando ao melhor<br>motoqueiro perto de você</h3>
-      <p class="text-[13px] text-zinc-500 mt-3 leading-relaxed">Analisando avaliação, distância<br>e tempo em tempo real</p>
+      <h3 id="busca-titulo" class="sora font-extrabold text-[20px] mt-8">Procurando o melhor<br>motoqueiro perto de você</h3>
+      <p id="busca-sub" class="text-[13px] text-zinc-500 mt-3 leading-relaxed">Analisando distância e tempo<br>em tempo real</p>
       <button id="btn-cancelar-busca" type="button" class="mt-10 w-full bg-white border border-zinc-200 rounded-2xl py-4 font-bold text-[14px]">Cancelar busca</button>
     </section>
 
@@ -248,6 +248,96 @@
   </div>
 </main>
 
+<!-- ============================================================
+     CONTAINER DE OFERTAS/CORRIDA ATIVA DO MOTOQUEIRO
+     ============================================================ -->
+<div id="ofertas-box" class="fixed top-20 left-1/2 -translate-x-1/2 z-[1200] w-[90%] max-w-[400px] space-y-2 pointer-events-auto"></div>
+
+<!-- ============================================================
+     MODAL DE OFERTA (MOTOQUEIRO RECEBE)
+     ============================================================ -->
+<div id="modal-oferta" class="fixed inset-0 z-[3000] bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+  <div class="bg-white rounded-[28px] w-full max-w-[380px] shadow-premium-lg overflow-hidden" onclick="event.stopPropagation()">
+    <div class="bg-[#FF6A00] text-white px-6 pt-5 pb-6">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-bold uppercase tracking-widest opacity-80">Nova corrida</span>
+        <span id="of-timer" class="sora font-extrabold text-[24px] leading-none">25s</span>
+      </div>
+      <div class="sora font-extrabold text-[32px] mt-3" id="of-valor">R$ 0,00</div>
+      <div class="h-1.5 bg-white/25 rounded-full mt-3 overflow-hidden">
+        <div id="of-progress" class="h-full bg-white transition-[width] duration-200" style="width:100%"></div>
+      </div>
+    </div>
+    <div class="p-6">
+      <div class="space-y-3">
+        <div class="flex items-start gap-3">
+          <div class="mk-origem mt-1"></div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Embarque</div>
+            <div id="of-origem" class="text-[14px] font-semibold truncate">—</div>
+            <div id="of-ate-embarque" class="text-[11px] text-zinc-500 mt-0.5"></div>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="mk-dest mt-1"></div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Destino</div>
+            <div id="of-destino" class="text-[14px] font-semibold truncate">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-4 bg-zinc-100 rounded-xl px-3 py-2 text-[12px] font-medium text-zinc-600" id="of-dist">—</div>
+      <div class="flex gap-3 mt-5">
+        <button id="of-recusar" type="button" class="flex-1 bg-white border-2 border-zinc-200 rounded-2xl py-4 font-bold text-[14px] hover:border-red-300 hover:bg-red-50 transition">Recusar</button>
+        <button id="of-aceitar" type="button" class="flex-1 bg-black text-white rounded-2xl py-4 font-bold text-[14px] hover:bg-zinc-900 transition">Aceitar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL DE PAGAMENTO (PASSAGEIRO)
+     ============================================================ -->
+<div id="modal-pagamento" class="fixed inset-0 z-[2600] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+  <div class="bg-white rounded-[28px] w-full max-w-[400px] shadow-premium-lg p-6" onclick="event.stopPropagation()">
+    <div class="text-center mb-5">
+      <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 text-3xl flex items-center justify-center mx-auto">✓</div>
+      <h3 class="sora font-extrabold text-[20px] mt-3">Corrida finalizada</h3>
+      <div id="pg-valor" class="sora font-extrabold text-[32px] text-[#FF6A00] mt-2">R$ 0,00</div>
+    </div>
+    <div class="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Forma de pagamento</div>
+    <div class="grid grid-cols-3 gap-2 mb-5">
+      <button type="button" class="pg-op py-4 rounded-2xl border-2 border-zinc-200 font-bold text-[13px] hover:border-[#FF6A00]" data-forma="pix">💠<br>PIX</button>
+      <button type="button" class="pg-op py-4 rounded-2xl border-2 border-zinc-200 font-bold text-[13px] hover:border-[#FF6A00]" data-forma="dinheiro">💵<br>Dinheiro</button>
+      <button type="button" class="pg-op py-4 rounded-2xl border-2 border-zinc-200 font-bold text-[13px] hover:border-[#FF6A00]" data-forma="cartao">💳<br>Cartão</button>
+    </div>
+    <button id="btn-pagar" type="button" disabled class="w-full bg-zinc-200 text-zinc-400 rounded-2xl py-4 font-bold sora">Escolha a forma</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL DE AVALIAÇÃO (PASSAGEIRO)
+     ============================================================ -->
+<div id="modal-avaliacao" class="fixed inset-0 z-[2700] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+  <div class="bg-white rounded-[28px] w-full max-w-[400px] shadow-premium-lg p-6 text-center">
+    <h3 class="sora font-extrabold text-[20px]">Como foi a corrida?</h3>
+    <p class="text-[13px] text-zinc-500 mt-1" id="av-nome-mot">—</p>
+    <div class="flex justify-center gap-2 mt-6" id="av-estrelas">
+      <button class="av-star text-[36px] transition hover:scale-110 text-zinc-300" data-nota="1">☆</button>
+      <button class="av-star text-[36px] transition hover:scale-110 text-zinc-300" data-nota="2">☆</button>
+      <button class="av-star text-[36px] transition hover:scale-110 text-zinc-300" data-nota="3">☆</button>
+      <button class="av-star text-[36px] transition hover:scale-110 text-zinc-300" data-nota="4">☆</button>
+      <button class="av-star text-[36px] transition hover:scale-110 text-zinc-300" data-nota="5">☆</button>
+    </div>
+    <input id="av-comentario" type="text" maxlength="120" class="mt-5 w-full rounded-2xl border border-zinc-200 px-4 py-3 outline-none focus:border-[#FF6A00]" placeholder="Comentário (opcional)">
+    <button id="btn-enviar-av" type="button" disabled class="mt-5 w-full bg-zinc-200 text-zinc-400 rounded-2xl py-4 font-bold sora">Enviar avaliação</button>
+    <button id="btn-pular-av" type="button" class="mt-3 text-[12px] text-zinc-400 underline">Pular</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL LOGIN / CADASTRO
+     ============================================================ -->
 <div id="modal-auth" class="fixed inset-0 z-[2200] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
   <div class="bg-white rounded-[28px] w-full max-w-[420px] shadow-premium-lg overflow-hidden" onclick="event.stopPropagation()">
     <div class="p-6 pb-4">
@@ -296,6 +386,9 @@
   </div>
 </div>
 
+<!-- ============================================================
+     MODAL CADASTRO MOTOQUEIRO
+     ============================================================ -->
 <div id="modal-moto" class="fixed inset-0 z-[2000] bg-white hidden flex-col">
   <div class="sticky top-0 bg-white/90 backdrop-blur-xl border-b px-6 py-4 flex items-center justify-between" style="padding-top:max(1rem,env(safe-area-inset-top))">
     <div class="flex items-center gap-3">
@@ -397,6 +490,9 @@
   </div>
 </div>
 
+<!-- ============================================================
+     MODAL FAVORITOS
+     ============================================================ -->
 <div id="modal-fav" class="fixed inset-0 z-[2100] bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4">
   <div class="bg-white rounded-[24px] w-full max-w-[420px] p-6 shadow-premium-lg" onclick="event.stopPropagation()">
     <div class="flex items-center justify-between mb-5">
@@ -434,8 +530,10 @@
   </div>
 </div>
 
+<!-- ============================================================
+     MODAL ADMIN
+     ============================================================ -->
 <div id="modal-admin" class="fixed inset-0 z-[2500] bg-zinc-50 hidden flex-col">
-
   <div class="sticky top-0 bg-white border-b border-zinc-200 px-6 py-4 flex items-center justify-between z-10" style="padding-top:max(1rem,env(safe-area-inset-top))">
     <div class="flex items-center gap-3">
       <div class="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center font-bold">🔧</div>
@@ -455,7 +553,6 @@
   </div>
 
   <div class="flex-1 overflow-y-auto p-6">
-
     <div class="admin-painel" data-painel="pendentes">
       <div id="admin-lista-pendentes" class="space-y-3">
         <div class="text-center py-12 text-zinc-400 text-[14px]">Carregando...</div>
@@ -486,10 +583,12 @@
         <div class="text-center py-12 text-zinc-400 text-[14px] col-span-2">Carregando...</div>
       </div>
     </div>
-
   </div>
 </div>
 
+<!-- ============================================================
+     MODO MAPA (ESCOLHER DESTINO ARRASTANDO)
+     ============================================================ -->
 <div id="modo-mapa-overlay" class="hidden">
   <div id="modo-mapa-barra" class="absolute top-0 left-0 right-0 z-[1100] p-4" style="padding-top:max(1rem,env(safe-area-inset-top))">
     <div class="glass shadow-premium-lg rounded-2xl p-4">
@@ -520,6 +619,7 @@
 </div>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet/leaflet-maplibre-gl.js"></script>
@@ -528,6 +628,9 @@
 (function () {
   'use strict';
 
+  /* =========================================================
+     CONFIG
+     ========================================================= */
   const SUPABASE_URL = 'https://jskwwxhnvcrsamcvwgcv.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impza3d3eGhudmNyc2FtY3Z3Z2N2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzNDM5MjksImV4cCI6MjEwNjkxOTkyOX0.iXvIcVZBDWlOrRYDkMgj0e5agWX6T2D4Y9yjc2ZDldY';
 
@@ -538,7 +641,11 @@
   const $ = (id) => document.getElementById(id);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const STORAGE = { FAV: 'mj_favoritos_v2' };
+  const CATEGORIA_MOTO = { id: 'moto', nome: 'Moto', desc: 'Corrida premium de moto', icone: '🏍', base: 4, porKm: 1.6, espera: 3 };
 
+  /* =========================================================
+     HELPERS
+     ========================================================= */
   function haversine(a, b) {
     const R = 6371;
     const dLat = (b.lat - a.lat) * Math.PI / 180;
@@ -559,7 +666,7 @@
     let t;
     return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
   }
-  function formatMoney(v) { return 'R$ ' + v.toFixed(2).replace('.', ','); }
+  function formatMoney(v) { return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ','); }
   function initials(name) {
     return (name || '').split(/\s+/).filter(Boolean).map(p => p[0]).join('').slice(0, 2).toUpperCase() || '--';
   }
@@ -578,13 +685,16 @@
   }
   function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
+  /* =========================================================
+     TOAST / BANNER
+     ========================================================= */
   let toastTimer = null;
   function mostrarToast(msg, tipo = 'info') {
     const t = $('toast');
     t.textContent = msg;
     t.className = 'toast on' + (tipo === 'error' ? ' error' : tipo === 'success' ? ' success' : '');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('on'), 2400);
+    toastTimer = setTimeout(() => t.classList.remove('on'), 2600);
   }
   function mostrarBanner(txt, tipo = 'info', acao = null, cb = null) {
     const b = $('loc-banner');
@@ -607,22 +717,20 @@
   }
 
   /* =========================================================
-     MAPA COM OpenFreeMap (vetorial, atualizado semanalmente)
+     MAPA
      ========================================================= */
   const map = L.map('map', { zoomControl: false, attributionControl: true }).setView([-15.7939, -47.8828], 4);
 
-  L.maplibreGL({
-    style: 'https://tiles.openfreemap.org/styles/liberty'
-  }).addTo(map);
+  L.maplibreGL({ style: 'https://tiles.openfreemap.org/styles/liberty' }).addTo(map);
 
   const isDesktop = window.innerWidth >= 768;
   const mapPad = isDesktop
     ? { paddingTopLeft: [460, 80], paddingBottomRight: [60, 60] }
     : { paddingTopLeft: [40, 80], paddingBottomRight: [40, 380] };
 
-  const iconeOrigem = L.divIcon({ className: '', iconSize: [20, 20], iconAnchor: [10, 10], html: '<div class="mk-origem"></div>' });
-  const iconeDestino = L.divIcon({ className: '', iconSize: [18, 18], iconAnchor: [9, 9], html: '<div class="mk-dest"></div>' });
-  const iconeEu = L.divIcon({ className: '', iconSize: [24, 24], iconAnchor: [12, 12], html: '<div class="mk-eu"></div>' });
+  const iconeOrigem  = L.divIcon({ className: '', iconSize: [20, 20], iconAnchor: [10, 10], html: '<div class="mk-origem"></div>' });
+  const iconeDestino = L.divIcon({ className: '', iconSize: [18, 18], iconAnchor: [9, 9],   html: '<div class="mk-dest"></div>' });
+  const iconeEu      = L.divIcon({ className: '', iconSize: [24, 24], iconAnchor: [12, 12], html: '<div class="mk-eu"></div>' });
 
   function criarIconeMoto(dir, eta) {
     return L.divIcon({
@@ -652,24 +760,22 @@
     markersMotoqueiros.clear();
   }
 
+  /* =========================================================
+     STATE
+     ========================================================= */
   const state = {
     pickup: null, destino: null, rota: null, opcao: null,
     user: null, profile: null,
     motoqueiroCadastro: null,
-    motoPos: null, motoAlvo: null, motoDir: 0, motoTimer: null, motoAtivo: false,
-    buscaAbort: null, favAbort: null,
-    gpsTimer: null, realtimeChannel: null
+    // corrida (passageiro)
+    corridaId: null, canalCorrida: null, canalMotoPos: null, pollTimer: null,
+    motoqueiroAtual: null, timeoutSemAceite: null, corridaParaAvaliar: null,
+    // motoqueiro
+    canalOfertas: null, canalMinhaCorrida: null, ofertaAtual: null,
+    timerOferta: null, corridaAtual: null, timerHeartbeat: null,
+    // misc
+    buscaAbort: null, favAbort: null
   };
-
-  const CATEGORIA_MOTO = { id: 'moto', nome: 'Moto', desc: 'Corrida premium de moto', icone: '🏍', base: 4, porKm: 1.6, espera: 3 };
-
-  const MOTOQUEIROS = [
-    { nome: 'João Almeida', moto: 'Honda CG 160 Titan', detalhe: 'Vermelha · 2022 · 160cc', placa: 'ABC1D23' },
-    { nome: 'Maria Souza', moto: 'Yamaha Factor 150', detalhe: 'Azul · 2023 · 150cc', placa: 'XYZ4E56' },
-    { nome: 'Carlos Pereira', moto: 'Honda XRE 300', detalhe: 'Preta · 2024 · 300cc', placa: 'QWE7R89' },
-    { nome: 'Ana Lima', moto: 'Yamaha Fazer 250', detalhe: 'Cinza · 2023 · 250cc', placa: 'JKL0M12' },
-    { nome: 'Rafael Costa', moto: 'Royal Enfield Hunter', detalhe: 'Verde · 2024 · 350cc', placa: 'POI3U45' }
-  ];
 
   function mostrarPasso(n) {
     $$('#sheet section').forEach(s => s.classList.add('hidden'));
@@ -677,6 +783,9 @@
     if (el) el.classList.remove('hidden');
   }
 
+  /* =========================================================
+     BACKEND (RPCs)
+     ========================================================= */
   async function buscarMotoqueirosProximos(lat, lng, raioKm = 5, limite = 10) {
     try {
       const { data, error } = await supabase.rpc('buscar_motoqueiros_proximos', {
@@ -702,7 +811,7 @@
       p_distancia_km: distancia, p_duracao_min: duracao, p_preco_total: preco
     });
     if (error) throw error;
-    return data;
+    return data; // { corrida_id, oferta: {...} }
   }
   async function buscarMeuCadastroMotoqueiro() {
     if (!state.user) return null;
@@ -759,6 +868,9 @@
     return !error;
   }
 
+  /* =========================================================
+     AUTH
+     ========================================================= */
   const modalAuth = $('modal-auth');
   function abrirAuth(aba = 'login') {
     modalAuth.classList.remove('hidden'); modalAuth.classList.add('flex'); trocarAba(aba);
@@ -798,7 +910,12 @@
     return data;
   }
   async function fazerLogout() {
-    pararGPS();
+    // encerra tudo do motoqueiro antes de sair
+    pararHeartbeat();
+    if (state.canalOfertas) { supabase.removeChannel(state.canalOfertas); state.canalOfertas = null; }
+    if (state.canalMinhaCorrida) { supabase.removeChannel(state.canalMinhaCorrida); state.canalMinhaCorrida = null; }
+    // encerra tudo do passageiro
+    pararPolling(); pararCanaisPassageiro();
     await supabase.auth.signOut();
     mostrarToast('Sessão encerrada');
   }
@@ -826,7 +943,11 @@
       if (favsBackend.length > 0) { favoritos = favsBackend; renderFavoritos(); }
       if (state.pickup) {
         carregarMotoqueirosNoMapa();
-        inscreverRealtimeMotoqueiros();
+      }
+      // se o motoqueiro já estava online, religa heartbeat
+      if (state.motoqueiroCadastro?.status === 'aprovado' && state.motoqueiroCadastro?.disponivel) {
+        iniciarHeartbeat();
+        ouvirMinhasOfertas();
       }
     } else {
       state.user = null; state.profile = null; state.motoqueiroCadastro = null;
@@ -896,6 +1017,9 @@
     }
   });
 
+  /* =========================================================
+     GEOCODIFICAÇÃO
+     ========================================================= */
   async function geocodificarReverso(lat, lng) {
     try {
       const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, { headers: { 'Accept-Language': 'pt-BR' } });
@@ -906,6 +1030,9 @@
     return 'Local selecionado';
   }
 
+  /* =========================================================
+     PICKUP / GPS
+     ========================================================= */
   async function definirPickup(lat, lng, nome, real = false) {
     const nf = nome || await geocodificarReverso(lat, lng);
     state.pickup = { lat, lng, nome: nf };
@@ -935,7 +1062,7 @@
         await definirPickup(pos.coords.latitude, pos.coords.longitude, null, true);
         mostrarBanner('📍 Você está aqui', 'sucesso');
         setTimeout(esconderBanner, 2500);
-        if (state.user) { carregarMotoqueirosNoMapa(); inscreverRealtimeMotoqueiros(); }
+        if (state.user) carregarMotoqueirosNoMapa();
       },
       (err) => {
         const msg = err.code === 1 ? 'Permissão negada. Ative o GPS.' : 'GPS indisponível';
@@ -960,6 +1087,9 @@
     );
   });
 
+  /* =========================================================
+     BUSCA DE DESTINO
+     ========================================================= */
   let resAtuais = [];
   const buscarDestino = debounce(async (q) => {
     if (state.buscaAbort) state.buscaAbort.abort();
@@ -1006,6 +1136,9 @@
     });
   }
 
+  /* =========================================================
+     FAVORITOS
+     ========================================================= */
   let favoritos = [];
   try { favoritos = JSON.parse(localStorage.getItem(STORAGE.FAV) || '[]'); if (!Array.isArray(favoritos)) favoritos = []; } catch (_) { favoritos = []; }
   function salvarFavoritosLS() { try { localStorage.setItem(STORAGE.FAV, JSON.stringify(favoritos)); } catch (_) {} }
@@ -1146,6 +1279,9 @@
     mostrarToast('⭐ Favorito salvo!', 'success');
   });
 
+  /* =========================================================
+     MODO MAPA
+     ========================================================= */
   const overlayMapa = $('modo-mapa-overlay');
   const barraEndereco = $('modo-mapa-endereco');
   const btnModoCancelar = $('btn-modo-mapa-cancelar');
@@ -1159,10 +1295,7 @@
   let zoomAnterior = null;
 
   function ativarModoMapa() {
-    if (!state.pickup) {
-      mostrarToast('Aguarde o GPS localizar você', 'error');
-      return;
-    }
+    if (!state.pickup) { mostrarToast('Aguarde o GPS localizar você', 'error'); return; }
     modoMapaAtivo = true;
     enderecoAtualMapa = null;
     centroMapaAnterior = map.getCenter();
@@ -1180,10 +1313,7 @@
     overlayMapa.classList.add('hidden');
     enderecoAtualMapa = null;
     btnModoConfirmar.disabled = true;
-    if (timeoutGeocodeMapa) {
-      clearTimeout(timeoutGeocodeMapa);
-      timeoutGeocodeMapa = null;
-    }
+    if (timeoutGeocodeMapa) { clearTimeout(timeoutGeocodeMapa); timeoutGeocodeMapa = null; }
     if (voltarMapa && centroMapaAnterior && zoomAnterior) {
       map.flyTo([centroMapaAnterior.lat, centroMapaAnterior.lng], zoomAnterior, { duration: 1 });
     }
@@ -1225,6 +1355,9 @@
     timeoutGeocodeMapa = setTimeout(atualizarEnderecoCentral, 400);
   });
 
+  /* =========================================================
+     ESCOLHER DESTINO + CALCULAR ROTA
+     ========================================================= */
   async function escolherDestino(lat, lng, nome) {
     if (!state.pickup) { mostrarToast('Aguarde o GPS', 'error'); return; }
     state.destino = { lat, lng, nome };
@@ -1295,29 +1428,240 @@
     btn.textContent = `Confirmar • ${formatMoney(preco)}`;
   }
 
-  let buscaTimeout = null;
+  /* =========================================================
+     FLUXO DO PASSAGEIRO — CONFIRMAR CORRIDA
+     ========================================================= */
+  function atualizarTextoBusca(titulo, sub) {
+    const t = $('busca-titulo');
+    const s = $('busca-sub');
+    if (t) t.innerHTML = titulo;
+    if (s) s.innerHTML = sub;
+  }
+
   $('btn-confirmar').addEventListener('click', async () => {
     if (!state.opcao || $('btn-confirmar').disabled) return;
     $('btn-confirmar').disabled = true;
-    mostrarPasso('buscando');
-    if (state.user && state.pickup && state.destino) {
-      try {
-        const preco = CATEGORIA_MOTO.base + CATEGORIA_MOTO.porKm * state.rota.distancia;
-        const corridaId = await criarCorridaBackend(state.pickup, state.destino, state.rota.distancia, state.rota.duracao, preco);
-        console.log('[MotoJá] Corrida criada:', corridaId);
-      } catch (e) {
-        console.warn('[MotoJá] Não foi possível criar corrida no backend:', e.message);
+
+    if (!state.user) {
+      mostrarToast('Faça login para solicitar', 'error');
+      abrirAuth('login');
+      $('btn-confirmar').disabled = false;
+      return;
+    }
+
+    try {
+      const preco = CATEGORIA_MOTO.base + CATEGORIA_MOTO.porKm * state.rota.distancia;
+      const resp = await criarCorridaBackend(
+        state.pickup, state.destino,
+        state.rota.distancia, state.rota.duracao, preco
+      );
+      state.corridaId = resp.corrida_id || resp.id || resp;
+      if (!state.corridaId) throw new Error('Backend não retornou id');
+
+      mostrarPasso('buscando');
+      atualizarTextoBusca(
+        'Procurando o melhor<br>motoqueiro perto de você',
+        'Analisando distância e avaliação'
+      );
+
+      // se a própria RPC já ofertou para alguém, mostra o nome
+      if (resp.oferta?.ofertado) {
+        atualizarTextoBusca('Enviando solicitação...', 'Aguardando resposta do motoqueiro');
       }
+      if (resp.oferta?.motivo === 'sem_motoqueiros') {
+        mostrarToast('Nenhum motoqueiro disponível agora', 'error');
+        resetCorrida();
+        return;
+      }
+
+      escutarCorrida(state.corridaId);
+      iniciarPolling(state.corridaId);
+
+      // timeout geral de 3 min
+      state.timeoutSemAceite = setTimeout(async () => {
+        if (!state.corridaId) return;
+        await supabase.rpc('cancelar_corrida', { p_corrida_id: state.corridaId, p_por: 'timeout' });
+        mostrarToast('Nenhum motoqueiro aceitou a tempo', 'error');
+        resetCorrida();
+      }, 180000);
+
+    } catch (e) {
+      console.error('[confirmar]', e);
+      mostrarToast('Erro: ' + e.message, 'error');
+      $('btn-confirmar').disabled = false;
     }
-    if (state.pickup) {
-      const proximos = await buscarMotoqueirosProximos(state.pickup.lat, state.pickup.lng, 5, 5);
-      if (proximos.length > 0) console.log('[MotoJá] Motoqueiros reais encontrados:', proximos.length);
-    }
-    buscaTimeout = setTimeout(encontrarMotoqueiro, 2800);
   });
 
-  $('btn-cancelar-busca').addEventListener('click', () => {
-    clearTimeout(buscaTimeout);
+  function escutarCorrida(corridaId) {
+    if (state.canalCorrida) supabase.removeChannel(state.canalCorrida);
+    state.canalCorrida = supabase
+      .channel('corrida-' + corridaId)
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'corridas', filter: `id=eq.${corridaId}` },
+        ({ new: c }) => tratarUpdateCorrida(c))
+      .subscribe();
+  }
+
+  async function tratarUpdateCorrida(c) {
+    if (!c || c.id !== state.corridaId) return;
+    console.log('[corrida]', c.status);
+
+    switch (c.status) {
+      case 'oferecida':
+        await mostrarOferecendo(c);
+        break;
+
+      case 'aceita':
+        if (!state.motoqueiroAtual) {
+          await carregarMotoqueiroReal(c);
+          pararPolling();
+        }
+        break;
+
+      case 'chegou':
+        mostrarToast('🏍 Motoqueiro no local! Mostre o código.', 'success');
+        if ($('dr-eta')) $('dr-eta').textContent = 'Chegou!';
+        break;
+
+      case 'em_andamento':
+        mostrarToast('Boa viagem! 🛵', 'success');
+        trocarBotaoParaEmAndamento(c);
+        break;
+
+      case 'finalizada':
+        pararPolling();
+        pararCanaisPassageiro();
+        abrirModalPagamento(c);
+        break;
+
+      case 'cancelada':
+        mostrarToast('Corrida cancelada', 'error');
+        resetCorrida();
+        break;
+
+      case 'sem_motoqueiro':
+        mostrarToast('Nenhum motoqueiro disponível. Tente novamente.', 'error');
+        resetCorrida();
+        break;
+    }
+  }
+
+  async function mostrarOferecendo(c) {
+    if (!c.offer_motoqueiro_id) return;
+    const { data: mot } = await supabase
+      .from('motoqueiros')
+      .select('id, profiles(nome_completo)')
+      .eq('id', c.offer_motoqueiro_id)
+      .maybeSingle();
+
+    const nome = mot?.profiles?.nome_completo?.split(' ')[0] || 'motoqueiro';
+    atualizarTextoBusca(
+      `Enviando solicitação para<br><span class="text-[#FF6A00]">${nome}</span>`,
+      'Aguardando resposta...'
+    );
+  }
+
+  function iniciarPolling(corridaId) {
+    pararPolling();
+    state.pollTimer = setInterval(async () => {
+      const { data } = await supabase.from('corridas').select('*').eq('id', corridaId).maybeSingle();
+      if (data) tratarUpdateCorrida(data);
+    }, 3000);
+  }
+  function pararPolling() {
+    if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
+  }
+  function pararCanaisPassageiro() {
+    if (state.canalCorrida) { supabase.removeChannel(state.canalCorrida); state.canalCorrida = null; }
+    if (state.canalMotoPos) { supabase.removeChannel(state.canalMotoPos); state.canalMotoPos = null; }
+    if (state.timeoutSemAceite) { clearTimeout(state.timeoutSemAceite); state.timeoutSemAceite = null; }
+  }
+
+  async function carregarMotoqueiroReal(corrida) {
+    const { data: mot } = await supabase
+      .from('motoqueiros')
+      .select(`id, moto_marca, moto_modelo, moto_ano, moto_cor, moto_placa,
+               nota_media, total_corridas, lat, lng,
+               profiles(nome_completo, telefone)`)
+      .eq('id', corrida.motoqueiro_id)
+      .single();
+
+    if (!mot) { mostrarToast('Erro ao carregar motoqueiro', 'error'); return; }
+    state.motoqueiroAtual = mot;
+
+    const nome  = mot.profiles?.nome_completo || 'Motoqueiro';
+    const nota  = Number(mot.nota_media ?? 5).toFixed(2).replace('.', ',');
+    const trips = (mot.total_corridas ?? 0).toLocaleString('pt-BR');
+
+    $('dr-avatar').textContent  = initials(nome);
+    $('dr-nome').textContent    = nome;
+    $('dr-nota').textContent    = '★ ' + nota;
+    $('dr-viagens').textContent = '· ' + trips + ' corridas';
+    $('dr-moto').textContent    = `${mot.moto_marca || ''} ${mot.moto_modelo || ''}`.trim() || 'Moto';
+    $('dr-detalhe').textContent = `${mot.moto_cor || ''} · ${mot.moto_ano || ''}`;
+    $('dr-placa').textContent   = mot.moto_placa || '---';
+    $('codigo-embarque').textContent = (corrida.codigo_embarque || '----').split('').join(' ');
+
+    // botão cancelar volta a ficar ativo
+    const btnNova = $('btn-nova');
+    btnNova.disabled = false;
+    btnNova.className = 'mt-4 w-full bg-zinc-100 rounded-2xl py-4 font-bold text-[13px] text-zinc-600';
+    btnNova.textContent = 'Cancelar corrida';
+
+    if (mot.lat && mot.lng) {
+      const p = { lat: mot.lat, lng: mot.lng };
+      const alvo = { lat: corrida.origem_lat, lng: corrida.origem_lng };
+      const eta = Math.max(1, Math.round(haversine(p, alvo) * 60 / 25));
+      if (markerMoto) map.removeLayer(markerMoto);
+      markerMoto = L.marker([p.lat, p.lng], {
+        icon: criarIconeMoto(bearing(p, alvo), eta), zIndexOffset: 1000
+      }).addTo(map);
+      $('dr-eta').textContent = eta + ' min';
+      map.fitBounds(L.featureGroup([markerOrigem, markerMoto]).getBounds().pad(0.6), mapPad);
+    }
+
+    mostrarPasso('motorista');
+    rastrearMotoqueiroRealtime(mot.id, corrida.origem_lat, corrida.origem_lng);
+  }
+
+  function rastrearMotoqueiroRealtime(motoqueiroId, alvoLat, alvoLng) {
+    if (state.canalMotoPos) supabase.removeChannel(state.canalMotoPos);
+    state.canalMotoPos = supabase
+      .channel('pos-moto-' + motoqueiroId)
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'motoqueiros', filter: `id=eq.${motoqueiroId}` },
+        ({ new: m }) => {
+          if (!m?.lat || !m?.lng || !markerMoto) return;
+          const p = { lat: m.lat, lng: m.lng };
+          const alvo = { lat: alvoLat, lng: alvoLng };
+          const d = haversine(p, alvo);
+          const eta = Math.max(1, Math.round(d * 60 / 25));
+          markerMoto.setLatLng([p.lat, p.lng]);
+          markerMoto.setIcon(criarIconeMoto(bearing(p, alvo), eta));
+          $('dr-eta').textContent = eta + ' min';
+        })
+      .subscribe();
+  }
+
+  function trocarBotaoParaEmAndamento() {
+    const btn = $('btn-nova');
+    btn.disabled = true;
+    btn.className = 'mt-4 w-full bg-zinc-100 rounded-2xl py-4 font-bold text-[13px] text-zinc-400 cursor-not-allowed';
+    btn.textContent = 'Em andamento — aguarde o motoqueiro finalizar';
+  }
+
+  async function cancelarBusca(motivo = 'passageiro') {
+    pararPolling();
+    pararCanaisPassageiro();
+    if (state.corridaId) {
+      try { await supabase.rpc('cancelar_corrida', { p_corrida_id: state.corridaId, p_por: motivo }); }
+      catch (e) { console.warn(e); }
+      state.corridaId = null;
+    }
+  }
+
+  $('btn-cancelar-busca').addEventListener('click', async () => {
+    await cancelarBusca('passageiro');
     state.destino = state.rota = state.opcao = null;
     limparRotaVisual();
     $('destino-input').value = '';
@@ -1325,63 +1669,21 @@
     mostrarPasso('destino');
   });
 
-  function encontrarMotoqueiro() {
-    const m = MOTOQUEIROS[Math.floor(Math.random() * MOTOQUEIROS.length)];
-    const ini = initials(m.nome);
-    const nota = (4.8 + Math.random() * 0.19).toFixed(2).replace('.', ',');
-    const viagens = Math.floor(1200 + Math.random() * 4000).toLocaleString('pt-BR');
-    const cod = String(Math.floor(1000 + Math.random() * 9000));
-    $('dr-avatar').textContent = ini;
-    $('dr-nome').textContent = m.nome;
-    $('dr-nota').textContent = '★ ' + nota;
-    $('dr-viagens').textContent = '· ' + viagens + ' corridas';
-    $('dr-moto').textContent = m.moto;
-    $('dr-detalhe').textContent = m.detalhe;
-    $('dr-placa').textContent = m.placa;
-    $('codigo-embarque').textContent = cod.split('').join(' ');
-    const ang = Math.random() * Math.PI * 2;
-    const dist = 0.006;
-    state.motoPos = { lat: state.pickup.lat + Math.cos(ang) * dist, lng: state.pickup.lng + Math.sin(ang) * dist * 1.2 };
-    state.motoAlvo = { lat: state.pickup.lat, lng: state.pickup.lng };
-    state.motoDir = bearing(state.motoPos, state.motoAlvo);
-    state.motoAtivo = true;
-    if (markerMoto) map.removeLayer(markerMoto);
-    const etaIni = Math.max(2, Math.round(haversine(state.motoPos, state.motoAlvo) * 60 / 25));
-    markerMoto = L.marker([state.motoPos.lat, state.motoPos.lng], { icon: criarIconeMoto(state.motoDir, etaIni), zIndexOffset: 1000 }).addTo(map);
-    const g = L.featureGroup([markerOrigem, markerMoto]);
-    map.fitBounds(g.getBounds().pad(0.7), mapPad);
-    mostrarPasso('motorista');
-    if (state.motoTimer) clearInterval(state.motoTimer);
-    state.motoTimer = setInterval(() => {
-      if (!state.motoAtivo) return;
-      const a = state.motoPos, b = state.motoAlvo;
-      const nl = a.lat + (b.lat - a.lat) * 0.25;
-      const nl2 = a.lng + (b.lng - a.lng) * 0.25;
-      state.motoDir = bearing(a, { lat: nl, lng: nl2 });
-      state.motoPos = { lat: nl, lng: nl2 };
-      const d = haversine(state.motoPos, b);
-      const eta = Math.max(1, Math.round(d * 60 / 25));
-      if (markerMoto) { markerMoto.setLatLng([nl, nl2]); markerMoto.setIcon(criarIconeMoto(state.motoDir, eta)); }
-      $('dr-eta').textContent = eta + ' min';
-      if (d < 0.03) {
-        clearInterval(state.motoTimer); state.motoAtivo = false;
-        $('dr-eta').textContent = 'Chegou!';
-        mostrarToast('Motoqueiro chegou!', 'success');
-      }
-    }, 1500);
-  }
-
   function resetCorrida() {
-    if (state.motoTimer) clearInterval(state.motoTimer);
-    state.motoAtivo = false;
+    pararCanaisPassageiro();
     state.destino = state.rota = state.opcao = null;
+    state.corridaId = null;
+    state.motoqueiroAtual = null;
     limparRotaVisual();
     if (state.pickup) map.setView([state.pickup.lat, state.pickup.lng], 15);
     $('destino-input').value = '';
     $('sugestoes').innerHTML = '';
+    $('btn-confirmar').disabled = true;
+    $('btn-confirmar').className = 'mt-5 w-full bg-zinc-200 text-zinc-400 rounded-2xl py-[18px] font-bold sora text-[15px]';
+    $('btn-confirmar').textContent = 'Selecione uma opção';
     mostrarPasso('destino');
   }
-  $('btn-nova').addEventListener('click', resetCorrida);
+
   $('btn-voltar').addEventListener('click', () => {
     limparRotaVisual();
     state.destino = state.rota = state.opcao = null;
@@ -1391,6 +1693,110 @@
     mostrarPasso('destino');
   });
 
+  $('btn-nova').addEventListener('click', async () => {
+    if (state.corridaId) await cancelarBusca('passageiro');
+    resetCorrida();
+  });
+
+  /* =========================================================
+     PAGAMENTO + AVALIAÇÃO (PASSAGEIRO)
+     ========================================================= */
+  let formaPagamentoSel = null;
+  let notaAv = 0;
+
+  function abrirModalPagamento(corrida) {
+    formaPagamentoSel = null;
+    state.corridaParaAvaliar = corrida;
+    $('pg-valor').textContent = formatMoney(corrida.preco_total);
+    $$('.pg-op').forEach(b => b.classList.remove('!border-[#FF6A00]','!bg-[#FFF7ED]'));
+    const btn = $('btn-pagar');
+    btn.disabled = true; btn.textContent = 'Escolha a forma';
+    btn.className = 'w-full bg-zinc-200 text-zinc-400 rounded-2xl py-4 font-bold sora';
+    const modal = $('modal-pagamento');
+    modal.classList.remove('hidden'); modal.classList.add('flex');
+  }
+
+  $$('.pg-op').forEach(b => {
+    b.addEventListener('click', () => {
+      $$('.pg-op').forEach(x => x.classList.remove('!border-[#FF6A00]','!bg-[#FFF7ED]'));
+      b.classList.add('!border-[#FF6A00]','!bg-[#FFF7ED]');
+      formaPagamentoSel = b.dataset.forma;
+      const btn = $('btn-pagar');
+      btn.disabled = false; btn.textContent = 'Confirmar pagamento';
+      btn.className = 'w-full bg-black text-white rounded-2xl py-4 font-bold sora';
+    });
+  });
+
+  $('btn-pagar').addEventListener('click', async () => {
+    if (!formaPagamentoSel || !state.corridaParaAvaliar) return;
+    try {
+      await supabase.rpc('confirmar_pagamento', {
+        p_corrida_id: state.corridaParaAvaliar.id, p_forma: formaPagamentoSel
+      });
+      $('modal-pagamento').classList.add('hidden');
+      $('modal-pagamento').classList.remove('flex');
+      abrirModalAvaliacao(state.corridaParaAvaliar);
+    } catch (e) { mostrarToast(e.message, 'error'); }
+  });
+
+  function abrirModalAvaliacao() {
+    notaAv = 0;
+    $('av-nome-mot').textContent = state.motoqueiroAtual?.profiles?.nome_completo || 'Motoqueiro';
+    atualizarEstrelas(0);
+    $('av-comentario').value = '';
+    $('btn-enviar-av').disabled = true;
+    $('btn-enviar-av').className = 'mt-5 w-full bg-zinc-200 text-zinc-400 rounded-2xl py-4 font-bold sora';
+    const modal = $('modal-avaliacao');
+    modal.classList.remove('hidden'); modal.classList.add('flex');
+  }
+
+  function atualizarEstrelas(n) {
+    $$('.av-star').forEach((b, i) => {
+      b.textContent = i < n ? '★' : '☆';
+      b.classList.toggle('text-[#FF6A00]', i < n);
+      b.classList.toggle('text-zinc-300', i >= n);
+    });
+  }
+
+  $$('.av-star').forEach(b => {
+    b.addEventListener('click', () => {
+      notaAv = Number(b.dataset.nota);
+      atualizarEstrelas(notaAv);
+      const btn = $('btn-enviar-av');
+      btn.disabled = false;
+      btn.className = 'mt-5 w-full bg-black text-white rounded-2xl py-4 font-bold sora';
+    });
+  });
+
+  $('btn-enviar-av').addEventListener('click', async () => {
+    if (!notaAv || !state.corridaParaAvaliar) return;
+    try {
+      await supabase.rpc('avaliar_corrida', {
+        p_corrida_id: state.corridaParaAvaliar.id,
+        p_nota: notaAv,
+        p_comentario: $('av-comentario').value.trim() || null
+      });
+      mostrarToast('⭐ Obrigado pela avaliação!', 'success');
+      fecharTudoFinal();
+    } catch (e) { mostrarToast(e.message, 'error'); }
+  });
+
+  $('btn-pular-av').addEventListener('click', fecharTudoFinal);
+
+  function fecharTudoFinal() {
+    ['modal-avaliacao','modal-pagamento'].forEach(id => {
+      const el = $(id);
+      el.classList.add('hidden'); el.classList.remove('flex');
+    });
+    state.corridaParaAvaliar = null;
+    state.motoqueiroAtual = null;
+    state.corridaId = null;
+    resetCorrida();
+  }
+
+  /* =========================================================
+     MOTOQUEIRO — UI + FLUXO COMPLETO
+     ========================================================= */
   function atualizarUIMotoqueiro() {
     const painel = $('painel-motoqueiro');
     const btnToggle = $('btn-toggle-online');
@@ -1413,36 +1819,44 @@
     btnToggle.textContent = c.disponivel ? 'Ficar offline' : 'Ficar online';
   }
 
-  function iniciarGPS() {
-    if (state.gpsTimer) clearInterval(state.gpsTimer);
-    const enviar = () => {
-      if (!state.motoqueiroCadastro) return;
-      navigator.geolocation.getCurrentPosition(async (pos) => {
-        await atualizarMinhaPosicao(pos.coords.latitude, pos.coords.longitude, true);
-      }, () => {}, { enableHighAccuracy: true, timeout: 8000 });
+  function iniciarHeartbeat() {
+    pararHeartbeat();
+    const ping = () => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => atualizarMinhaPosicao(pos.coords.latitude, pos.coords.longitude, true),
+        () => {},
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
     };
-    enviar();
-    state.gpsTimer = setInterval(enviar, 10000);
+    ping();
+    state.timerHeartbeat = setInterval(ping, 10000);
   }
-  function pararGPS() {
-    if (state.gpsTimer) { clearInterval(state.gpsTimer); state.gpsTimer = null; }
+  function pararHeartbeat() {
+    if (state.timerHeartbeat) { clearInterval(state.timerHeartbeat); state.timerHeartbeat = null; }
   }
 
   $('btn-toggle-online').addEventListener('click', async () => {
     if (!state.motoqueiroCadastro) return;
     const c = state.motoqueiroCadastro;
     const novoEstado = !c.disponivel;
+
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const ok = await atualizarMinhaPosicao(pos.coords.latitude, pos.coords.longitude, novoEstado);
-        if (ok) {
-          c.disponivel = novoEstado;
-          state.motoqueiroCadastro = c;
-          atualizarUIMotoqueiro();
-          if (novoEstado) { iniciarGPS(); mostrarToast('🟢 Você está online!', 'success'); }
-          else { pararGPS(); mostrarToast('🔴 Você está offline'); }
+        if (!ok) { mostrarToast('Erro ao atualizar status', 'error'); return; }
+        c.disponivel = novoEstado;
+        state.motoqueiroCadastro = c;
+        atualizarUIMotoqueiro();
+
+        if (novoEstado) {
+          iniciarHeartbeat();
+          ouvirMinhasOfertas();
+          mostrarToast('🟢 Você está online!', 'success');
         } else {
-          mostrarToast('Erro ao atualizar status', 'error');
+          pararHeartbeat();
+          if (state.canalOfertas) { supabase.removeChannel(state.canalOfertas); state.canalOfertas = null; }
+          fecharModalOferta();
+          mostrarToast('🔴 Você está offline');
         }
       },
       () => mostrarToast('Ative o GPS para ficar online', 'error'),
@@ -1450,6 +1864,228 @@
     );
   });
 
+  /* -------- ouve ofertas direcionadas para mim -------- */
+  function ouvirMinhasOfertas() {
+    const meuMotId = state.motoqueiroCadastro?.id;
+    if (!meuMotId) return;
+    if (state.canalOfertas) supabase.removeChannel(state.canalOfertas);
+
+    state.canalOfertas = supabase
+      .channel('minhas-ofertas-' + meuMotId)
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'corridas',
+          filter: `offer_motoqueiro_id=eq.${meuMotId}` },
+        ({ new: c }) => {
+          if (c.status === 'oferecida' && c.offer_expires_at) {
+            abrirModalOferta(c);
+          } else if (state.ofertaAtual?.id === c.id && c.status !== 'oferecida') {
+            fecharModalOferta();
+          }
+        })
+      .subscribe();
+
+    // fallback: polling curto
+    clearInterval(state._pollOferta);
+    state._pollOferta = setInterval(async () => {
+      if (!state.motoqueiroCadastro?.disponivel || state.ofertaAtual || state.corridaAtual) return;
+      const { data } = await supabase
+        .from('corridas')
+        .select('*')
+        .eq('offer_motoqueiro_id', meuMotId)
+        .eq('status', 'oferecida')
+        .gte('offer_expires_at', new Date().toISOString())
+        .order('offer_expires_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (data) abrirModalOferta(data);
+    }, 3000);
+  }
+
+  /* -------- MODAL DE OFERTA -------- */
+  function abrirModalOferta(c) {
+    state.ofertaAtual = c;
+    const el = $('modal-oferta');
+    el.classList.remove('hidden');
+    el.classList.add('flex');
+
+    $('of-valor').textContent  = formatMoney(c.preco_total);
+    $('of-origem').textContent = c.origem_nome || '—';
+    $('of-destino').textContent = c.destino_nome || '—';
+    $('of-dist').textContent   = `${Number(c.distancia_km).toFixed(1)} km · ${Math.round(c.duracao_min)} min`;
+
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const d = haversine(
+        { lat: pos.coords.latitude, lng: pos.coords.longitude },
+        { lat: c.origem_lat, lng: c.origem_lng }
+      );
+      $('of-ate-embarque').textContent = `a ${d.toFixed(1)} km de você`;
+    }, () => { $('of-ate-embarque').textContent = ''; }, { timeout: 4000 });
+
+    clearInterval(state.timerOferta);
+    const expiry = new Date(c.offer_expires_at).getTime();
+    const atualizar = () => {
+      const restam = Math.max(0, Math.floor((expiry - Date.now()) / 1000));
+      $('of-timer').textContent = restam + 's';
+      $('of-progress').style.width = Math.min(100, (restam / 25) * 100) + '%';
+      if (restam <= 0) {
+        clearInterval(state.timerOferta);
+        supabase.rpc('expirar_oferta', { p_corrida_id: c.id }).then(() => fecharModalOferta());
+      }
+    };
+    atualizar();
+    state.timerOferta = setInterval(atualizar, 250);
+  }
+
+  function fecharModalOferta() {
+    clearInterval(state.timerOferta);
+    state.timerOferta = null;
+    state.ofertaAtual = null;
+    const el = $('modal-oferta');
+    el.classList.add('hidden');
+    el.classList.remove('flex');
+  }
+
+  $('of-aceitar').addEventListener('click', async () => {
+    const c = state.ofertaAtual; if (!c) return;
+    const btn = $('of-aceitar');
+    btn.disabled = true; btn.textContent = 'Aceitando...';
+    try {
+      const { data, error } = await supabase.rpc('aceitar_corrida', { p_corrida_id: c.id });
+      if (error) throw error;
+      fecharModalOferta();
+      state.corridaAtual = data;
+      mostrarToast('✅ Corrida aceita! Código ' + data.codigo_embarque, 'success');
+      renderCorridaEmAndamento(data);
+      ouvirMinhaCorrida(data.id);
+    } catch (e) {
+      mostrarToast(e.message, 'error');
+      btn.disabled = false; btn.textContent = 'Aceitar';
+      fecharModalOferta();
+    }
+  });
+
+  $('of-recusar').addEventListener('click', async () => {
+    const c = state.ofertaAtual; if (!c) return;
+    fecharModalOferta();
+    try { await supabase.rpc('recusar_corrida', { p_corrida_id: c.id }); }
+    catch (e) { console.warn(e); }
+  });
+
+  /* -------- ouve updates da corrida aceita -------- */
+  function ouvirMinhaCorrida(corridaId) {
+    if (state.canalMinhaCorrida) supabase.removeChannel(state.canalMinhaCorrida);
+    state.canalMinhaCorrida = supabase
+      .channel('minha-corrida-' + corridaId)
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'corridas', filter: `id=eq.${corridaId}` },
+        ({ new: c }) => {
+          if (c.status === 'em_andamento') {
+            renderCorridaRodando(c);
+            mostrarToast('Corrida iniciada 🛵', 'success');
+          }
+          if (c.status === 'cancelada') {
+            mostrarToast('Passageiro cancelou', 'error');
+            limparCorridaAtual();
+          }
+        })
+      .subscribe();
+  }
+
+  /* -------- tela: aceita (indo buscar) -------- */
+  function renderCorridaEmAndamento(data) {
+    const box = $('ofertas-box');
+    box.innerHTML = `
+      <div class="bg-black text-white rounded-2xl p-4 shadow-premium-lg">
+        <div class="text-[11px] text-white/60 uppercase font-bold">Indo ao embarque</div>
+        <div class="text-[12px] text-white/70 mt-2">📍 ${data.origem_nome}</div>
+        <div class="text-[12px] text-white/70">🏁 ${data.destino_nome}</div>
+        <div class="sora font-extrabold text-[22px] mt-3 text-[#FF6A00]">
+          ${formatMoney(data.preco_total)}
+        </div>
+        <div class="flex gap-2 mt-4">
+          <button id="btn-cheguei" class="flex-1 bg-[#FF6A00] text-white rounded-xl py-3 font-bold text-[13px]">
+            Cheguei no embarque
+          </button>
+          <button id="btn-cancelar-mot" class="bg-red-600 text-white rounded-xl px-4 py-3 font-bold text-[13px]">✕</button>
+        </div>
+      </div>`;
+
+    $('btn-cheguei').onclick = async () => {
+      try {
+        await supabase.rpc('motoqueiro_chegou', { p_corrida_id: data.id });
+        mostrarToast('Aguardando passageiro informar o código…', 'info');
+        pedirCodigoEmbarque(data);
+      } catch (e) { mostrarToast(e.message, 'error'); }
+    };
+    $('btn-cancelar-mot').onclick = async () => {
+      try { await supabase.rpc('cancelar_corrida', { p_corrida_id: data.id, p_por: 'motoqueiro' }); }
+      catch (e) { console.warn(e); }
+      limparCorridaAtual();
+    };
+  }
+
+  /* -------- tela: aguardando código -------- */
+  function pedirCodigoEmbarque(data) {
+    const box = $('ofertas-box');
+    box.innerHTML = `
+      <div class="bg-amber-500 text-white rounded-2xl p-4 shadow-premium-lg">
+        <div class="text-[11px] text-white/80 uppercase font-bold">Embarque</div>
+        <div class="sora font-bold text-[15px] mt-1">Digite o código que o passageiro vai mostrar</div>
+        <input id="inp-codigo" inputmode="numeric" maxlength="4"
+          class="w-full mt-3 text-center text-[28px] sora font-extrabold tracking-[0.4em]
+                 bg-white/20 text-white rounded-xl py-3 outline-none border-2 border-white/30
+                 focus:border-white"
+          placeholder="••••">
+        <div class="flex gap-2 mt-3">
+          <button id="btn-iniciar" class="flex-1 bg-white text-amber-700 rounded-xl py-3 font-bold">Iniciar corrida</button>
+          <button id="btn-cancelar-mot2" class="bg-red-600 text-white rounded-xl px-4 py-3 font-bold">✕</button>
+        </div>
+      </div>`;
+
+    $('inp-codigo').focus();
+    $('btn-iniciar').onclick = async () => {
+      const cod = $('inp-codigo').value.trim();
+      if (cod.length !== 4) { mostrarToast('Código tem 4 dígitos', 'error'); return; }
+      try { await supabase.rpc('iniciar_corrida', { p_corrida_id: data.id, p_codigo: cod }); }
+      catch (e) { mostrarToast(e.message, 'error'); }
+    };
+    $('btn-cancelar-mot2').onclick = async () => {
+      try { await supabase.rpc('cancelar_corrida', { p_corrida_id: data.id, p_por: 'motoqueiro' }); }
+      catch (e) { console.warn(e); }
+      limparCorridaAtual();
+    };
+  }
+
+  /* -------- tela: em rota -------- */
+  function renderCorridaRodando(c) {
+    const box = $('ofertas-box');
+    box.innerHTML = `
+      <div class="bg-emerald-600 text-white rounded-2xl p-4 shadow-premium-lg">
+        <div class="text-[11px] text-white/80 uppercase font-bold">Em andamento</div>
+        <div class="sora font-extrabold text-[18px] mt-1">Levando passageiro</div>
+        <div class="text-[12px] text-white/70 mt-1">🏁 ${c.destino_nome || ''}</div>
+        <button id="btn-finalizar" class="w-full mt-3 bg-white text-emerald-700 rounded-xl py-3 font-bold">
+          Finalizar corrida
+        </button>
+      </div>`;
+    $('btn-finalizar').onclick = async () => {
+      try {
+        const { data, error } = await supabase.rpc('finalizar_corrida', { p_corrida_id: c.id });
+        if (error) throw error;
+        mostrarToast(`💰 Receberá ${formatMoney(data.liquido_motoqueiro)} (comissão ${formatMoney(data.comissao)})`, 'success');
+        limparCorridaAtual();
+      } catch (e) { mostrarToast(e.message, 'error'); }
+    };
+  }
+
+  function limparCorridaAtual() {
+    state.corridaAtual = null;
+    if (state.canalMinhaCorrida) { supabase.removeChannel(state.canalMinhaCorrida); state.canalMinhaCorrida = null; }
+    $('ofertas-box').innerHTML = '';
+    ouvirMinhasOfertas();
+  }
+
+  /* -------- pins de motoqueiros no mapa (estética) -------- */
   async function carregarMotoqueirosNoMapa() {
     if (!state.pickup) return;
     const lista = await buscarMotoqueirosProximos(state.pickup.lat, state.pickup.lng, 10, 20);
@@ -1460,18 +2096,11 @@
         .bindPopup(`<b>${m.nome}</b><br>${m.moto_marca || ''} ${m.moto_modelo || ''}<br>${m.distancia_km} km`);
       markersMotoqueiros.set(m.id, marker);
     });
-    console.log('[MotoJá] Motoqueiros no mapa:', lista.length);
   }
 
-  function inscreverRealtimeMotoqueiros() {
-    if (state.realtimeChannel) supabase.removeChannel(state.realtimeChannel);
-    state.realtimeChannel = supabase.channel('motoqueiros-online')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'motoqueiros' }, () => {
-        carregarMotoqueirosNoMapa();
-      })
-      .subscribe();
-  }
-
+  /* =========================================================
+     CADASTRO DE MOTOQUEIRO (MODAL)
+     ========================================================= */
   const modalMoto = $('modal-moto');
   let etapaMoto = 1;
   const checksMoto = {};
@@ -1598,6 +2227,9 @@
     else if (!modalMoto.classList.contains('hidden')) fecharMoto();
   });
 
+  /* =========================================================
+     ADMIN
+     ========================================================= */
   const modalAdmin = $('modal-admin');
   function abrirAdmin() {
     modalAdmin.classList.remove('hidden');
@@ -1754,6 +2386,9 @@
     }
   }
 
+  /* =========================================================
+     TEMA
+     ========================================================= */
   const TEMA_KEY = 'mj_tema';
   function aplicarTema(tema) {
     const btn = $('btn-tema');
@@ -1773,9 +2408,11 @@
     mostrarToast(novo === 'escuro' ? '🌙 Modo noturno ativado' : '☀️ Modo claro ativado');
   }
   (function() { aplicarTema(localStorage.getItem(TEMA_KEY) || 'claro'); })();
-  const btnTema = $('btn-tema');
-  if (btnTema) btnTema.addEventListener('click', alternarTema);
+  $('btn-tema').addEventListener('click', alternarTema);
 
+  /* =========================================================
+     INIT
+     ========================================================= */
   renderFavoritos();
   obterLocalizacaoReal();
 
@@ -1786,6 +2423,11 @@
       : { paddingTopLeft: [40, 80], paddingBottomRight: [40, 380] });
     map.invalidateSize();
   }, 200));
+
+  // limpa oferta fantasma ao fechar a aba
+  window.addEventListener('beforeunload', () => {
+    pararHeartbeat();
+  });
 
 })();
 </script>
