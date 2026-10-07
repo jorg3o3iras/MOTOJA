@@ -2280,18 +2280,42 @@
     const m = $('modal-admin-senha');
     m.classList.add('hidden'); m.classList.remove('flex');
   }
-  function validarSenhaAdmin() {
-    const v = $('admin-senha-input').value;
-    if (v === SENHA_ADMIN) {
-      fecharModalSenhaAdmin();
-      abrirAdmin();
-    } else {
-      $('admin-senha-erro').classList.remove('hidden');
-      $('admin-senha-input').value = '';
-      $('admin-senha-input').focus();
-      setTimeout(() => $('admin-senha-erro').classList.add('hidden'), 2500);
-    }
+  async function validarSenhaAdmin() {
+  const v = $('admin-senha-input').value;
+
+  // Senha errada → não faz nada, só mostra erro
+  if (v !== SENHA_ADMIN) {
+    $('admin-senha-erro').classList.remove('hidden');
+    $('admin-senha-input').value = '';
+    $('admin-senha-input').focus();
+    setTimeout(() => $('admin-senha-erro').classList.add('hidden'), 2500);
+    return;
   }
+
+  // Senha certa → agora sim valida login + permissão
+  fecharModalSenhaAdmin();
+
+  // 1. Está logado?
+  if (!state.user) {
+    mostrarToast('Faça login como administrador', 'error');
+    abrirAuth('login');
+    return;
+  }
+
+  // 2. É admin no banco?
+  const { data: ehAdmin, error } = await supabase.rpc('sou_admin');
+  if (error) {
+    mostrarToast('Erro ao verificar permissão', 'error');
+    return;
+  }
+  if (!ehAdmin) {
+    mostrarToast('Sua conta não tem permissão de admin', 'error');
+    return;
+  }
+
+  // 3. Tudo OK → abre o painel
+  abrirAdmin();
+}
 
   $('btn-admin-senha-cancelar').addEventListener('click', fecharModalSenhaAdmin);
   $('btn-admin-senha-entrar').addEventListener('click', validarSenhaAdmin);
@@ -2300,14 +2324,10 @@
     if (e.target === $('modal-admin-senha')) fecharModalSenhaAdmin();
   });
 
-  // Botão Admin: exige login + ser admin no banco + senha
-  $('btn-admin').addEventListener('click', async () => {
-    if (!state.user) { mostrarToast('Faça login primeiro', 'error'); abrirAuth('login'); return; }
-    const { data: ehAdmin, error } = await supabase.rpc('sou_admin');
-    if (error) { mostrarToast('Erro ao verificar permissão', 'error'); return; }
-    if (!ehAdmin) { mostrarToast('Você não tem permissão de admin', 'error'); return; }
-    abrirModalSenhaAdmin();
-  });
+  // Botão Admin: SEMPRE pede a senha primeiro
+$('btn-admin').addEventListener('click', () => {
+  abrirModalSenhaAdmin();
+});
 
   document.querySelectorAll('.admin-tab').forEach(btn => {
     btn.addEventListener('click', () => {
