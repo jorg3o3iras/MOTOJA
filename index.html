@@ -773,6 +773,7 @@
     // motoqueiro
     canalOfertas: null, canalMinhaCorrida: null, ofertaAtual: null,
     timerOferta: null, corridaAtual: null, timerHeartbeat: null,
+    _pollOferta: null,
     // misc
     buscaAbort: null, favAbort: null
   };
@@ -914,6 +915,7 @@
     pararHeartbeat();
     if (state.canalOfertas) { supabase.removeChannel(state.canalOfertas); state.canalOfertas = null; }
     if (state.canalMinhaCorrida) { supabase.removeChannel(state.canalMinhaCorrida); state.canalMinhaCorrida = null; }
+    if (state._pollOferta) { clearInterval(state._pollOferta); state._pollOferta = null; }
     // encerra tudo do passageiro
     pararPolling(); pararCanaisPassageiro();
     await supabase.auth.signOut();
@@ -942,7 +944,7 @@
       const favsBackend = await carregarFavoritosDoBackend();
       if (favsBackend.length > 0) { favoritos = favsBackend; renderFavoritos(); }
       if (state.pickup) {
-        carregarMotoqueirosNoMapa();
+        carregarMotoqueirosNoMapaDebounced();
       }
       // se o motoqueiro já estava online, religa heartbeat
       if (state.motoqueiroCadastro?.status === 'aprovado' && state.motoqueiroCadastro?.disponivel) {
@@ -1062,7 +1064,7 @@
         await definirPickup(pos.coords.latitude, pos.coords.longitude, null, true);
         mostrarBanner('📍 Você está aqui', 'sucesso');
         setTimeout(esconderBanner, 2500);
-        if (state.user) carregarMotoqueirosNoMapa();
+        if (state.user) carregarMotoqueirosNoMapaDebounced();
       },
       (err) => {
         const msg = err.code === 1 ? 'Permissão negada. Ative o GPS.' : 'GPS indisponível';
@@ -1561,12 +1563,17 @@
     );
   }
 
+  // >>> OTIMIZAÇÃO #1: polling de 3s → 15s + colunas mínimas
   function iniciarPolling(corridaId) {
     pararPolling();
     state.pollTimer = setInterval(async () => {
-      const { data } = await supabase.from('corridas').select('*').eq('id', corridaId).maybeSingle();
+      const { data } = await supabase
+        .from('corridas')
+        .select('id, status, motoqueiro_id, offer_motoqueiro_id, codigo_embarque, origem_nome, destino_nome, preco_total, distancia_km, duracao_min')
+        .eq('id', corridaId)
+        .maybeSingle();
       if (data) tratarUpdateCorrida(data);
-    }, 3000);
+    }, 15000);
   }
   function pararPolling() {
     if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
@@ -1624,14 +1631,20 @@
     rastrearMotoqueiroRealtime(mot.id, corrida.origem_lat, corrida.origem_lng);
   }
 
+  // >>> OTIMIZAÇÃO #5: ignora updates de posição duplicados
   function rastrearMotoqueiroRealtime(motoqueiroId, alvoLat, alvoLng) {
     if (state.canalMotoPos) supabase.removeChannel(state.canalMotoPos);
+    let ultimoLat = null, ultimoLng = null;
     state.canalMotoPos = supabase
       .channel('pos-moto-' + motoqueiroId)
       .on('postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'motoqueiros', filter: `id=eq.${motoqueiroId}` },
         ({ new: m }) => {
           if (!m?.lat || !m?.lng || !markerMoto) return;
+          // ignora updates que não mudaram a posição (ex: nota_media, total_corridas)
+          if (m.lat === ultimoLat && m.lng === ultimoLng) return;
+          ultimoLat = m.lat; ultimoLng = m.lng;
+
           const p = { lat: m.lat, lng: m.lng };
           const alvo = { lat: alvoLat, lng: alvoLng };
           const d = haversine(p, alvo);
@@ -1819,6 +1832,7 @@
     btnToggle.textContent = c.disponivel ? 'Ficar offline' : 'Ficar online';
   }
 
+  // >>> OTIMIZAÇÃO #2: heartbeat de 10s → 30s
   function iniciarHeartbeat() {
     pararHeartbeat();
     const ping = () => {
@@ -1829,7 +1843,7 @@
       );
     };
     ping();
-    state.timerHeartbeat = setInterval(ping, 10000);
+    state.timerHeartbeat = setInterval(ping, 30000);
   }
   function pararHeartbeat() {
     if (state.timerHeartbeat) { clearInterval(state.timerHeartbeat); state.timerHeartbeat = null; }
@@ -1855,6 +1869,7 @@
         } else {
           pararHeartbeat();
           if (state.canalOfertas) { supabase.removeChannel(state.canalOfertas); state.canalOfertas = null; }
+          if (state._pollOferta) { clearInterval(state._pollOferta); state._pollOferta = null; }
           fecharModalOferta();
           mostrarToast('🔴 Você está offline');
         }
@@ -1884,13 +1899,13 @@
         })
       .subscribe();
 
-    // fallback: polling curto
-    clearInterval(state._pollOferta);
+    // >>> OTIMIZAÇÃO #3: polling de 3s → 15s + colunas mínimas
+    if (state._pollOferta) clearInterval(state._pollOferta);
     state._pollOferta = setInterval(async () => {
       if (!state.motoqueiroCadastro?.disponivel || state.ofertaAtual || state.corridaAtual) return;
       const { data } = await supabase
         .from('corridas')
-        .select('*')
+        .select('id, status, motoqueiro_id, offer_motoqueiro_id, codigo_embarque, origem_nome, destino_nome, preco_total, distancia_km, duracao_min, offer_expires_at, origem_lat, origem_lng')
         .eq('offer_motoqueiro_id', meuMotId)
         .eq('status', 'oferecida')
         .gte('offer_expires_at', new Date().toISOString())
@@ -1898,7 +1913,7 @@
         .limit(1)
         .maybeSingle();
       if (data) abrirModalOferta(data);
-    }, 3000);
+    }, 15000);
   }
 
   /* -------- MODAL DE OFERTA -------- */
@@ -2086,9 +2101,12 @@
   }
 
   /* -------- pins de motoqueiros no mapa (estética) -------- */
+  // >>> OTIMIZAÇÃO #4: raio 5km, limite 10 + debounce
+  const carregarMotoqueirosNoMapaDebounced = debounce(carregarMotoqueirosNoMapa, 3000);
+
   async function carregarMotoqueirosNoMapa() {
     if (!state.pickup) return;
-    const lista = await buscarMotoqueirosProximos(state.pickup.lat, state.pickup.lng, 10, 20);
+    const lista = await buscarMotoqueirosProximos(state.pickup.lat, state.pickup.lng, 5, 10);
     limparMotoqueirosDoMapa();
     lista.forEach(m => {
       const marker = L.marker([m.lat, m.lng], { icon: criarIconeMotoSimples(m.nome) })
@@ -2424,7 +2442,24 @@
     map.invalidateSize();
   }, 200));
 
-  // limpa oferta fantasma ao fechar a aba
+  // >>> OTIMIZAÇÃO #6: pausa polling/heartbeat quando a aba está em background
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
+      if (state._pollOferta) { clearInterval(state._pollOferta); state._pollOferta = null; }
+      if (state.timerHeartbeat) { clearInterval(state.timerHeartbeat); state.timerHeartbeat = null; }
+      console.log('[Egress] aba oculta → polling pausado');
+    } else {
+      if (state.corridaId) iniciarPolling(state.corridaId);
+      if (state.motoqueiroCadastro?.status === 'aprovado' && state.motoqueiroCadastro?.disponivel) {
+        iniciarHeartbeat();
+        ouvirMinhasOfertas();
+      }
+      console.log('[Egress] aba visível → polling religado');
+    }
+  });
+
+  // limpa heartbeat ao fechar a aba
   window.addEventListener('beforeunload', () => {
     pararHeartbeat();
   });
