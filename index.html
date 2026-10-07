@@ -663,7 +663,6 @@
      ========================================================= */
   const SUPABASE_URL = 'https://zthpupgggmxwrsfksalw.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_Q0zXHqPXXsUrbzwOxHL5_w_2E1vKdo4';
-  const SENHA_ADMIN = '123456'; // ← troque aqui pela sua senha
 
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
@@ -2282,39 +2281,52 @@
   }
   async function validarSenhaAdmin() {
   const v = $('admin-senha-input').value;
+  if (!v) return;
 
-  // Senha errada → não faz nada, só mostra erro
-  if (v !== SENHA_ADMIN) {
-    $('admin-senha-erro').classList.remove('hidden');
-    $('admin-senha-input').value = '';
-    $('admin-senha-input').focus();
-    setTimeout(() => $('admin-senha-erro').classList.add('hidden'), 2500);
-    return;
+  const btn = $('btn-admin-senha-entrar');
+  const txt = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Verificando...';
+
+  try {
+    // 1. Valida a senha NO BANCO (nunca no frontend)
+    const { data: senhaOk, error: errSenha } = await supabase.rpc('validar_senha_admin', { p_senha: v });
+    if (errSenha) throw errSenha;
+
+    if (!senhaOk) {
+      $('admin-senha-erro').classList.remove('hidden');
+      $('admin-senha-input').value = '';
+      $('admin-senha-input').focus();
+      setTimeout(() => $('admin-senha-erro').classList.add('hidden'), 2500);
+      return;
+    }
+
+    // 2. Senha certa → fecha o modal
+    fecharModalSenhaAdmin();
+
+    // 3. Está logado?
+    if (!state.user) {
+      mostrarToast('Faça login como administrador', 'error');
+      abrirAuth('login');
+      return;
+    }
+
+    // 4. Está na tabela admins?
+    const { data: ehAdmin, error: errAdmin } = await supabase.rpc('sou_admin');
+    if (errAdmin) throw errAdmin;
+    if (!ehAdmin) {
+      mostrarToast('Sua conta não tem permissão de admin', 'error');
+      return;
+    }
+
+    // 5. Tudo OK → abre painel
+    abrirAdmin();
+  } catch (e) {
+    mostrarToast('Erro: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = txt;
   }
-
-  // Senha certa → agora sim valida login + permissão
-  fecharModalSenhaAdmin();
-
-  // 1. Está logado?
-  if (!state.user) {
-    mostrarToast('Faça login como administrador', 'error');
-    abrirAuth('login');
-    return;
-  }
-
-  // 2. É admin no banco?
-  const { data: ehAdmin, error } = await supabase.rpc('sou_admin');
-  if (error) {
-    mostrarToast('Erro ao verificar permissão', 'error');
-    return;
-  }
-  if (!ehAdmin) {
-    mostrarToast('Sua conta não tem permissão de admin', 'error');
-    return;
-  }
-
-  // 3. Tudo OK → abre o painel
-  abrirAdmin();
 }
 
   $('btn-admin-senha-cancelar').addEventListener('click', fecharModalSenhaAdmin);
