@@ -100,9 +100,9 @@
   <div class="pointer-events-auto flex gap-2 flex-wrap justify-end max-w-[70%]">
     <button id="btn-localizar" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold hover:scale-[1.02] active:scale-[0.98] transition">📍 Onde estou</button>
     <button id="btn-tema" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold" title="Alternar tema">🌙</button>
-    <button id="btn-conta" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold">👤 Entrar</button>
+    <button id="btn-conta" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold">👤 Passageiro</button>
     <button id="btn-sair-header" type="button" class="hidden glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold hover:bg-red-50 hover:text-red-600 transition">🚪 Sair</button>
-    <button id="btn-abrir-cadastro-moto" type="button" class="bg-black text-white shadow-premium-lg rounded-full px-5 py-2.5 text-[13px] font-bold hover:bg-zinc-900 transition">🪪 Sou Motoqueiro</button>
+    <button id="btn-abrir-cadastro-moto" type="button" class="bg-black text-white shadow-premium-lg rounded-full px-5 py-2.5 text-[13px] font-bold hover:bg-zinc-900 transition">🪪 Cadastrar Motoqueiro</button>
     <button id="btn-admin" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold">🔧 Admin</button>
   </div>
 </header>
@@ -982,7 +982,7 @@
       }
     } else {
       state.user = null; state.profile = null; state.motoqueiroCadastro = null;
-      $('btn-conta').innerHTML = '👤 Entrar';
+      $('btn-conta').innerHTML = '👤 Passageiro';
       $('user-logado').classList.add('hidden');
       $('btn-sair-header').classList.add('hidden'); // esconde botão Sair
       limparMotoqueirosDoMapa();
