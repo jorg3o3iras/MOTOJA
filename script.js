@@ -240,6 +240,26 @@
     });
     return path;
   }
+
+  /* -------- DOCUMENTOS (ADMIN) -------- */
+  async function carregarDocumentosMotoqueiro(motoqueiroId) {
+    const { data, error } = await supabase
+      .from('documentos')
+      .select('id, tipo, url_storage, status, criado_em')
+      .eq('motoqueiro_id', motoqueiroId);
+
+    if (error || !data?.length) return [];
+
+    const docs = await Promise.all(data.map(async (d) => {
+      const { data: signed } = await supabase.storage
+        .from('documentos')
+        .createSignedUrl(d.url_storage, 3600);
+      return { ...d, url_assinada: signed?.signedUrl || null };
+    }));
+
+    return docs;
+  }
+
   async function carregarFavoritosDoBackend() {
     if (!state.user) return [];
     const { data, error } = await supabase.from('favoritos').select('id, nome, lat, lng, icone, endereco').order('criado_em', { ascending: false });
@@ -265,7 +285,6 @@
      ========================================================= */
   const modalAuth = $('modal-auth');
 
-  // Guarda de onde o usuário veio para saber o que abrir após o cadastro
   let intencaoCadastro = null; // 'passageiro' | 'motoqueiro'
 
   function abrirAuth(aba = 'login') {
@@ -274,7 +293,6 @@
   function fecharAuth() {
     modalAuth.classList.add('hidden'); modalAuth.classList.remove('flex');
     $('form-login').reset(); $('form-signup').reset();
-    // NÃO limpa intencaoCadastro aqui — o handler do signup precisa dela
   }
   function trocarAba(aba) {
     const isLogin = aba === 'login';
@@ -293,7 +311,6 @@
     else abrirAuth('login');
   });
 
-  // Botão Sair do header
   $('btn-sair-header').addEventListener('click', () => {
     if (confirm('Deseja sair da conta?')) fazerLogout();
   });
@@ -411,7 +428,6 @@
     try {
       const data = await fazerCadastro(nome, email, senha, telefone);
 
-      // Caso 1: confirmação de e-mail ligada → não veio session
       if (!data.session) {
         mostrarToast('Confirme seu e-mail antes de continuar', 'success');
         fecharAuth();
@@ -420,7 +436,6 @@
         return;
       }
 
-      // Caso 2: veio session (já logado)
       if (data.user) {
         const profile = await carregarProfile(data.user.id);
         await atualizarUIUsuario(data.user, profile);
@@ -429,7 +444,6 @@
       fecharAuth();
       mostrarToast('✓ Conta criada!', 'success');
 
-      // Se veio do botão 🪪 Motoqueiro → abre o modal de cadastro de motoqueiro
       if (intencaoCadastro === 'motoqueiro') {
         intencaoCadastro = null;
         setTimeout(() => abrirMoto(), 400);
@@ -1228,14 +1242,12 @@
     const texto = $('moto-status-texto');
     const sheet = $('sheet');
 
-    // Sem cadastro de motoqueiro → passageiro comum
     if (!state.motoqueiroCadastro) {
       painel.classList.add('hidden');
       if (sheet) sheet.classList.remove('hidden');
       return;
     }
 
-    // Tem cadastro → é motoqueiro. Esconde a sheet (não é passageiro)
     if (sheet) sheet.classList.add('hidden');
     painel.classList.remove('hidden');
 
@@ -1578,7 +1590,6 @@
 
   function abrirMoto() {
     if (!state.user) {
-      // Marca a intenção e manda pro cadastro de conta
       intencaoCadastro = 'motoqueiro';
       mostrarToast('Crie uma conta para continuar como motoqueiro', 'info');
       abrirAuth('signup');
@@ -1642,6 +1653,7 @@
     if (etapaMoto === 2 && (!$('moto-marca').value || !$('moto-modelo').value.trim())) {
       mostrarToast('Preencha marca e modelo', 'error'); return;
     }
+    // ✅ ETAPA 3 (documentos) agora é OPCIONAL — não bloqueia o avanço
     goMoto(etapaMoto + 1);
   });
 
@@ -1696,7 +1708,6 @@
     btn.textContent = 'Verificando...';
 
     try {
-      // 1. Valida a senha NO BANCO (nunca no frontend)
       const { data: senhaOk, error: errSenha } = await supabase.rpc('validar_senha_admin', { p_senha: v });
       if (errSenha) throw errSenha;
 
@@ -1708,17 +1719,14 @@
         return;
       }
 
-      // 2. Senha certa → fecha o modal
       fecharModalSenhaAdmin();
 
-      // 3. Está logado?
       if (!state.user) {
         mostrarToast('Faça login como administrador', 'error');
         abrirAuth('login');
         return;
       }
 
-      // 4. Está na tabela admins?
       const { data: ehAdmin, error: errAdmin } = await supabase.rpc('sou_admin');
       if (errAdmin) throw errAdmin;
       if (!ehAdmin) {
@@ -1726,7 +1734,6 @@
         return;
       }
 
-      // 5. Tudo OK → abre painel
       abrirAdmin();
     } catch (e) {
       mostrarToast('Erro: ' + e.message, 'error');
@@ -1743,7 +1750,6 @@
     if (e.target === $('modal-admin-senha')) fecharModalSenhaAdmin();
   });
 
-  // Botão Admin: SEMPRE pede a senha primeiro
   $('btn-admin').addEventListener('click', () => {
     abrirModalSenhaAdmin();
   });
@@ -1794,13 +1800,82 @@
         el.innerHTML = '<div class="text-center py-12 text-zinc-400 text-[14px]">🎉 Nenhum motoqueiro pendente</div>';
         return;
       }
+
       el.innerHTML = data.map(m => {
         const nome = (m.profiles && m.profiles.nome_completo) || 'Sem nome';
         const tel = (m.profiles && m.profiles.telefone) || '';
-        return '<div class="admin-card"><div class="flex items-start justify-between gap-3 mb-3"><div class="flex-1 min-w-0"><div class="sora font-bold text-[16px] truncate">' + nome + '</div><div class="text-[12px] text-zinc-500 mt-0.5">' + tel + '</div><div class="text-[12px] text-zinc-500 mt-1">🏍️ ' + (m.moto_marca || '') + ' ' + (m.moto_modelo || '') + ' · ' + (m.moto_placa || '') + '</div></div></div><div class="flex gap-2"><button class="admin-btn aprovar flex-1" data-aprovar="' + m.id + '">✓ Aprovar</button><button class="admin-btn reprovar flex-1" data-reprovar="' + m.id + '">✕ Reprovar</button></div></div>';
+        return `
+          <div class="admin-card" data-mot-id="${m.id}">
+            <div class="flex items-start justify-between gap-3 mb-3">
+              <div class="flex-1 min-w-0">
+                <div class="sora font-bold text-[16px] truncate">${nome}</div>
+                <div class="text-[12px] text-zinc-500 mt-0.5">${tel}</div>
+                <div class="text-[12px] text-zinc-500 mt-1">🏍️ ${(m.moto_marca || '')} ${(m.moto_modelo || '')} · ${(m.moto_placa || '')}</div>
+              </div>
+            </div>
+
+            <button type="button" class="ver-docs-btn w-full bg-zinc-100 hover:bg-zinc-200 rounded-xl py-2.5 text-[12px] font-bold mb-2 transition" data-mot-id="${m.id}">
+              📎 Ver documentos
+            </button>
+            <div class="docs-container hidden mb-3 space-y-2" data-docs-for="${m.id}"></div>
+
+            <div class="flex gap-2">
+              <button class="admin-btn aprovar flex-1" data-aprovar="${m.id}">✓ Aprovar</button>
+              <button class="admin-btn reprovar flex-1" data-reprovar="${m.id}">✕ Reprovar</button>
+            </div>
+          </div>`;
       }).join('');
-      el.querySelectorAll('[data-aprovar]').forEach(btn => btn.addEventListener('click', () => mudarStatus(btn.dataset.aprovar, 'aprovado')));
-      el.querySelectorAll('[data-reprovar]').forEach(btn => btn.addEventListener('click', () => mudarStatus(btn.dataset.reprovar, 'reprovado')));
+
+      el.querySelectorAll('[data-aprovar]').forEach(btn =>
+        btn.addEventListener('click', () => mudarStatus(btn.dataset.aprovar, 'aprovado')));
+      el.querySelectorAll('[data-reprovar]').forEach(btn =>
+        btn.addEventListener('click', () => mudarStatus(btn.dataset.reprovar, 'reprovado')));
+
+      el.querySelectorAll('.ver-docs-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const motId = btn.dataset.motId;
+          const container = el.querySelector(`[data-docs-for="${motId}"]`);
+          if (!container) return;
+
+          if (!container.classList.contains('hidden')) {
+            container.classList.add('hidden');
+            container.innerHTML = '';
+            btn.textContent = '📎 Ver documentos';
+            return;
+          }
+
+          container.classList.remove('hidden');
+          container.innerHTML = '<div class="text-[12px] text-zinc-400 text-center py-3">Carregando documentos...</div>';
+          btn.textContent = '📎 Ocultar documentos';
+
+          const docs = await carregarDocumentosMotoqueiro(motId);
+
+          if (!docs.length) {
+            container.innerHTML = '<div class="text-[12px] text-zinc-400 text-center py-3">Nenhum documento enviado</div>';
+            return;
+          }
+
+          container.innerHTML = docs.map(d => {
+            const label = { cnh: '🪪 CNH', crlv: '📋 CRLV', selfie: '🤳 Selfie' }[d.tipo] || d.tipo;
+            const isImg = /\.(jpg|jpeg|png|webp|gif)$/i.test(d.url_storage);
+            return `
+              <div class="border border-zinc-200 rounded-xl overflow-hidden">
+                <div class="flex items-center justify-between px-3 py-2 bg-zinc-50">
+                  <span class="text-[12px] font-bold">${label}</span>
+                  <span class="text-[10px] text-emerald-600 font-bold uppercase">${d.status}</span>
+                </div>
+                ${isImg && d.url_assinada
+                  ? `<img src="${d.url_assinada}" class="w-full max-h-[240px] object-contain bg-zinc-100 cursor-pointer" onclick="window.open('${d.url_assinada}','_blank')">`
+                  : ''}
+                <a href="${d.url_assinada || '#'}" target="_blank"
+                   class="block text-center text-[12px] font-bold py-2 bg-white hover:bg-zinc-100 text-black border-t border-zinc-200">
+                  🔗 Abrir arquivo
+                </a>
+              </div>`;
+          }).join('');
+        });
+      });
+
     } catch (e) {
       console.error(e);
       el.innerHTML = '<div class="text-center py-12 text-red-500 text-[13px]">Erro: ' + e.message + '</div>';
@@ -2014,7 +2089,6 @@
     }
   });
 
-  // helper para não quebrar se a aba voltar antes de ter motoqueiro
   function ouvirMinhasOfertasSafe() {
     try { ouvirMinhasOfertas(); } catch (_) {}
   }
