@@ -91,11 +91,78 @@
   }
 
   /* =========================================================
-     MAPA
+     MAPA + CAMADAS (Mapa / Satélite / Híbrido / Escuro)
      ========================================================= */
-  const map = L.map('map', { zoomControl: false, attributionControl: true }).setView([-15.7939, -47.8828], 4);
+  const map = L.map('map', {
+    zoomControl: false,
+    attributionControl: true
+  }).setView([-15.7939, -47.8828], 4);
 
-  L.maplibreGL({ style: 'https://tiles.openfreemap.org/styles/liberty' }).addTo(map);
+  const ATTR_OSM   = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+  const ATTR_CART  = '&copy; <a href="https://carto.com/attributions">CARTO</a>';
+  const ATTR_ESRI  = 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics';
+
+  // 🔧 Camadas disponíveis
+  const CAMADAS = {
+    mapa: {
+      nome: 'Mapa',
+      layer: L.maplibreGL({ style: 'https://tiles.openfreemap.org/styles/liberty' }),
+      classe: ''
+    },
+    satelite: {
+      nome: 'Satélite',
+      layer: L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        { maxZoom: 19, attribution: ATTR_ESRI, className: 'satelite' }
+      ),
+      classe: 'satelite'
+    },
+    hibrido: {
+      nome: 'Híbrido',
+      layer: L.layerGroup([
+        L.tileLayer(
+          'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          { maxZoom: 19, attribution: ATTR_ESRI, className: 'satelite' }
+        ),
+        L.tileLayer(
+          'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
+          { maxZoom: 19, attribution: ATTR_CART, pane: 'shadowPane', opacity: 0.9 }
+        )
+      ]),
+      classe: 'hibrido'
+    },
+    escuro: {
+      nome: 'Escuro',
+      layer: L.maplibreGL({ style: 'https://tiles.openfreemap.org/styles/dark' }),
+      classe: 'escuro'
+    }
+  };
+
+  const CAMADA_KEY = 'mj_camada';
+  let camadaAtual = null;
+
+  function aplicarCamada(nome) {
+    if (!CAMADAS[nome]) nome = 'mapa';
+
+    if (camadaAtual) {
+      map.removeLayer(CAMADAS[camadaAtual].layer);
+    }
+
+    CAMADAS[nome].layer.addTo(map);
+    camadaAtual = nome;
+
+    document.querySelectorAll('.camada-op').forEach(b =>
+      b.classList.toggle('on', b.dataset.camada === nome)
+    );
+
+    const icones = { mapa: '🗺️', satelite: '🛰️', hibrido: '🌐', escuro: '🌙' };
+    const btn = document.getElementById('btn-camadas');
+    if (btn) btn.textContent = icones[nome] || '🗺️';
+
+    try { localStorage.setItem(CAMADA_KEY, nome); } catch (_) {}
+  }
+
+  aplicarCamada(localStorage.getItem(CAMADA_KEY) || 'mapa');
 
   const isDesktop = window.innerWidth >= 768;
   const mapPad = isDesktop
@@ -132,6 +199,39 @@
   function limparMotoqueirosDoMapa() {
     markersMotoqueiros.forEach(m => map.removeLayer(m));
     markersMotoqueiros.clear();
+  }
+
+  /* =========================================================
+     MODAL DE CAMADAS DO MAPA
+     ========================================================= */
+  const modalCamadas = $('modal-camadas');
+
+  if (modalCamadas) {
+    $('btn-camadas').addEventListener('click', () => {
+      modalCamadas.classList.remove('hidden');
+      modalCamadas.classList.add('flex');
+    });
+    $('btn-fechar-camadas').addEventListener('click', () => {
+      modalCamadas.classList.add('hidden');
+      modalCamadas.classList.remove('flex');
+    });
+    modalCamadas.addEventListener('click', e => {
+      if (e.target === modalCamadas) {
+        modalCamadas.classList.add('hidden');
+        modalCamadas.classList.remove('flex');
+      }
+    });
+
+    $$('.camada-op').forEach(btn => {
+      btn.addEventListener('click', () => {
+        aplicarCamada(btn.dataset.camada);
+        setTimeout(() => {
+          modalCamadas.classList.add('hidden');
+          modalCamadas.classList.remove('flex');
+          mostrarToast('🛰️ Camada: ' + CAMADAS[btn.dataset.camada].nome, 'success');
+        }, 220);
+      });
+    });
   }
 
   /* =========================================================
@@ -178,13 +278,11 @@
     } catch (e) { console.warn('[MotoJá] atualizar posição:', e.message); return false; }
   }
 
-  // 🔒 NÃO envia mais o preço — o backend calcula com base em `configuracoes`
   async function criarCorridaBackend(origem, destino, distancia, duracao) {
     const { data, error } = await supabase.rpc('criar_corrida', {
       p_origem_nome: origem.nome, p_origem_lat: origem.lat, p_origem_lng: origem.lng,
       p_destino_nome: destino.nome, p_destino_lat: destino.lat, p_destino_lng: destino.lng,
       p_distancia_km: distancia, p_duracao_min: duracao
-      // p_preco_total: o backend ignora e calcula o oficial
     });
     if (error) throw error;
     return data;
@@ -223,10 +321,6 @@
 
     if (error) {
       console.error('[Moto] ERRO:', error);
-      console.error('[Moto] code:', error.code);
-      console.error('[Moto] message:', error.message);
-      console.error('[Moto] details:', error.details);
-      console.error('[Moto] hint:', error.hint);
       throw error;
     }
 
@@ -247,7 +341,6 @@
     return path;
   }
 
-  /* -------- DOCUMENTOS (ADMIN) -------- */
   async function carregarDocumentosMotoqueiro(motoqueiroId) {
     const { data, error } = await supabase
       .from('documentos')
@@ -266,7 +359,6 @@
     return docs;
   }
 
-  /* -------- CONFIG DE PREÇOS -------- */
   async function carregarConfigPrecos() {
     try {
       const { data, error } = await supabase.rpc('obter_config_precos');
@@ -990,7 +1082,6 @@
     }
 
     try {
-      // 🔒 NÃO envia mais o preço — backend calcula
       const resp = await criarCorridaBackend(
         state.pickup, state.destino,
         state.rota.distancia, state.rota.duracao
@@ -998,7 +1089,6 @@
       state.corridaId = resp.corrida_id || resp.id || resp;
       if (!state.corridaId) throw new Error('Backend não retornou id');
 
-      // 💰 Guarda o preço OFICIAL devolvido pelo backend
       if (resp.preco_total) {
         state.precoOficial = Number(resp.preco_total);
         console.log('[Corrida] Preço oficial do backend:', state.precoOficial);
@@ -1761,7 +1851,6 @@
     if (etapaMoto === 2 && (!$('moto-marca').value || !$('moto-modelo').value.trim())) {
       mostrarToast('Preencha marca e modelo', 'error'); return;
     }
-    // ✅ ETAPA 3 (documentos) agora é OPCIONAL — não bloqueia o avanço
     goMoto(etapaMoto + 1);
   });
 
@@ -1773,6 +1862,9 @@
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     if (modoMapaAtivo) desativarModoMapa(true);
+    else if (modalCamadas && !modalCamadas.classList.contains('hidden')) {
+      modalCamadas.classList.add('hidden'); modalCamadas.classList.remove('flex');
+    }
     else if (!$('modal-admin-senha').classList.contains('hidden')) fecharModalSenhaAdmin();
     else if (!$('modal-admin').classList.contains('hidden')) fecharAdmin();
     else if (!$('modal-fav').classList.contains('hidden')) fecharModalFav();
@@ -1992,194 +2084,189 @@
   }
 
   async function carregarMotoqueiros(filtro) {
-  const el = $('admin-lista-motoqueiros');
-  el.innerHTML = '<div class="text-center py-12 text-zinc-400 text-[14px]">Carregando...</div>';
-  try {
-    let query = supabase
-      .from('motoqueiros')
-      .select('id, status, moto_marca, moto_modelo, moto_placa, disponivel, total_corridas, criado_em, profiles(nome_completo, telefone)')
-      .order('criado_em', { ascending: false });
-    if (filtro) query = query.eq('status', filtro);
-    const { data, error } = await query;
-    if (error) throw error;
-    if (!data.length) {
-      el.innerHTML = '<div class="text-center py-12 text-zinc-400 text-[14px]">Nenhum motoqueiro encontrado</div>';
-      return;
-    }
-
-    const coresStatus = {
-      aprovado: '#059669',
-      pendente: '#f59e0b',
-      reprovado: '#dc2626',
-      suspenso: '#71717a'
-    };
-
-    el.innerHTML = data.map(m => {
-      const nome = (m.profiles && m.profiles.nome_completo) || 'Sem nome';
-      const tel = (m.profiles && m.profiles.telefone) || '—';
-      const corStatus = coresStatus[m.status] || '#71717a';
-
-      // Botões variam conforme o status
-      let botoes = '';
-      if (m.status === 'pendente') {
-        botoes = `
-          <button class="admin-btn aprovar flex-1" data-aprovar="${m.id}">✓ Aprovar</button>
-          <button class="admin-btn reprovar flex-1" data-reprovar="${m.id}">✕ Reprovar</button>`;
-      } else if (m.status === 'aprovado') {
-        botoes = `
-          <button class="admin-btn suspender flex-1" data-suspender="${m.id}">⏸ Suspender</button>
-          <button class="admin-btn reprovar flex-1" data-excluir="${m.id}">🗑 Excluir</button>`;
-      } else if (m.status === 'suspenso') {
-        botoes = `
-          <button class="admin-btn aprovar flex-1" data-reativar="${m.id}">▶ Reativar</button>
-          <button class="admin-btn reprovar flex-1" data-excluir="${m.id}">🗑 Excluir</button>`;
-      } else if (m.status === 'reprovado') {
-        botoes = `
-          <button class="admin-btn aprovar flex-1" data-aprovar="${m.id}">✓ Aprovar</button>
-          <button class="admin-btn reprovar flex-1" data-excluir="${m.id}">🗑 Excluir</button>`;
+    const el = $('admin-lista-motoqueiros');
+    el.innerHTML = '<div class="text-center py-12 text-zinc-400 text-[14px]">Carregando...</div>';
+    try {
+      let query = supabase
+        .from('motoqueiros')
+        .select('id, status, moto_marca, moto_modelo, moto_placa, disponivel, total_corridas, criado_em, profiles(nome_completo, telefone)')
+        .order('criado_em', { ascending: false });
+      if (filtro) query = query.eq('status', filtro);
+      const { data, error } = await query;
+      if (error) throw error;
+      if (!data.length) {
+        el.innerHTML = '<div class="text-center py-12 text-zinc-400 text-[14px]">Nenhum motoqueiro encontrado</div>';
+        return;
       }
 
-      return `
-        <div class="admin-card">
-          <div class="flex items-start justify-between gap-3 mb-2">
-            <div class="flex-1 min-w-0">
-              <div class="sora font-bold text-[15px] truncate">${nome}</div>
-              <div class="text-[12px] text-zinc-500 mt-0.5">${(m.moto_marca || '')} ${(m.moto_modelo || '')} · ${(m.moto_placa || '')}</div>
-            </div>
-            <div class="text-[10px] font-bold px-2 py-1 rounded-full"
-                 style="background:${corStatus}20; color:${corStatus}">
-              ${m.status.toUpperCase()}
-            </div>
-          </div>
-          <div class="text-[11px] text-zinc-500 mb-2">📞 ${tel} · 🏁 ${(m.total_corridas || 0)} corridas · ${m.disponivel ? '🟢 Online' : '⚫ Offline'}</div>
+      const coresStatus = {
+        aprovado: '#059669',
+        pendente: '#f59e0b',
+        reprovado: '#dc2626',
+        suspenso: '#71717a'
+      };
 
-          <button type="button" class="ver-docs-btn w-full bg-zinc-100 hover:bg-zinc-200 rounded-xl py-2.5 text-[12px] font-bold mb-2 transition" data-mot-id="${m.id}">
-            📎 Ver documentos
-          </button>
-          <div class="docs-container hidden mb-3 space-y-2" data-docs-for="${m.id}"></div>
+      el.innerHTML = data.map(m => {
+        const nome = (m.profiles && m.profiles.nome_completo) || 'Sem nome';
+        const tel = (m.profiles && m.profiles.telefone) || '—';
+        const corStatus = coresStatus[m.status] || '#71717a';
 
-          <div class="flex gap-2">${botoes}</div>
-        </div>`;
-    }).join('');
-
-    // Handlers dos botões de ação
-    el.querySelectorAll('[data-aprovar]').forEach(btn =>
-      btn.addEventListener('click', () => mudarStatus(btn.dataset.aprovar, 'aprovado')));
-    el.querySelectorAll('[data-reprovar]').forEach(btn =>
-      btn.addEventListener('click', () => mudarStatus(btn.dataset.reprovar, 'reprovado')));
-    el.querySelectorAll('[data-suspender]').forEach(btn =>
-      btn.addEventListener('click', () => suspenderMotoqueiro(btn.dataset.suspender)));
-    el.querySelectorAll('[data-reativar]').forEach(btn =>
-      btn.addEventListener('click', () => reativarMotoqueiro(btn.dataset.reativar)));
-    el.querySelectorAll('[data-excluir]').forEach(btn =>
-      btn.addEventListener('click', () => excluirMotoqueiro(btn.dataset.excluir)));
-
-    // Handler do botão Ver documentos (igual à aba Pendentes)
-    el.querySelectorAll('.ver-docs-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const motId = btn.dataset.motId;
-        const container = el.querySelector(`[data-docs-for="${motId}"]`);
-        if (!container) return;
-
-        // Se já está aberto, só fecha
-        if (!container.classList.contains('hidden')) {
-          container.classList.add('hidden');
-          container.innerHTML = '';
-          btn.textContent = '📎 Ver documentos';
-          return;
+        let botoes = '';
+        if (m.status === 'pendente') {
+          botoes = `
+            <button class="admin-btn aprovar flex-1" data-aprovar="${m.id}">✓ Aprovar</button>
+            <button class="admin-btn reprovar flex-1" data-reprovar="${m.id}">✕ Reprovar</button>`;
+        } else if (m.status === 'aprovado') {
+          botoes = `
+            <button class="admin-btn suspender flex-1" data-suspender="${m.id}">⏸ Suspender</button>
+            <button class="admin-btn reprovar flex-1" data-excluir="${m.id}">🗑 Excluir</button>`;
+        } else if (m.status === 'suspenso') {
+          botoes = `
+            <button class="admin-btn aprovar flex-1" data-reativar="${m.id}">▶ Reativar</button>
+            <button class="admin-btn reprovar flex-1" data-excluir="${m.id}">🗑 Excluir</button>`;
+        } else if (m.status === 'reprovado') {
+          botoes = `
+            <button class="admin-btn aprovar flex-1" data-aprovar="${m.id}">✓ Aprovar</button>
+            <button class="admin-btn reprovar flex-1" data-excluir="${m.id}">🗑 Excluir</button>`;
         }
 
-        container.classList.remove('hidden');
-        container.innerHTML = '<div class="text-[12px] text-zinc-400 text-center py-3">Carregando documentos...</div>';
-        btn.textContent = '📎 Ocultar documentos';
-
-        const docs = await carregarDocumentosMotoqueiro(motId);
-
-        if (!docs.length) {
-          container.innerHTML = '<div class="text-[12px] text-zinc-400 text-center py-3">Nenhum documento enviado</div>';
-          return;
-        }
-
-        container.innerHTML = docs.map(d => {
-          const label = { cnh: '🪪 CNH', crlv: '📋 CRLV', selfie: '🤳 Selfie' }[d.tipo] || d.tipo;
-          const isImg = /\.(jpg|jpeg|png|webp|gif)$/i.test(d.url_storage);
-          return `
-            <div class="border border-zinc-200 rounded-xl overflow-hidden">
-              <div class="flex items-center justify-between px-3 py-2 bg-zinc-50">
-                <span class="text-[12px] font-bold">${label}</span>
-                <span class="text-[10px] text-emerald-600 font-bold uppercase">${d.status}</span>
+        return `
+          <div class="admin-card">
+            <div class="flex items-start justify-between gap-3 mb-2">
+              <div class="flex-1 min-w-0">
+                <div class="sora font-bold text-[15px] truncate">${nome}</div>
+                <div class="text-[12px] text-zinc-500 mt-0.5">${(m.moto_marca || '')} ${(m.moto_modelo || '')} · ${(m.moto_placa || '')}</div>
               </div>
-              ${isImg && d.url_assinada
-                ? `<img src="${d.url_assinada}" class="w-full max-h-[240px] object-contain bg-zinc-100 cursor-pointer" onclick="window.open('${d.url_assinada}','_blank')">`
-                : ''}
-              <a href="${d.url_assinada || '#'}" target="_blank"
-                 class="block text-center text-[12px] font-bold py-2 bg-white hover:bg-zinc-100 text-black border-t border-zinc-200">
-                🔗 Abrir arquivo
-              </a>
-            </div>`;
-        }).join('');
+              <div class="text-[10px] font-bold px-2 py-1 rounded-full"
+                   style="background:${corStatus}20; color:${corStatus}">
+                ${m.status.toUpperCase()}
+              </div>
+            </div>
+            <div class="text-[11px] text-zinc-500 mb-2">📞 ${tel} · 🏁 ${(m.total_corridas || 0)} corridas · ${m.disponivel ? '🟢 Online' : '⚫ Offline'}</div>
+
+            <button type="button" class="ver-docs-btn w-full bg-zinc-100 hover:bg-zinc-200 rounded-xl py-2.5 text-[12px] font-bold mb-2 transition" data-mot-id="${m.id}">
+              📎 Ver documentos
+            </button>
+            <div class="docs-container hidden mb-3 space-y-2" data-docs-for="${m.id}"></div>
+
+            <div class="flex gap-2">${botoes}</div>
+          </div>`;
+      }).join('');
+
+      el.querySelectorAll('[data-aprovar]').forEach(btn =>
+        btn.addEventListener('click', () => mudarStatus(btn.dataset.aprovar, 'aprovado')));
+      el.querySelectorAll('[data-reprovar]').forEach(btn =>
+        btn.addEventListener('click', () => mudarStatus(btn.dataset.reprovar, 'reprovado')));
+      el.querySelectorAll('[data-suspender]').forEach(btn =>
+        btn.addEventListener('click', () => suspenderMotoqueiro(btn.dataset.suspender)));
+      el.querySelectorAll('[data-reativar]').forEach(btn =>
+        btn.addEventListener('click', () => reativarMotoqueiro(btn.dataset.reativar)));
+      el.querySelectorAll('[data-excluir]').forEach(btn =>
+        btn.addEventListener('click', () => excluirMotoqueiro(btn.dataset.excluir)));
+
+      el.querySelectorAll('.ver-docs-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const motId = btn.dataset.motId;
+          const container = el.querySelector(`[data-docs-for="${motId}"]`);
+          if (!container) return;
+
+          if (!container.classList.contains('hidden')) {
+            container.classList.add('hidden');
+            container.innerHTML = '';
+            btn.textContent = '📎 Ver documentos';
+            return;
+          }
+
+          container.classList.remove('hidden');
+          container.innerHTML = '<div class="text-[12px] text-zinc-400 text-center py-3">Carregando documentos...</div>';
+          btn.textContent = '📎 Ocultar documentos';
+
+          const docs = await carregarDocumentosMotoqueiro(motId);
+
+          if (!docs.length) {
+            container.innerHTML = '<div class="text-[12px] text-zinc-400 text-center py-3">Nenhum documento enviado</div>';
+            return;
+          }
+
+          container.innerHTML = docs.map(d => {
+            const label = { cnh: '🪪 CNH', crlv: '📋 CRLV', selfie: '🤳 Selfie' }[d.tipo] || d.tipo;
+            const isImg = /\.(jpg|jpeg|png|webp|gif)$/i.test(d.url_storage);
+            return `
+              <div class="border border-zinc-200 rounded-xl overflow-hidden">
+                <div class="flex items-center justify-between px-3 py-2 bg-zinc-50">
+                  <span class="text-[12px] font-bold">${label}</span>
+                  <span class="text-[10px] text-emerald-600 font-bold uppercase">${d.status}</span>
+                </div>
+                ${isImg && d.url_assinada
+                  ? `<img src="${d.url_assinada}" class="w-full max-h-[240px] object-contain bg-zinc-100 cursor-pointer" onclick="window.open('${d.url_assinada}','_blank')">`
+                  : ''}
+                <a href="${d.url_assinada || '#'}" target="_blank"
+                   class="block text-center text-[12px] font-bold py-2 bg-white hover:bg-zinc-100 text-black border-t border-zinc-200">
+                  🔗 Abrir arquivo
+                </a>
+              </div>`;
+          }).join('');
+        });
       });
-    });
 
-  } catch (e) {
-    console.error(e);
-    el.innerHTML = '<div class="text-center py-12 text-red-500 text-[13px]">Erro: ' + e.message + '</div>';
-  }
-}
-
-async function suspenderMotoqueiro(id) {
-  if (!confirm('Suspender este motoqueiro? Ele não poderá ficar online nem receber corridas.')) return;
-  try {
-    const { error } = await supabase.rpc('suspender_motoqueiro', { p_motoqueiro_id: id });
-    if (error) throw error;
-    mostrarToast('⏸ Motoqueiro suspenso', 'success');
-    carregarMotoqueiros();
-    carregarStats();
-  } catch (e) {
-    mostrarToast('Erro: ' + e.message, 'error');
-  }
-}
-
-async function reativarMotoqueiro(id) {
-  try {
-    const { error } = await supabase.rpc('reativar_motoqueiro', { p_motoqueiro_id: id });
-    if (error) throw error;
-    mostrarToast('▶ Motoqueiro reativado', 'success');
-    carregarMotoqueiros();
-    carregarStats();
-  } catch (e) {
-    mostrarToast('Erro: ' + e.message, 'error');
-  }
-}
-
-async function excluirMotoqueiro(id) {
-  if (!confirm('⚠️ Excluir PERMANENTEMENTE este motoqueiro?\n\nEle perderá o cadastro, documentos e histórico. Esta ação não pode ser desfeita.')) return;
-  if (!confirm('Tem certeza absoluta? Clique OK para confirmar a exclusão.')) return;
-  try {
-    const { data, error } = await supabase.rpc('excluir_motoqueiro', { p_motoqueiro_id: id });
-    if (error) throw error;
-
-    // Limpa arquivos do storage (opcional, mas boa prática)
-    const profileId = data?.profile_id;
-    if (profileId) {
-      try {
-        const { data: arquivos } = await supabase.storage
-          .from('documentos')
-          .list(`${profileId}/${id}`);
-        if (arquivos?.length) {
-          const paths = arquivos.map(f => `${profileId}/${id}/${f.name}`);
-          await supabase.storage.from('documentos').remove(paths);
-        }
-      } catch (e) { console.warn('Erro ao limpar storage:', e); }
+    } catch (e) {
+      console.error(e);
+      el.innerHTML = '<div class="text-center py-12 text-red-500 text-[13px]">Erro: ' + e.message + '</div>';
     }
-
-    mostrarToast('🗑 Motoqueiro excluído', 'success');
-    carregarMotoqueiros();
-    carregarStats();
-  } catch (e) {
-    mostrarToast('Erro: ' + e.message, 'error');
   }
-}
+
+  async function suspenderMotoqueiro(id) {
+    if (!confirm('Suspender este motoqueiro? Ele não poderá ficar online nem receber corridas.')) return;
+    try {
+      const { error } = await supabase.rpc('suspender_motoqueiro', { p_motoqueiro_id: id });
+      if (error) throw error;
+      mostrarToast('⏸ Motoqueiro suspenso', 'success');
+      carregarMotoqueiros();
+      carregarStats();
+    } catch (e) {
+      mostrarToast('Erro: ' + e.message, 'error');
+    }
+  }
+
+  async function reativarMotoqueiro(id) {
+    try {
+      const { error } = await supabase.rpc('reativar_motoqueiro', { p_motoqueiro_id: id });
+      if (error) throw error;
+      mostrarToast('▶ Motoqueiro reativado', 'success');
+      carregarMotoqueiros();
+      carregarStats();
+    } catch (e) {
+      mostrarToast('Erro: ' + e.message, 'error');
+    }
+  }
+
+  async function excluirMotoqueiro(id) {
+    if (!confirm('⚠️ Excluir PERMANENTEMENTE este motoqueiro?\n\nEle perderá o cadastro, documentos e histórico. Esta ação não pode ser desfeita.')) return;
+    if (!confirm('Tem certeza absoluta? Clique OK para confirmar a exclusão.')) return;
+    try {
+      const { data, error } = await supabase.rpc('excluir_motoqueiro', { p_motoqueiro_id: id });
+      if (error) throw error;
+
+      const profileId = data?.profile_id;
+      if (profileId) {
+        try {
+          const { data: arquivos } = await supabase.storage
+            .from('documentos')
+            .list(`${profileId}/${id}`);
+          if (arquivos?.length) {
+            const paths = arquivos.map(f => `${profileId}/${id}/${f.name}`);
+            await supabase.storage.from('documentos').remove(paths);
+          }
+        } catch (e) { console.warn('Erro ao limpar storage:', e); }
+      }
+
+      mostrarToast('🗑 Motoqueiro excluído', 'success');
+      carregarMotoqueiros();
+      carregarStats();
+    } catch (e) {
+      mostrarToast('Erro: ' + e.message, 'error');
+    }
+  }
 
   async function carregarCorridas() {
     const el = $('admin-lista-corridas');
