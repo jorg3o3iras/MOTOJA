@@ -13,7 +13,6 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={theme:{extend:{fontFamily:{sora:['Sora','sans-serif'],inter:['Inter','sans-serif']}}}};</script>
 
-
 </head>
 <body class="h-[100dvh] w-screen bg-[#0A0A0A] relative antialiased">
 
@@ -38,6 +37,20 @@
   </div>
 </header>
 
+<!-- ============================================================
+     PAINEL DO MOTOQUEIRO (fora da sheet, aparece só quando é motoqueiro)
+     ============================================================ -->
+<div id="painel-motoqueiro" class="hidden fixed top-[84px] left-4 right-4 z-[950] md:left-6 md:right-auto md:w-[420px]">
+  <div class="glass shadow-premium-lg rounded-2xl p-4 flex items-center gap-3">
+    <div class="text-2xl">🏍</div>
+    <div class="flex-1">
+      <div class="sora font-bold text-[13px] text-black">Modo Motoqueiro</div>
+      <div id="moto-status-texto" class="text-[11px] text-zinc-500">Status: —</div>
+    </div>
+    <button id="btn-toggle-online" type="button" class="bg-[#FF6A00] text-white rounded-full px-3 py-1.5 text-[11px] font-bold">Ficar online</button>
+  </div>
+</div>
+
 <div id="loc-banner" class="absolute top-[84px] left-1/2 -translate-x-1/2 z-[950] glass shadow-premium-lg rounded-full px-5 py-3 flex items-center gap-3 text-[13px] font-semibold max-w-[92%] transition-opacity">
   <div id="loc-spinner" class="w-4 h-4 border-2 border-zinc-200 border-t-[#FF6A00] rounded-full animate-[spin_.8s_linear_infinite] flex-shrink-0"></div>
   <span id="loc-texto" class="text-zinc-800">Localizando você com precisão premium...</span>
@@ -54,16 +67,6 @@
           <div id="user-mini-av" class="w-8 h-8 rounded-full bg-[#FF6A00] flex items-center justify-center font-extrabold text-xs">--</div>
           <span>Olá, <strong id="user-nome" class="sora">Passageiro</strong></span>
           <button id="btn-logout" type="button" class="ml-auto text-zinc-400 underline text-[11px]">Sair</button>
-        </div>
-      </div>
-      <div id="painel-motoqueiro" class="hidden mb-4">
-        <div class="bg-black text-white rounded-2xl p-4 flex items-center gap-3">
-          <div class="text-2xl">🏍</div>
-          <div class="flex-1">
-            <div class="sora font-bold text-[13px]">Modo Motoqueiro</div>
-            <div id="moto-status-texto" class="text-[11px] text-white/60">Status: —</div>
-          </div>
-          <button id="btn-toggle-online" type="button" class="bg-[#FF6A00] text-white rounded-full px-3 py-1.5 text-[11px] font-bold">Ficar online</button>
         </div>
       </div>
       <div class="flex items-start justify-between mb-5">
@@ -100,7 +103,7 @@
         <div class="w-10 h-10 rounded-full bg-[#FF6A00] flex items-center justify-center">⚡</div>
         <div class="flex-1">
           <div class="sora font-bold text-[13px]">MotoJá Premium ativo</div>
-         <div class="text-[12px]" style="color: red;">  Desenvolvido por Jorge Antonio<br>  Oeiras do Pará - 2026</div>
+          <div class="text-[12px]" style="color: red;">  Desenvolvido por Jorge Antonio<br>  Oeiras do Pará - 2026</div>
         </div>
         <div class="text-[10px] font-bold bg-white text-black rounded-full px-2 py-1">SEGURO</div>
       </div>
@@ -569,8 +572,8 @@
 
   <div class="absolute inset-0 z-[1050] pointer-events-none flex items-center justify-center">
     <div class="relative -mt-10">
-      <div class="absolute left-1/2 -translate-x-1/2 bottom-0 w-4 h-2 rounded-full bg-black/30"></div>
-      <div class="text-[36px] leading-none drop-shadow-[0_6px_12px_rgba(0,0,0,.35)] animate-[pinBounce_1.5s_ease-in-out_infinite]">📍</div>
+      <div class="absolute left-1/2 -translate-x-1/2 bottom-0 w-3 h-1.5 rounded-full bg-black/30"></div>
+      <div class="text-[32px] leading-none drop-shadow-[0_4px_8px_rgba(0,0,0,.35)] animate-[pinBounce_1.5s_ease-in-out_infinite]">📍</div>
     </div>
   </div>
 </div>
@@ -581,7 +584,5 @@
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet/leaflet-maplibre-gl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-
 
 <script src="script.js"></script></body></html>
