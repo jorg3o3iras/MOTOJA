@@ -38,7 +38,7 @@
 </header>
 
 <!-- ============================================================
-     PAINEL DO MOTOQUEIRO (fora da sheet, aparece só quando é motoqueiro)
+     PAINEL DO MOTOQUEIRO (fora da sheet)
      ============================================================ -->
 <div id="painel-motoqueiro" class="hidden fixed top-[84px] left-4 right-4 z-[950] md:left-6 md:right-auto md:w-[420px]">
   <div class="glass shadow-premium-lg rounded-2xl p-4 flex items-center gap-3">
@@ -189,7 +189,7 @@
 <div id="ofertas-box" class="fixed top-20 left-1/2 -translate-x-1/2 z-[1200] w-[90%] max-w-[400px] space-y-2 pointer-events-auto"></div>
 
 <!-- ============================================================
-     MODAL DE OFERTA (MOTOQUEIRO RECEBE)
+     MODAL DE OFERTA
      ============================================================ -->
 <div id="modal-oferta" class="fixed inset-0 z-[3000] bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
   <div class="bg-white rounded-[28px] w-full max-w-[380px] shadow-premium-lg overflow-hidden" onclick="event.stopPropagation()">
@@ -231,7 +231,7 @@
 </div>
 
 <!-- ============================================================
-     MODAL DE PAGAMENTO (PASSAGEIRO)
+     MODAL DE PAGAMENTO
      ============================================================ -->
 <div id="modal-pagamento" class="fixed inset-0 z-[2600] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
   <div class="bg-white rounded-[28px] w-full max-w-[400px] shadow-premium-lg p-6" onclick="event.stopPropagation()">
@@ -251,7 +251,7 @@
 </div>
 
 <!-- ============================================================
-     MODAL DE AVALIAÇÃO (PASSAGEIRO)
+     MODAL DE AVALIAÇÃO
      ============================================================ -->
 <div id="modal-avaliacao" class="fixed inset-0 z-[2700] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
   <div class="bg-white rounded-[28px] w-full max-w-[400px] shadow-premium-lg p-6 text-center">
@@ -375,7 +375,10 @@
     </div>
     <div class="form-step hidden" data-step="3">
       <h3 class="sora font-extrabold text-[20px]">Documentos</h3>
-      <p class="text-[13px] text-zinc-500 mt-1 mb-4">Toque para escolher o arquivo (foto ou PDF)</p>
+      <p class="text-[13px] text-zinc-500 mt-1 mb-4">
+        Toque para escolher o arquivo (foto ou PDF).<br>
+        <span class="text-[11px] text-zinc-400">Opcional — você pode enviar depois.</span>
+      </p>
       <div class="grid gap-3 mt-2">
         <label class="upload border-2 border-dashed border-zinc-200 rounded-2xl p-5 text-center cursor-pointer hover:border-black transition select-none" data-doc="cnh">
           <input type="file" accept="image/*,.pdf" class="hidden" data-file="cnh">
@@ -547,7 +550,7 @@
 </div>
 
 <!-- ============================================================
-     MODO MAPA (ESCOLHER DESTINO ARRASTANDO)
+     MODO MAPA
      ============================================================ -->
 <div id="modo-mapa-overlay" class="hidden">
   <div id="modo-mapa-barra" class="absolute top-0 left-0 right-0 z-[1100] p-4" style="padding-top:max(1rem,env(safe-area-inset-top))">
