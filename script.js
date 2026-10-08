@@ -1,4 +1,3 @@
-
 (function () {
   'use strict';
 
@@ -196,15 +195,36 @@
   }
   async function salvarCadastroMotoqueiro(dados) {
     if (!state.user) throw new Error('Faça login primeiro');
+
+    const payload = {
+      profile_id: state.user.id,
+      status: 'pendente',
+      moto_marca: dados.marca || null,
+      moto_modelo: dados.modelo || null,
+      moto_ano: parseInt(dados.ano) || null,
+      moto_cor: dados.cor || null,
+      moto_placa: dados.placa || null,
+      moto_cc: parseInt(dados.cc) || null
+    };
+
+    console.log('[Moto] payload:', payload);
+
     const { data, error } = await supabase
       .from('motoqueiros')
-      .upsert({
-        profile_id: state.user.id, status: 'pendente',
-        moto_marca: dados.marca, moto_modelo: dados.modelo,
-        moto_ano: parseInt(dados.ano) || null, moto_cor: dados.cor,
-        moto_placa: dados.placa, moto_cc: parseInt(dados.cc) || null
-      }, { onConflict: 'profile_id' }).select().single();
-    if (error) throw error;
+      .upsert(payload, { onConflict: 'profile_id' })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[Moto] ERRO:', error);
+      console.error('[Moto] code:', error.code);
+      console.error('[Moto] message:', error.message);
+      console.error('[Moto] details:', error.details);
+      console.error('[Moto] hint:', error.hint);
+      throw error;
+    }
+
+    console.log('[Moto] salvo:', data);
     return data;
   }
   async function uploadDocumento(motoqueiroId, tipo, arquivo) {
@@ -244,12 +264,17 @@
      AUTH
      ========================================================= */
   const modalAuth = $('modal-auth');
+
+  // Guarda de onde o usuário veio para saber o que abrir após o cadastro
+  let intencaoCadastro = null; // 'passageiro' | 'motoqueiro'
+
   function abrirAuth(aba = 'login') {
     modalAuth.classList.remove('hidden'); modalAuth.classList.add('flex'); trocarAba(aba);
   }
   function fecharAuth() {
     modalAuth.classList.add('hidden'); modalAuth.classList.remove('flex');
     $('form-login').reset(); $('form-signup').reset();
+    // NÃO limpa intencaoCadastro aqui — o handler do signup precisa dela
   }
   function trocarAba(aba) {
     const isLogin = aba === 'login';
@@ -313,7 +338,7 @@
       $('user-mini-av').textContent = initials(nome);
       $('user-nome').textContent = primeiroNome;
       $('user-logado').classList.remove('hidden');
-      $('btn-sair-header').classList.remove('hidden'); // mostra botão Sair
+      $('btn-sair-header').classList.remove('hidden');
       state.motoqueiroCadastro = await buscarMeuCadastroMotoqueiro();
       atualizarUIMotoqueiro();
       const favsBackend = await carregarFavoritosDoBackend();
@@ -327,7 +352,7 @@
       state.user = null; state.profile = null; state.motoqueiroCadastro = null;
       $('btn-conta').innerHTML = '👤 Passageiro';
       $('user-logado').classList.add('hidden');
-      $('btn-sair-header').classList.add('hidden'); // esconde botão Sair
+      $('btn-sair-header').classList.add('hidden');
       limparMotoqueirosDoMapa();
       atualizarUIMotoqueiro();
     }
@@ -379,10 +404,36 @@
     if (nome.length < 3) { mostrarToast('Informe seu nome completo', 'error'); return; }
     if (!isValidEmail(email)) { mostrarToast('E-mail inválido', 'error'); return; }
     if (senha.length < 6) { mostrarToast('Senha deve ter pelo menos 6 caracteres', 'error'); return; }
-    const txt = btn.textContent; btn.disabled = true; btn.textContent = 'Criando conta...';
+
+    const txt = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Criando conta...';
+
     try {
       const data = await fazerCadastro(nome, email, senha, telefone);
-      if (!data.session) { mostrarToast('Verifique seu e-mail para confirmar', 'success'); fecharAuth(); }
+
+      // Caso 1: confirmação de e-mail ligada → não veio session
+      if (!data.session) {
+        mostrarToast('Confirme seu e-mail antes de continuar', 'success');
+        fecharAuth();
+        intencaoCadastro = null;
+        btn.disabled = false; btn.textContent = txt;
+        return;
+      }
+
+      // Caso 2: veio session (já logado)
+      if (data.user) {
+        const profile = await carregarProfile(data.user.id);
+        await atualizarUIUsuario(data.user, profile);
+      }
+
+      fecharAuth();
+      mostrarToast('✓ Conta criada!', 'success');
+
+      // Se veio do botão 🪪 Motoqueiro → abre o modal de cadastro de motoqueiro
+      if (intencaoCadastro === 'motoqueiro') {
+        intencaoCadastro = null;
+        setTimeout(() => abrirMoto(), 400);
+      }
     } catch (err) {
       let msg = err.message;
       if (msg.includes('already registered')) msg = 'E-mail já cadastrado';
@@ -1175,8 +1226,19 @@
     const painel = $('painel-motoqueiro');
     const btnToggle = $('btn-toggle-online');
     const texto = $('moto-status-texto');
-    if (!state.motoqueiroCadastro) { painel.classList.add('hidden'); return; }
+    const sheet = $('sheet');
+
+    // Sem cadastro de motoqueiro → passageiro comum
+    if (!state.motoqueiroCadastro) {
+      painel.classList.add('hidden');
+      if (sheet) sheet.classList.remove('hidden');
+      return;
+    }
+
+    // Tem cadastro → é motoqueiro. Esconde a sheet (não é passageiro)
+    if (sheet) sheet.classList.add('hidden');
     painel.classList.remove('hidden');
+
     const c = state.motoqueiroCadastro;
     if (c.status !== 'aprovado') {
       texto.textContent = `Status: ${c.status} · Aguarde aprovação`;
@@ -1515,7 +1577,13 @@
   });
 
   function abrirMoto() {
-    if (!state.user) { mostrarToast('Faça login para ser motoqueiro', 'error'); abrirAuth('login'); return; }
+    if (!state.user) {
+      // Marca a intenção e manda pro cadastro de conta
+      intencaoCadastro = 'motoqueiro';
+      mostrarToast('Crie uma conta para continuar como motoqueiro', 'info');
+      abrirAuth('signup');
+      return;
+    }
     Object.keys(checksMoto).forEach(k => delete checksMoto[k]);
     Object.keys(arquivosMoto).forEach(k => arquivosMoto[k] = null);
     modalMoto.querySelectorAll('.check-item').forEach(c => {
@@ -1624,54 +1692,54 @@
     m.classList.add('hidden'); m.classList.remove('flex');
   }
   async function validarSenhaAdmin() {
-  const v = $('admin-senha-input').value;
-  if (!v) return;
+    const v = $('admin-senha-input').value;
+    if (!v) return;
 
-  const btn = $('btn-admin-senha-entrar');
-  const txt = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = 'Verificando...';
+    const btn = $('btn-admin-senha-entrar');
+    const txt = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Verificando...';
 
-  try {
-    // 1. Valida a senha NO BANCO (nunca no frontend)
-    const { data: senhaOk, error: errSenha } = await supabase.rpc('validar_senha_admin', { p_senha: v });
-    if (errSenha) throw errSenha;
+    try {
+      // 1. Valida a senha NO BANCO (nunca no frontend)
+      const { data: senhaOk, error: errSenha } = await supabase.rpc('validar_senha_admin', { p_senha: v });
+      if (errSenha) throw errSenha;
 
-    if (!senhaOk) {
-      $('admin-senha-erro').classList.remove('hidden');
-      $('admin-senha-input').value = '';
-      $('admin-senha-input').focus();
-      setTimeout(() => $('admin-senha-erro').classList.add('hidden'), 2500);
-      return;
+      if (!senhaOk) {
+        $('admin-senha-erro').classList.remove('hidden');
+        $('admin-senha-input').value = '';
+        $('admin-senha-input').focus();
+        setTimeout(() => $('admin-senha-erro').classList.add('hidden'), 2500);
+        return;
+      }
+
+      // 2. Senha certa → fecha o modal
+      fecharModalSenhaAdmin();
+
+      // 3. Está logado?
+      if (!state.user) {
+        mostrarToast('Faça login como administrador', 'error');
+        abrirAuth('login');
+        return;
+      }
+
+      // 4. Está na tabela admins?
+      const { data: ehAdmin, error: errAdmin } = await supabase.rpc('sou_admin');
+      if (errAdmin) throw errAdmin;
+      if (!ehAdmin) {
+        mostrarToast('Sua conta não tem permissão de admin', 'error');
+        return;
+      }
+
+      // 5. Tudo OK → abre painel
+      abrirAdmin();
+    } catch (e) {
+      mostrarToast('Erro: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = txt;
     }
-
-    // 2. Senha certa → fecha o modal
-    fecharModalSenhaAdmin();
-
-    // 3. Está logado?
-    if (!state.user) {
-      mostrarToast('Faça login como administrador', 'error');
-      abrirAuth('login');
-      return;
-    }
-
-    // 4. Está na tabela admins?
-    const { data: ehAdmin, error: errAdmin } = await supabase.rpc('sou_admin');
-    if (errAdmin) throw errAdmin;
-    if (!ehAdmin) {
-      mostrarToast('Sua conta não tem permissão de admin', 'error');
-      return;
-    }
-
-    // 5. Tudo OK → abre painel
-    abrirAdmin();
-  } catch (e) {
-    mostrarToast('Erro: ' + e.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = txt;
   }
-}
 
   $('btn-admin-senha-cancelar').addEventListener('click', fecharModalSenhaAdmin);
   $('btn-admin-senha-entrar').addEventListener('click', validarSenhaAdmin);
@@ -1681,9 +1749,9 @@
   });
 
   // Botão Admin: SEMPRE pede a senha primeiro
-$('btn-admin').addEventListener('click', () => {
-  abrirModalSenhaAdmin();
-});
+  $('btn-admin').addEventListener('click', () => {
+    abrirModalSenhaAdmin();
+  });
 
   document.querySelectorAll('.admin-tab').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1719,7 +1787,13 @@ $('btn-admin').addEventListener('click', () => {
         .select('id, status, moto_marca, moto_modelo, moto_placa, criado_em, profiles(nome_completo, telefone)')
         .eq('status', 'pendente')
         .order('criado_em', { ascending: false });
-      if (error) throw error;
+
+      if (error) {
+        console.error('[Admin] erro pendentes:', error);
+        el.innerHTML = '<div class="text-center py-12 text-red-500 text-[13px]">Erro: ' + error.message + '</div>';
+        return;
+      }
+
       $('badge-pendentes').textContent = data.length;
       if (!data.length) {
         el.innerHTML = '<div class="text-center py-12 text-zinc-400 text-[14px]">🎉 Nenhum motoqueiro pendente</div>';
@@ -1765,92 +1839,91 @@ $('btn-admin').addEventListener('click', () => {
   }
 
   async function carregarCorridas() {
-  const el = $('admin-lista-corridas');
-  el.innerHTML = '<div class="text-center py-12 text-zinc-400 text-[14px]">Carregando...</div>';
-  try {
-    const { data, error } = await supabase
-      .from('corridas')
-      .select(`
-        id, status, origem_nome, destino_nome, distancia_km, preco_total, criado_em,
-        passageiro:profiles!corridas_passageiro_id_fkey (nome_completo, telefone),
-        motoqueiro:motoqueiros!corridas_motoqueiro_id_fkey (
-          moto_marca, moto_modelo, moto_placa,
-          profiles (nome_completo, telefone)
-        )
-      `)
-      .order('criado_em', { ascending: false })
-      .limit(100);
-    if (error) throw error;
-    if (!data.length) {
-      el.innerHTML = '<div class="text-center py-12 text-zinc-400 text-[14px]">Nenhuma corrida registrada</div>';
-      return;
+    const el = $('admin-lista-corridas');
+    el.innerHTML = '<div class="text-center py-12 text-zinc-400 text-[14px]">Carregando...</div>';
+    try {
+      const { data, error } = await supabase
+        .from('corridas')
+        .select(`
+          id, status, origem_nome, destino_nome, distancia_km, preco_total, criado_em,
+          passageiro:profiles!corridas_passageiro_id_fkey (nome_completo, telefone),
+          motoqueiro:motoqueiros!corridas_motoqueiro_id_fkey (
+            moto_marca, moto_modelo, moto_placa,
+            profiles (nome_completo, telefone)
+          )
+        `)
+        .order('criado_em', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      if (!data.length) {
+        el.innerHTML = '<div class="text-center py-12 text-zinc-400 text-[14px]">Nenhuma corrida registrada</div>';
+        return;
+      }
+
+      const coresStatus = {
+        buscando: '#f59e0b',
+        oferecida: '#f59e0b',
+        aceita: '#059669',
+        chegou: '#059669',
+        em_andamento: '#059669',
+        finalizada: '#0A0A0A',
+        cancelada: '#dc2626',
+        sem_motoqueiro: '#71717a'
+      };
+
+      el.innerHTML = data.map(c => {
+        const dataFmt   = new Date(c.criado_em).toLocaleDateString('pt-BR');
+        const nomePass  = c.passageiro?.nome_completo || 'Passageiro';
+        const telPass   = c.passageiro?.telefone || '';
+        const nomeMot   = c.motoqueiro?.profiles?.nome_completo || 'Sem motoqueiro';
+        const telMot    = c.motoqueiro?.profiles?.telefone || '';
+        const moto      = c.motoqueiro
+          ? `${c.motoqueiro.moto_marca || ''} ${c.motoqueiro.moto_modelo || ''}`.trim() +
+            (c.motoqueiro.moto_placa ? ' · ' + c.motoqueiro.moto_placa : '')
+          : '';
+        const corStatus = coresStatus[c.status] || '#71717a';
+
+        return `
+          <div class="admin-card">
+            <div class="flex items-start justify-between gap-3 mb-3">
+              <div class="flex-1 min-w-0">
+                <div class="font-bold text-[13px] truncate">${c.origem_nome || '—'}</div>
+                <div class="text-[11px] text-zinc-500 truncate">→ ${c.destino_nome || '—'}</div>
+              </div>
+              <div class="text-right flex-shrink-0">
+                <div class="sora font-bold text-[15px]">R$ ${(c.preco_total || 0).toFixed(2).replace('.', ',')}</div>
+                <div class="text-[10px] text-zinc-400">${dataFmt}</div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-zinc-100">
+              <div class="min-w-0">
+                <div class="text-[9px] font-bold tracking-widest uppercase text-zinc-400">Passageiro</div>
+                <div class="text-[12px] font-semibold truncate mt-0.5">👤 ${nomePass}</div>
+                ${telPass ? `<div class="text-[10px] text-zinc-500 truncate">${telPass}</div>` : ''}
+              </div>
+              <div class="min-w-0">
+                <div class="text-[9px] font-bold tracking-widest uppercase text-zinc-400">Motoqueiro</div>
+                <div class="text-[12px] font-semibold truncate mt-0.5">🏍️ ${nomeMot}</div>
+                ${telMot ? `<div class="text-[10px] text-zinc-500 truncate">${telMot}</div>` : ''}
+                ${moto   ? `<div class="text-[10px] text-zinc-400 truncate">${moto}</div>` : ''}
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between mt-3 pt-2 border-t border-zinc-100">
+              <div class="text-[10px] text-zinc-500">📏 ${(c.distancia_km || 0).toFixed(1)} km</div>
+              <div class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                   style="background:${corStatus}20; color:${corStatus}">
+                ${(c.status || '').toUpperCase()}
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    } catch (e) {
+      console.error(e);
+      el.innerHTML = '<div class="text-center py-12 text-red-500 text-[13px]">Erro: ' + e.message + '</div>';
     }
-
-    // cores por status
-    const coresStatus = {
-      buscando: '#f59e0b',
-      oferecida: '#f59e0b',
-      aceita: '#059669',
-      chegou: '#059669',
-      em_andamento: '#059669',
-      finalizada: '#0A0A0A',
-      cancelada: '#dc2626',
-      sem_motoqueiro: '#71717a'
-    };
-
-    el.innerHTML = data.map(c => {
-      const dataFmt   = new Date(c.criado_em).toLocaleDateString('pt-BR');
-      const nomePass  = c.passageiro?.nome_completo || 'Passageiro';
-      const telPass   = c.passageiro?.telefone || '';
-      const nomeMot   = c.motoqueiro?.profiles?.nome_completo || 'Sem motoqueiro';
-      const telMot    = c.motoqueiro?.profiles?.telefone || '';
-      const moto      = c.motoqueiro
-        ? `${c.motoqueiro.moto_marca || ''} ${c.motoqueiro.moto_modelo || ''}`.trim() +
-          (c.motoqueiro.moto_placa ? ' · ' + c.motoqueiro.moto_placa : '')
-        : '';
-      const corStatus = coresStatus[c.status] || '#71717a';
-
-      return `
-        <div class="admin-card">
-          <div class="flex items-start justify-between gap-3 mb-3">
-            <div class="flex-1 min-w-0">
-              <div class="font-bold text-[13px] truncate">${c.origem_nome || '—'}</div>
-              <div class="text-[11px] text-zinc-500 truncate">→ ${c.destino_nome || '—'}</div>
-            </div>
-            <div class="text-right flex-shrink-0">
-              <div class="sora font-bold text-[15px]">R$ ${(c.preco_total || 0).toFixed(2).replace('.', ',')}</div>
-              <div class="text-[10px] text-zinc-400">${dataFmt}</div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-zinc-100">
-            <div class="min-w-0">
-              <div class="text-[9px] font-bold tracking-widest uppercase text-zinc-400">Passageiro</div>
-              <div class="text-[12px] font-semibold truncate mt-0.5">👤 ${nomePass}</div>
-              ${telPass ? `<div class="text-[10px] text-zinc-500 truncate">${telPass}</div>` : ''}
-            </div>
-            <div class="min-w-0">
-              <div class="text-[9px] font-bold tracking-widest uppercase text-zinc-400">Motoqueiro</div>
-              <div class="text-[12px] font-semibold truncate mt-0.5">🏍️ ${nomeMot}</div>
-              ${telMot ? `<div class="text-[10px] text-zinc-500 truncate">${telMot}</div>` : ''}
-              ${moto   ? `<div class="text-[10px] text-zinc-400 truncate">${moto}</div>` : ''}
-            </div>
-          </div>
-
-          <div class="flex items-center justify-between mt-3 pt-2 border-t border-zinc-100">
-            <div class="text-[10px] text-zinc-500">📏 ${(c.distancia_km || 0).toFixed(1)} km</div>
-            <div class="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                 style="background:${corStatus}20; color:${corStatus}">
-              ${(c.status || '').toUpperCase()}
-            </div>
-          </div>
-        </div>`;
-    }).join('');
-  } catch (e) {
-    console.error(e);
-    el.innerHTML = '<div class="text-center py-12 text-red-500 text-[13px]">Erro: ' + e.message + '</div>';
   }
-}
 
   async function carregarStats() {
     const el = $('admin-stats');
@@ -1940,14 +2013,14 @@ $('btn-admin').addEventListener('click', () => {
       if (state.corridaId) iniciarPolling(state.corridaId);
       if (state.motoqueiroCadastro?.status === 'aprovado' && state.motoqueiroCadastro?.disponivel) {
         iniciarHeartbeat();
-        ouvrirMinhasOfertasSafe();
+        ouvirMinhasOfertasSafe();
       }
       console.log('[Egress] aba visível → polling religado');
     }
   });
 
   // helper para não quebrar se a aba voltar antes de ter motoqueiro
-  function ouvrirMinhasOfertasSafe() {
+  function ouvirMinhasOfertasSafe() {
     try { ouvirMinhasOfertas(); } catch (_) {}
   }
 
