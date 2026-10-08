@@ -1992,30 +1992,141 @@
   }
 
   async function carregarMotoqueiros(filtro) {
-    const el = $('admin-lista-motoqueiros');
-    el.innerHTML = '<div class="text-center py-12 text-zinc-400 text-[14px]">Carregando...</div>';
-    try {
-      let query = supabase
-        .from('motoqueiros')
-        .select('id, status, moto_marca, moto_modelo, moto_placa, disponivel, total_corridas, criado_em, profiles(nome_completo, telefone)')
-        .order('criado_em', { ascending: false });
-      if (filtro) query = query.eq('status', filtro);
-      const { data, error } = await query;
-      if (error) throw error;
-      if (!data.length) {
-        el.innerHTML = '<div class="text-center py-12 text-zinc-400 text-[14px]">Nenhum motoqueiro encontrado</div>';
-        return;
-      }
-      el.innerHTML = data.map(m => {
-        const nome = (m.profiles && m.profiles.nome_completo) || 'Sem nome';
-        const corStatus = m.status === 'aprovado' ? '#059669' : m.status === 'pendente' ? '#f59e0b' : m.status === 'reprovado' ? '#dc2626' : '#71717a';
-        return '<div class="admin-card"><div class="flex items-start justify-between gap-3 mb-2"><div class="flex-1 min-w-0"><div class="sora font-bold text-[15px] truncate">' + nome + '</div><div class="text-[12px] text-zinc-500 mt-0.5">' + (m.moto_marca || '') + ' ' + (m.moto_modelo || '') + ' · ' + (m.moto_placa || '') + '</div></div><div class="text-[10px] font-bold px-2 py-1 rounded-full" style="background:' + corStatus + '20; color:' + corStatus + '">' + m.status.toUpperCase() + '</div></div><div class="text-[11px] text-zinc-500">📞 ' + ((m.profiles && m.profiles.telefone) || '—') + ' · 🏁 ' + (m.total_corridas || 0) + ' corridas · ' + (m.disponivel ? '🟢 Online' : '⚫ Offline') + '</div></div>';
-      }).join('');
-    } catch (e) {
-      console.error(e);
-      el.innerHTML = '<div class="text-center py-12 text-red-500 text-[13px]">Erro: ' + e.message + '</div>';
+  const el = $('admin-lista-motoqueiros');
+  el.innerHTML = '<div class="text-center py-12 text-zinc-400 text-[14px]">Carregando...</div>';
+  try {
+    let query = supabase
+      .from('motoqueiros')
+      .select('id, status, moto_marca, moto_modelo, moto_placa, disponivel, total_corridas, criado_em, profiles(nome_completo, telefone)')
+      .order('criado_em', { ascending: false });
+    if (filtro) query = query.eq('status', filtro);
+    const { data, error } = await query;
+    if (error) throw error;
+    if (!data.length) {
+      el.innerHTML = '<div class="text-center py-12 text-zinc-400 text-[14px]">Nenhum motoqueiro encontrado</div>';
+      return;
     }
+
+    const coresStatus = {
+      aprovado: '#059669',
+      pendente: '#f59e0b',
+      reprovado: '#dc2626',
+      suspenso: '#71717a'
+    };
+
+    el.innerHTML = data.map(m => {
+      const nome = (m.profiles && m.profiles.nome_completo) || 'Sem nome';
+      const tel = (m.profiles && m.profiles.telefone) || '—';
+      const corStatus = coresStatus[m.status] || '#71717a';
+
+      // Botões variam conforme o status
+      let botoes = '';
+      if (m.status === 'pendente') {
+        botoes = `
+          <button class="admin-btn aprovar flex-1" data-aprovar="${m.id}">✓ Aprovar</button>
+          <button class="admin-btn reprovar flex-1" data-reprovar="${m.id}">✕ Reprovar</button>`;
+      } else if (m.status === 'aprovado') {
+        botoes = `
+          <button class="admin-btn suspender flex-1" data-suspender="${m.id}">⏸ Suspender</button>
+          <button class="admin-btn reprovar flex-1" data-excluir="${m.id}">🗑 Excluir</button>`;
+      } else if (m.status === 'suspenso') {
+        botoes = `
+          <button class="admin-btn aprovar flex-1" data-reativar="${m.id}">▶ Reativar</button>
+          <button class="admin-btn reprovar flex-1" data-excluir="${m.id}">🗑 Excluir</button>`;
+      } else if (m.status === 'reprovado') {
+        botoes = `
+          <button class="admin-btn aprovar flex-1" data-aprovar="${m.id}">✓ Aprovar</button>
+          <button class="admin-btn reprovar flex-1" data-excluir="${m.id}">🗑 Excluir</button>`;
+      }
+
+      return `
+        <div class="admin-card">
+          <div class="flex items-start justify-between gap-3 mb-2">
+            <div class="flex-1 min-w-0">
+              <div class="sora font-bold text-[15px] truncate">${nome}</div>
+              <div class="text-[12px] text-zinc-500 mt-0.5">${(m.moto_marca || '')} ${(m.moto_modelo || '')} · ${(m.moto_placa || '')}</div>
+            </div>
+            <div class="text-[10px] font-bold px-2 py-1 rounded-full"
+                 style="background:${corStatus}20; color:${corStatus}">
+              ${m.status.toUpperCase()}
+            </div>
+          </div>
+          <div class="text-[11px] text-zinc-500 mb-3">📞 ${tel} · 🏁 ${(m.total_corridas || 0)} corridas · ${m.disponivel ? '🟢 Online' : '⚫ Offline'}</div>
+          <div class="flex gap-2">${botoes}</div>
+        </div>`;
+    }).join('');
+
+    // Handlers dos botões
+    el.querySelectorAll('[data-aprovar]').forEach(btn =>
+      btn.addEventListener('click', () => mudarStatus(btn.dataset.aprovar, 'aprovado')));
+    el.querySelectorAll('[data-reprovar]').forEach(btn =>
+      btn.addEventListener('click', () => mudarStatus(btn.dataset.reprovar, 'reprovado')));
+    el.querySelectorAll('[data-suspender]').forEach(btn =>
+      btn.addEventListener('click', () => suspenderMotoqueiro(btn.dataset.suspender)));
+    el.querySelectorAll('[data-reativar]').forEach(btn =>
+      btn.addEventListener('click', () => reativarMotoqueiro(btn.dataset.reativar)));
+    el.querySelectorAll('[data-excluir]').forEach(btn =>
+      btn.addEventListener('click', () => excluirMotoqueiro(btn.dataset.excluir)));
+
+  } catch (e) {
+    console.error(e);
+    el.innerHTML = '<div class="text-center py-12 text-red-500 text-[13px]">Erro: ' + e.message + '</div>';
   }
+}
+
+async function suspenderMotoqueiro(id) {
+  if (!confirm('Suspender este motoqueiro? Ele não poderá ficar online nem receber corridas.')) return;
+  try {
+    const { error } = await supabase.rpc('suspender_motoqueiro', { p_motoqueiro_id: id });
+    if (error) throw error;
+    mostrarToast('⏸ Motoqueiro suspenso', 'success');
+    carregarMotoqueiros();
+    carregarStats();
+  } catch (e) {
+    mostrarToast('Erro: ' + e.message, 'error');
+  }
+}
+
+async function reativarMotoqueiro(id) {
+  try {
+    const { error } = await supabase.rpc('reativar_motoqueiro', { p_motoqueiro_id: id });
+    if (error) throw error;
+    mostrarToast('▶ Motoqueiro reativado', 'success');
+    carregarMotoqueiros();
+    carregarStats();
+  } catch (e) {
+    mostrarToast('Erro: ' + e.message, 'error');
+  }
+}
+
+async function excluirMotoqueiro(id) {
+  if (!confirm('⚠️ Excluir PERMANENTEMENTE este motoqueiro?\n\nEle perderá o cadastro, documentos e histórico. Esta ação não pode ser desfeita.')) return;
+  if (!confirm('Tem certeza absoluta? Clique OK para confirmar a exclusão.')) return;
+  try {
+    const { data, error } = await supabase.rpc('excluir_motoqueiro', { p_motoqueiro_id: id });
+    if (error) throw error;
+
+    // Limpa arquivos do storage (opcional, mas boa prática)
+    const profileId = data?.profile_id;
+    if (profileId) {
+      try {
+        const { data: arquivos } = await supabase.storage
+          .from('documentos')
+          .list(`${profileId}/${id}`);
+        if (arquivos?.length) {
+          const paths = arquivos.map(f => `${profileId}/${id}/${f.name}`);
+          await supabase.storage.from('documentos').remove(paths);
+        }
+      } catch (e) { console.warn('Erro ao limpar storage:', e); }
+    }
+
+    mostrarToast('🗑 Motoqueiro excluído', 'success');
+    carregarMotoqueiros();
+    carregarStats();
+  } catch (e) {
+    mostrarToast('Erro: ' + e.message, 'error');
+  }
+}
 
   async function carregarCorridas() {
     const el = $('admin-lista-corridas');
