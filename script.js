@@ -1642,11 +1642,6 @@
     if (etapaMoto === 2 && (!$('moto-marca').value || !$('moto-modelo').value.trim())) {
       mostrarToast('Preencha marca e modelo', 'error'); return;
     }
-    if (etapaMoto === 3) {
-      if (!arquivosMoto.cnh || !arquivosMoto.crlv || !arquivosMoto.selfie) {
-        mostrarToast('Envie os 3 documentos', 'error'); return;
-      }
-    }
     goMoto(etapaMoto + 1);
   });
 
