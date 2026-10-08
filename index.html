@@ -29,6 +29,7 @@
   </div>
   <div class="pointer-events-auto flex gap-2 flex-wrap justify-end max-w-[70%]">
     <button id="btn-localizar" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold hover:scale-[1.02] active:scale-[0.98] transition">📍 Onde estou</button>
+    <button id="btn-camadas" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold" title="Camadas do mapa">🛰️</button>
     <button id="btn-tema" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold" title="Alternar tema">🌙</button>
     <button id="btn-conta" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold">👤 Passageiro</button>
     <button id="btn-sair-header" type="button" class="hidden glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold hover:bg-red-50 hover:text-red-600 transition">🚪 Sair</button>
@@ -624,6 +625,60 @@
     <div class="relative -mt-10">
       <div class="absolute left-1/2 -translate-x-1/2 bottom-0 w-3 h-1.5 rounded-full bg-black/30"></div>
       <div class="text-[32px] leading-none drop-shadow-[0_4px_8px_rgba(0,0,0,.35)] animate-[pinBounce_1.5s_ease-in-out_infinite]">📍</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL CAMADAS DO MAPA
+     ============================================================ -->
+<div id="modal-camadas" class="fixed inset-0 z-[2600] bg-black/60 backdrop-blur-sm hidden items-end md:items-center justify-center p-4">
+  <div class="bg-white rounded-[28px] w-full max-w-[400px] shadow-premium-lg p-6" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="sora font-extrabold text-[18px]">Camadas do mapa</h3>
+      <button id="btn-fechar-camadas" type="button" class="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-[13px]">✕</button>
+    </div>
+
+    <div class="space-y-2">
+      <button type="button" class="camada-op" data-camada="mapa">
+        <div class="ico">🗺️</div>
+        <div class="flex-1 text-left">
+          <div class="font-bold text-[14px]">Mapa</div>
+          <div class="text-[11px] text-zinc-500">Vetorial claro (padrão)</div>
+        </div>
+        <div class="check">✓</div>
+      </button>
+
+      <button type="button" class="camada-op" data-camada="satelite">
+        <div class="ico">🛰️</div>
+        <div class="flex-1 text-left">
+          <div class="font-bold text-[14px]">Satélite</div>
+          <div class="text-[11px] text-zinc-500">Imagem aérea em alta resolução</div>
+        </div>
+        <div class="check">✓</div>
+      </button>
+
+      <button type="button" class="camada-op" data-camada="hibrido">
+        <div class="ico">🌐</div>
+        <div class="flex-1 text-left">
+          <div class="font-bold text-[14px]">Híbrido</div>
+          <div class="text-[11px] text-zinc-500">Satélite + nomes de ruas</div>
+        </div>
+        <div class="check">✓</div>
+      </button>
+
+      <button type="button" class="camada-op" data-camada="escuro">
+        <div class="ico">🌙</div>
+        <div class="flex-1 text-left">
+          <div class="font-bold text-[14px]">Escuro</div>
+          <div class="text-[11px] text-zinc-500">Ideal para dirigir à noite</div>
+        </div>
+        <div class="check">✓</div>
+      </button>
+    </div>
+
+    <div class="mt-4 text-[11px] text-zinc-400 text-center">
+      A camada escolhida é salva automaticamente
     </div>
   </div>
 </div>
