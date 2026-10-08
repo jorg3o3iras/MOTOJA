@@ -15,6 +15,7 @@
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const STORAGE = { FAV: 'mj_favoritos_v2' };
   const CATEGORIA_MOTO = { id: 'moto', nome: 'Moto', desc: 'Corrida premium de moto', icone: '🏍', base: 4, porKm: 1.6, espera: 3 };
+  const PRECOS_PADRAO = { preco_base: 4, preco_por_km: 1.6, espera_min: 3, comissao_pct: 20 };
 
   /* =========================================================
      HELPERS
@@ -260,6 +261,100 @@
     return docs;
   }
 
+  /* -------- CONFIG DE PREÇOS -------- */
+  async function carregarConfigPrecos() {
+    try {
+      const { data, error } = await supabase.rpc('obter_config_precos');
+      if (error) throw error;
+      if (data) aplicarConfigPrecos(data);
+      return data;
+    } catch (e) {
+      console.warn('[Config] usando padrão:', e.message);
+      return null;
+    }
+  }
+
+  function aplicarConfigPrecos(cfg) {
+    if (!cfg) return;
+    CATEGORIA_MOTO.base   = Number(cfg.preco_base)   || PRECOS_PADRAO.preco_base;
+    CATEGORIA_MOTO.porKm  = Number(cfg.preco_por_km) || PRECOS_PADRAO.preco_por_km;
+    CATEGORIA_MOTO.espera = Number(cfg.espera_min)   || PRECOS_PADRAO.espera_min;
+  }
+
+  async function carregarConfigPrecosAdmin() {
+    const { data } = await supabase.rpc('obter_config_precos');
+    const cfg = data || PRECOS_PADRAO;
+    $('cfg-preco-base').value = cfg.preco_base;
+    $('cfg-preco-km').value   = cfg.preco_por_km;
+    $('cfg-espera').value     = cfg.espera_min;
+    $('cfg-comissao').value   = cfg.comissao_pct ?? 20;
+    atualizarSimulacao();
+    if (cfg.atualizado_em) {
+      $('cfg-info').textContent = 'Atualizado em ' + new Date(cfg.atualizado_em).toLocaleString('pt-BR');
+    } else {
+      $('cfg-info').textContent = '';
+    }
+  }
+
+  function atualizarSimulacao() {
+    const base   = Number($('cfg-preco-base').value) || 0;
+    const km     = Number($('cfg-preco-km').value)   || 0;
+    const espera = Number($('cfg-espera').value)     || 0;
+    const sim5  = base + km * 5;
+    const sim10 = base + km * 10;
+    const sim20 = base + km * 20;
+    $('cfg-simulacao').innerHTML =
+      `Base <b>R$ ${base.toFixed(2)}</b> + <b>R$ ${km.toFixed(2)}</b>/km + <b>${espera} min</b><br>` +
+      `• 5 km → <b>R$ ${sim5.toFixed(2)}</b><br>` +
+      `• 10 km → <b>R$ ${sim10.toFixed(2)}</b><br>` +
+      `• 20 km → <b>R$ ${sim20.toFixed(2)}</b>`;
+  }
+
+  ['cfg-preco-base','cfg-preco-km','cfg-espera','cfg-comissao'].forEach(id => {
+    const el = $(id);
+    if (el) el.addEventListener('input', atualizarSimulacao);
+  });
+
+  $('btn-cfg-restaurar').addEventListener('click', () => {
+    $('cfg-preco-base').value = PRECOS_PADRAO.preco_base;
+    $('cfg-preco-km').value   = PRECOS_PADRAO.preco_por_km;
+    $('cfg-espera').value     = PRECOS_PADRAO.espera_min;
+    $('cfg-comissao').value   = PRECOS_PADRAO.comissao_pct;
+    atualizarSimulacao();
+    mostrarToast('Padrão restaurado (não salvo ainda)');
+  });
+
+  $('btn-cfg-salvar').addEventListener('click', async () => {
+    const btn = $('btn-cfg-salvar');
+    const base = Number($('cfg-preco-base').value);
+    const km   = Number($('cfg-preco-km').value);
+    const esp  = Number($('cfg-espera').value);
+    const com  = Number($('cfg-comissao').value);
+
+    if ([base, km, esp, com].some(v => isNaN(v) || v < 0)) {
+      mostrarToast('Preencha valores válidos', 'error'); return;
+    }
+
+    const txt = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Salvando...';
+
+    try {
+      const { data, error } = await supabase.rpc('atualizar_config_precos', {
+        p_preco_base: base, p_preco_por_km: km,
+        p_espera_min: esp,  p_comissao_pct: com
+      });
+      if (error) throw error;
+      aplicarConfigPrecos(data);
+      atualizarSimulacao();
+      $('cfg-info').textContent = 'Atualizado em ' + new Date().toLocaleString('pt-BR');
+      mostrarToast('✓ Preços atualizados!', 'success');
+    } catch (e) {
+      mostrarToast('Erro: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = txt;
+    }
+  });
+
   async function carregarFavoritosDoBackend() {
     if (!state.user) return [];
     const { data, error } = await supabase.from('favoritos').select('id, nome, lat, lng, icone, endereco').order('criado_em', { ascending: false });
@@ -285,7 +380,7 @@
      ========================================================= */
   const modalAuth = $('modal-auth');
 
-  let intencaoCadastro = null; // 'passageiro' | 'motoqueiro'
+  let intencaoCadastro = null;
 
   function abrirAuth(aba = 'login') {
     modalAuth.classList.remove('hidden'); modalAuth.classList.add('flex'); trocarAba(aba);
@@ -1766,6 +1861,7 @@
       if (aba === 'motoqueiros') carregarMotoqueiros();
       if (aba === 'corridas') carregarCorridas();
       if (aba === 'stats') carregarStats();
+      if (aba === 'precos') carregarConfigPrecosAdmin();
     });
   });
 
@@ -2064,6 +2160,7 @@
      ========================================================= */
   renderFavoritos();
   obterLocalizacaoReal();
+  carregarConfigPrecos();
 
   window.addEventListener('resize', debounce(() => {
     const desktop = window.innerWidth >= 768;
