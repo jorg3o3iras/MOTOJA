@@ -2051,12 +2051,18 @@
               ${m.status.toUpperCase()}
             </div>
           </div>
-          <div class="text-[11px] text-zinc-500 mb-3">📞 ${tel} · 🏁 ${(m.total_corridas || 0)} corridas · ${m.disponivel ? '🟢 Online' : '⚫ Offline'}</div>
+          <div class="text-[11px] text-zinc-500 mb-2">📞 ${tel} · 🏁 ${(m.total_corridas || 0)} corridas · ${m.disponivel ? '🟢 Online' : '⚫ Offline'}</div>
+
+          <button type="button" class="ver-docs-btn w-full bg-zinc-100 hover:bg-zinc-200 rounded-xl py-2.5 text-[12px] font-bold mb-2 transition" data-mot-id="${m.id}">
+            📎 Ver documentos
+          </button>
+          <div class="docs-container hidden mb-3 space-y-2" data-docs-for="${m.id}"></div>
+
           <div class="flex gap-2">${botoes}</div>
         </div>`;
     }).join('');
 
-    // Handlers dos botões
+    // Handlers dos botões de ação
     el.querySelectorAll('[data-aprovar]').forEach(btn =>
       btn.addEventListener('click', () => mudarStatus(btn.dataset.aprovar, 'aprovado')));
     el.querySelectorAll('[data-reprovar]').forEach(btn =>
@@ -2067,6 +2073,53 @@
       btn.addEventListener('click', () => reativarMotoqueiro(btn.dataset.reativar)));
     el.querySelectorAll('[data-excluir]').forEach(btn =>
       btn.addEventListener('click', () => excluirMotoqueiro(btn.dataset.excluir)));
+
+    // Handler do botão Ver documentos (igual à aba Pendentes)
+    el.querySelectorAll('.ver-docs-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const motId = btn.dataset.motId;
+        const container = el.querySelector(`[data-docs-for="${motId}"]`);
+        if (!container) return;
+
+        // Se já está aberto, só fecha
+        if (!container.classList.contains('hidden')) {
+          container.classList.add('hidden');
+          container.innerHTML = '';
+          btn.textContent = '📎 Ver documentos';
+          return;
+        }
+
+        container.classList.remove('hidden');
+        container.innerHTML = '<div class="text-[12px] text-zinc-400 text-center py-3">Carregando documentos...</div>';
+        btn.textContent = '📎 Ocultar documentos';
+
+        const docs = await carregarDocumentosMotoqueiro(motId);
+
+        if (!docs.length) {
+          container.innerHTML = '<div class="text-[12px] text-zinc-400 text-center py-3">Nenhum documento enviado</div>';
+          return;
+        }
+
+        container.innerHTML = docs.map(d => {
+          const label = { cnh: '🪪 CNH', crlv: '📋 CRLV', selfie: '🤳 Selfie' }[d.tipo] || d.tipo;
+          const isImg = /\.(jpg|jpeg|png|webp|gif)$/i.test(d.url_storage);
+          return `
+            <div class="border border-zinc-200 rounded-xl overflow-hidden">
+              <div class="flex items-center justify-between px-3 py-2 bg-zinc-50">
+                <span class="text-[12px] font-bold">${label}</span>
+                <span class="text-[10px] text-emerald-600 font-bold uppercase">${d.status}</span>
+              </div>
+              ${isImg && d.url_assinada
+                ? `<img src="${d.url_assinada}" class="w-full max-h-[240px] object-contain bg-zinc-100 cursor-pointer" onclick="window.open('${d.url_assinada}','_blank')">`
+                : ''}
+              <a href="${d.url_assinada || '#'}" target="_blank"
+                 class="block text-center text-[12px] font-bold py-2 bg-white hover:bg-zinc-100 text-black border-t border-zinc-200">
+                🔗 Abrir arquivo
+              </a>
+            </div>`;
+        }).join('');
+      });
+    });
 
   } catch (e) {
     console.error(e);
