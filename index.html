@@ -82,7 +82,18 @@
         <div class="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center text-[13px]">●</div>
         <div class="flex-1">
           <label for="destino-input" class="text-[10px] font-bold tracking-[0.12em] text-zinc-400 uppercase">Destino</label>
-          <input id="destino-input" type="search" class="w-full bg-transparent outline-none text-[16px] font-semibold placeholder:text-zinc-400 text-black" placeholder="Para onde? Shopping, trabalho..." autocomplete="off">
+          <!-- ✅ CORRIGIDO: anti-autofill -->
+          <input id="destino-input"
+                 type="text"
+                 name="mj-destino-busca"
+                 class="w-full bg-transparent outline-none text-[16px] font-semibold placeholder:text-zinc-400 text-black"
+                 placeholder="Para onde? Shopping, trabalho..."
+                 autocomplete="one-time-code"
+                 autocorrect="off"
+                 autocapitalize="off"
+                 spellcheck="false"
+                 readonly
+                 onfocus="this.removeAttribute('readonly')">
         </div>
         <div class="text-zinc-300">⌕</div>
       </div>
@@ -445,7 +456,18 @@
       </div>
       <div>
         <label class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Endereço</label>
-        <input id="fav-endereco" type="search" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="Digite o endereço" autocomplete="off">
+        <!-- ✅ CORRIGIDO: anti-autofill -->
+        <input id="fav-endereco"
+               type="text"
+               name="mj-fav-end"
+               class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition"
+               placeholder="Digite o endereço"
+               autocomplete="one-time-code"
+               autocorrect="off"
+               autocapitalize="off"
+               spellcheck="false"
+               readonly
+               onfocus="this.removeAttribute('readonly')">
         <div id="fav-sugestoes" class="mt-2 max-h-[180px] overflow-y-auto no-scrollbar"></div>
         <div id="fav-selecionado" class="hidden mt-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 flex items-center gap-2 text-[12px] text-emerald-700 font-medium">
           <span>✓</span><span id="fav-sel-txt" class="truncate"></span>
