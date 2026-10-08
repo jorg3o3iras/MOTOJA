@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0A0A0A">
+<meta name="description" content="MotoJá Premium — corridas de moto com segurança e preço justo">
+<title>MotoJá — Premium</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet"><link rel="stylesheet" href="style.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sora:['Sora','sans-serif'],inter:['Inter','sans-serif']}}}};</script>
+
+
+</head>
+<body class="h-[100dvh] w-screen bg-[#0A0A0A] relative antialiased">
+
+<div id="map" class="absolute inset-0 z-0" role="application" aria-label="Mapa da corrida"></div>
+<div class="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-b from-black/10 via-transparent to-black/5"></div>
+
+<header class="absolute top-0 inset-x-0 z-[900] p-4 md:p-6 flex justify-between items-start pointer-events-none" style="padding-top:max(1rem,env(safe-area-inset-top))">
+  <div class="pointer-events-auto flex items-center gap-2">
+    <div class="glass shadow-premium rounded-full px-4 py-[10px] flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-full bg-[#FF6A00] flex items-center justify-center text-white font-extrabold text-[15px] sora">M</div>
+      <span class="sora font-extrabold text-[16px] tracking-[-0.02em] text-black">MotoJá</span>
+      <span class="ml-1 text-[9px] font-bold tracking-[0.14em] text-white bg-black rounded-full px-2 py-0.5">PREMIUM</span>
+    </div>
+  </div>
+  <div class="pointer-events-auto flex gap-2 flex-wrap justify-end max-w-[70%]">
+    <button id="btn-localizar" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold hover:scale-[1.02] active:scale-[0.98] transition">📍 Onde estou</button>
+    <button id="btn-tema" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold" title="Alternar tema">🌙</button>
+    <button id="btn-conta" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold">👤 Passageiro</button>
+    <button id="btn-sair-header" type="button" class="hidden glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold hover:bg-red-50 hover:text-red-600 transition">🚪 Sair</button>
+    <button id="btn-abrir-cadastro-moto" type="button" class="bg-black text-white shadow-premium-lg rounded-full px-5 py-2.5 text-[13px] font-bold hover:bg-zinc-900 transition">🪪Motoqueiro</button>
+    <button id="btn-admin" type="button" class="glass shadow-premium rounded-full px-4 py-2.5 text-[13px] font-bold">🔧 Admin</button>
+  </div>
+</header>
+
+<div id="loc-banner" class="absolute top-[84px] left-1/2 -translate-x-1/2 z-[950] glass shadow-premium-lg rounded-full px-5 py-3 flex items-center gap-3 text-[13px] font-semibold max-w-[92%] transition-opacity">
+  <div id="loc-spinner" class="w-4 h-4 border-2 border-zinc-200 border-t-[#FF6A00] rounded-full animate-[spin_.8s_linear_infinite] flex-shrink-0"></div>
+  <span id="loc-texto" class="text-zinc-800">Localizando você com precisão premium...</span>
+  <button id="loc-acao" type="button" class="hidden ml-2 bg-black text-white rounded-full px-3 py-1 text-[11px] font-bold">Tentar</button>
+</div>
+
+<main id="sheet" class="absolute left-0 right-0 bottom-0 z-[1000] md:left-6 md:bottom-6 md:right-auto md:w-[420px] glass shadow-premium-lg rounded-t-[28px] md:rounded-[28px] border border-white/60 flex flex-col max-h-[84dvh] md:max-h-[calc(100dvh-100px)] overflow-hidden" style="padding-bottom:env(safe-area-inset-bottom,0px)">
+  <div class="h-[5px] w-10 bg-black/10 rounded-full mx-auto mt-3 md:hidden flex-shrink-0"></div>
+  <div class="flex-1 overflow-y-auto no-scrollbar p-6 pb-8">
+
+    <section id="step-destino">
+      <div id="user-logado" class="hidden mb-4">
+        <div class="bg-zinc-900 text-white rounded-full px-3 py-2 flex items-center gap-3 text-[13px]">
+          <div id="user-mini-av" class="w-8 h-8 rounded-full bg-[#FF6A00] flex items-center justify-center font-extrabold text-xs">--</div>
+          <span>Olá, <strong id="user-nome" class="sora">Passageiro</strong></span>
+          <button id="btn-logout" type="button" class="ml-auto text-zinc-400 underline text-[11px]">Sair</button>
+        </div>
+      </div>
+      <div id="painel-motoqueiro" class="hidden mb-4">
+        <div class="bg-black text-white rounded-2xl p-4 flex items-center gap-3">
+          <div class="text-2xl">🏍</div>
+          <div class="flex-1">
+            <div class="sora font-bold text-[13px]">Modo Motoqueiro</div>
+            <div id="moto-status-texto" class="text-[11px] text-white/60">Status: —</div>
+          </div>
+          <button id="btn-toggle-online" type="button" class="bg-[#FF6A00] text-white rounded-full px-3 py-1.5 text-[11px] font-bold">Ficar online</button>
+        </div>
+      </div>
+      <div class="flex items-start justify-between mb-5">
+        <div>
+          <h1 class="sora font-extrabold text-[28px] leading-[0.95] tracking-[-0.04em] text-black">Para onde<br><span class="text-zinc-400">vamos hoje?</span></h1>
+          <p id="pickup-info" class="mt-3 text-[13px] text-zinc-500 leading-snug">📍 Detectando embarque premium...</p>
+        </div>
+        <div class="w-12 h-12 rounded-2xl bg-black flex items-center justify-center text-xl">🏍</div>
+      </div>
+
+      <div class="input-premium bg-zinc-100 border-2 border-transparent rounded-2xl px-4 py-4 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center text-[13px]">●</div>
+        <div class="flex-1">
+          <label for="destino-input" class="text-[10px] font-bold tracking-[0.12em] text-zinc-400 uppercase">Destino</label>
+          <input id="destino-input" type="search" class="w-full bg-transparent outline-none text-[16px] font-semibold placeholder:text-zinc-400 text-black" placeholder="Para onde? Shopping, trabalho..." autocomplete="off">
+        </div>
+        <div class="text-zinc-300">⌕</div>
+      </div>
+
+      <button id="btn-escolher-mapa" type="button" class="mt-3 w-full bg-white border-2 border-zinc-200 rounded-2xl px-4 py-3.5 flex items-center justify-center gap-2 text-[14px] font-bold hover:border-[#FF6A00] hover:bg-[#FFF7ED] transition active:scale-[0.98]">
+        <span class="text-[18px]">📍</span>
+        <span>Escolher no mapa</span>
+      </button>
+
+      <div id="sugestoes" class="mt-2"></div>
+      <div class="mt-6">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-[11px] font-bold tracking-[0.12em] text-zinc-400 uppercase">Meus favoritos</div>
+          <button id="btn-add-favorito" type="button" class="text-[11px] font-bold text-[#FF6A00] hover:underline flex items-center gap-1">+ Adicionar</button>
+        </div>
+        <div id="favoritos-lista" class="grid grid-cols-2 gap-2"></div>
+      </div>
+      <div class="mt-6 bg-black rounded-[20px] p-4 flex items-center gap-3 text-white">
+        <div class="w-10 h-10 rounded-full bg-[#FF6A00] flex items-center justify-center">⚡</div>
+        <div class="flex-1">
+          <div class="sora font-bold text-[13px]">MotoJá Premium ativo</div>
+          <div class="text-[11px] text-white/60">Motos novas, capacete higienizado, seguro incluso</div>
+        </div>
+        <div class="text-[10px] font-bold bg-white text-black rounded-full px-2 py-1">SEGURO</div>
+      </div>
+    </section>
+
+    <section id="step-opcoes" class="hidden">
+      <button id="btn-voltar" type="button" class="mb-4 w-9 h-9 rounded-full bg-zinc-100 flex items-center justify-center">←</button>
+      <h2 class="sora font-extrabold text-[22px] tracking-[-0.03em]">Confirmar corrida</h2>
+      <div id="rota-resumo" class="mt-3 bg-zinc-100 rounded-full px-4 py-2.5 flex items-center gap-2 text-[12px] font-medium text-zinc-600"></div>
+      <div id="lista-opcoes" class="mt-5 space-y-3"></div>
+      <button id="btn-confirmar" type="button" disabled="" class="mt-5 w-full bg-zinc-200 text-zinc-400 rounded-2xl py-[18px] font-bold sora text-[15px]">Selecione uma opção</button>
+      <div class="mt-3 text-center text-[11px] text-zinc-400">Preço final • sem surpresas</div>
+    </section>
+
+    <section id="step-buscando" class="hidden text-center py-8">
+      <div class="relative w-[120px] h-[120px] mx-auto">
+        <div class="absolute inset-0 rounded-full border-[3px] border-zinc-100"></div>
+        <div class="absolute inset-0 rounded-full border-[3px] border-t-[#FF6A00] border-r-transparent border-b-transparent border-l-transparent animate-[spin_1s_linear_infinite]"></div>
+        <div class="absolute inset-[20px] rounded-full bg-black flex items-center justify-center text-3xl">🏍</div>
+      </div>
+      <h3 id="busca-titulo" class="sora font-extrabold text-[20px] mt-8">Procurando o melhor<br>motoqueiro perto de você</h3>
+      <p id="busca-sub" class="text-[13px] text-zinc-500 mt-3 leading-relaxed">Analisando distância e tempo<br>em tempo real</p>
+      <button id="btn-cancelar-busca" type="button" class="mt-10 w-full bg-white border border-zinc-200 rounded-2xl py-4 font-bold text-[14px]">Cancelar busca</button>
+    </section>
+
+    <section id="step-motorista" class="hidden">
+      <div class="bg-black text-white rounded-full px-4 py-2 flex items-center justify-center gap-2 text-[11px] font-bold tracking-wide mb-5">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> RASTREAMENTO PREMIUM ATIVO
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="relative">
+          <div id="dr-avatar" class="w-[64px] h-[64px] rounded-full bg-[#FF6A00] flex items-center justify-center text-white font-extrabold text-[18px] sora">--</div>
+          <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow">
+            <div class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse border-2 border-white"></div>
+          </div>
+        </div>
+        <div class="flex-1">
+          <div id="dr-nome" class="sora font-bold text-[18px]">—</div>
+          <div class="flex items-center gap-2 mt-1 flex-wrap">
+            <span id="dr-nota" class="text-[12px] font-bold bg-zinc-900 text-white rounded-full px-2 py-0.5">★ 5,00</span>
+            <span id="dr-viagens" class="text-[11px] text-zinc-500">· 0 corridas</span>
+            <span class="text-[10px] bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5 font-bold">VERIFICADO</span>
+          </div>
+        </div>
+      </div>
+      <div class="mt-6 bg-black rounded-[20px] p-5 flex items-center gap-5 text-white relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-[#FF6A00]/20 blur-[30px] rounded-full"></div>
+        <div>
+          <div id="dr-eta" class="sora font-extrabold text-[36px] leading-none text-[#FF6A00]">— min</div>
+          <div class="text-[10px] tracking-[0.12em] font-bold text-white/50 uppercase mt-1">Tempo estimado</div>
+        </div>
+        <div class="flex-1 text-[13px] leading-snug text-white/70">Seu motoqueiro premium<br>a caminho</div>
+      </div>
+      <div class="mt-4 bg-[#FFF7ED] border border-[#FF6A00]/20 border-dashed rounded-[20px] p-4 flex items-center justify-between">
+        <div>
+          <div class="text-[10px] font-bold tracking-[0.14em] text-zinc-500 uppercase">Código de embarque</div>
+          <div id="codigo-embarque" class="sora font-extrabold text-[28px] tracking-[0.2em] mt-1">— — — —</div>
+          <div class="text-[11px] text-zinc-500 mt-1">Mostre ao motoqueiro</div>
+        </div>
+        <div class="w-14 h-14 rounded-2xl bg-black text-white flex items-center justify-center sora font-bold">MJ</div>
+      </div>
+      <div class="mt-4 bg-white border border-zinc-200 rounded-[20px] p-4 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-zinc-900 flex items-center justify-center text-2xl">🏍</div>
+        <div class="flex-1">
+          <div id="dr-moto" class="sora font-bold text-[14px]">—</div>
+          <div id="dr-detalhe" class="text-[11px] text-zinc-500 mt-0.5">—</div>
+        </div>
+        <div id="dr-placa" class="bg-white border-2 border-black rounded-lg px-2.5 py-1 font-extrabold text-[12px] tracking-widest">---</div>
+      </div>
+      <div class="grid grid-cols-3 gap-2 mt-4">
+        <button type="button" class="bg-white border border-zinc-200 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition"><span>📞</span><span class="text-[11px] font-bold">Ligar</span></button>
+        <button type="button" class="bg-white border border-zinc-200 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition"><span>💬</span><span class="text-[11px] font-bold">Chat</span></button>
+        <button type="button" class="bg-white border border-zinc-200 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition"><span>🆘</span><span class="text-[11px] font-bold">Emergência</span></button>
+      </div>
+      <button id="btn-nova" type="button" class="mt-4 w-full bg-zinc-100 rounded-2xl py-4 font-bold text-[13px] text-zinc-600">Cancelar corrida</button>
+    </section>
+  </div>
+</main>
+
+<!-- ============================================================
+     CONTAINER DE OFERTAS/CORRIDA ATIVA DO MOTOQUEIRO
+     ============================================================ -->
+<div id="ofertas-box" class="fixed top-20 left-1/2 -translate-x-1/2 z-[1200] w-[90%] max-w-[400px] space-y-2 pointer-events-auto"></div>
+
+<!-- ============================================================
+     MODAL DE OFERTA (MOTOQUEIRO RECEBE)
+     ============================================================ -->
+<div id="modal-oferta" class="fixed inset-0 z-[3000] bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+  <div class="bg-white rounded-[28px] w-full max-w-[380px] shadow-premium-lg overflow-hidden" onclick="event.stopPropagation()">
+    <div class="bg-[#FF6A00] text-white px-6 pt-5 pb-6">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-bold uppercase tracking-widest opacity-80">Nova corrida</span>
+        <span id="of-timer" class="sora font-extrabold text-[24px] leading-none">25s</span>
+      </div>
+      <div class="sora font-extrabold text-[32px] mt-3" id="of-valor">R$ 0,00</div>
+      <div class="h-1.5 bg-white/25 rounded-full mt-3 overflow-hidden">
+        <div id="of-progress" class="h-full bg-white transition-[width] duration-200" style="width:100%"></div>
+      </div>
+    </div>
+    <div class="p-6">
+      <div class="space-y-3">
+        <div class="flex items-start gap-3">
+          <div class="mk-origem mt-1"></div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Embarque</div>
+            <div id="of-origem" class="text-[14px] font-semibold truncate">—</div>
+            <div id="of-ate-embarque" class="text-[11px] text-zinc-500 mt-0.5"></div>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="mk-dest mt-1"></div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Destino</div>
+            <div id="of-destino" class="text-[14px] font-semibold truncate">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-4 bg-zinc-100 rounded-xl px-3 py-2 text-[12px] font-medium text-zinc-600" id="of-dist">—</div>
+      <div class="flex gap-3 mt-5">
+        <button id="of-recusar" type="button" class="flex-1 bg-white border-2 border-zinc-200 rounded-2xl py-4 font-bold text-[14px] hover:border-red-300 hover:bg-red-50 transition">Recusar</button>
+        <button id="of-aceitar" type="button" class="flex-1 bg-black text-white rounded-2xl py-4 font-bold text-[14px] hover:bg-zinc-900 transition">Aceitar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL DE PAGAMENTO (PASSAGEIRO)
+     ============================================================ -->
+<div id="modal-pagamento" class="fixed inset-0 z-[2600] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+  <div class="bg-white rounded-[28px] w-full max-w-[400px] shadow-premium-lg p-6" onclick="event.stopPropagation()">
+    <div class="text-center mb-5">
+      <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 text-3xl flex items-center justify-center mx-auto">✓</div>
+      <h3 class="sora font-extrabold text-[20px] mt-3">Corrida finalizada</h3>
+      <div id="pg-valor" class="sora font-extrabold text-[32px] text-[#FF6A00] mt-2">R$ 0,00</div>
+    </div>
+    <div class="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Forma de pagamento</div>
+    <div class="grid grid-cols-3 gap-2 mb-5">
+      <button type="button" class="pg-op py-4 rounded-2xl border-2 border-zinc-200 font-bold text-[13px] hover:border-[#FF6A00]" data-forma="pix">💠<br>PIX</button>
+      <button type="button" class="pg-op py-4 rounded-2xl border-2 border-zinc-200 font-bold text-[13px] hover:border-[#FF6A00]" data-forma="dinheiro">💵<br>Dinheiro</button>
+      <button type="button" class="pg-op py-4 rounded-2xl border-2 border-zinc-200 font-bold text-[13px] hover:border-[#FF6A00]" data-forma="cartao">💳<br>Cartão</button>
+    </div>
+    <button id="btn-pagar" type="button" disabled="" class="w-full bg-zinc-200 text-zinc-400 rounded-2xl py-4 font-bold sora">Escolha a forma</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL DE AVALIAÇÃO (PASSAGEIRO)
+     ============================================================ -->
+<div id="modal-avaliacao" class="fixed inset-0 z-[2700] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+  <div class="bg-white rounded-[28px] w-full max-w-[400px] shadow-premium-lg p-6 text-center">
+    <h3 class="sora font-extrabold text-[20px]">Como foi a corrida?</h3>
+    <p class="text-[13px] text-zinc-500 mt-1" id="av-nome-mot">—</p>
+    <div class="flex justify-center gap-2 mt-6" id="av-estrelas">
+      <button class="av-star text-[36px] transition hover:scale-110 text-zinc-300" data-nota="1">☆</button>
+      <button class="av-star text-[36px] transition hover:scale-110 text-zinc-300" data-nota="2">☆</button>
+      <button class="av-star text-[36px] transition hover:scale-110 text-zinc-300" data-nota="3">☆</button>
+      <button class="av-star text-[36px] transition hover:scale-110 text-zinc-300" data-nota="4">☆</button>
+      <button class="av-star text-[36px] transition hover:scale-110 text-zinc-300" data-nota="5">☆</button>
+    </div>
+    <input id="av-comentario" type="text" maxlength="120" class="mt-5 w-full rounded-2xl border border-zinc-200 px-4 py-3 outline-none focus:border-[#FF6A00]" placeholder="Comentário (opcional)">
+    <button id="btn-enviar-av" type="button" disabled="" class="mt-5 w-full bg-zinc-200 text-zinc-400 rounded-2xl py-4 font-bold sora">Enviar avaliação</button>
+    <button id="btn-pular-av" type="button" class="mt-3 text-[12px] text-zinc-400 underline">Pular</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL LOGIN / CADASTRO
+     ============================================================ -->
+<div id="modal-auth" class="fixed inset-0 z-[2200] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+  <div class="bg-white rounded-[28px] w-full max-w-[420px] shadow-premium-lg overflow-hidden" onclick="event.stopPropagation()">
+    <div class="p-6 pb-4">
+      <div class="flex items-center justify-between mb-5">
+        <div class="flex items-center gap-2">
+          <div class="w-9 h-9 rounded-full bg-[#FF6A00] flex items-center justify-center text-white font-extrabold sora">M</div>
+          <h3 class="sora font-extrabold text-[18px]">Sua conta</h3>
+        </div>
+        <button id="btn-fechar-auth" type="button" class="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-[13px]">✕</button>
+      </div>
+      <div class="flex gap-2 bg-zinc-100 rounded-full p-1 mb-5">
+        <button type="button" id="tab-login" class="auth-tab on flex-1">Entrar</button>
+        <button type="button" id="tab-signup" class="auth-tab flex-1">Criar conta</button>
+      </div>
+      <form id="form-login" class="space-y-4">
+        <div>
+          <label class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">E-mail</label>
+          <input id="login-email" type="email" required="" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="voce@email.com" autocomplete="email">
+        </div>
+        <div>
+          <label class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Senha</label>
+          <input id="login-senha" type="password" required="" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <button type="submit" id="btn-login-submit" class="w-full bg-black text-white rounded-2xl py-4 font-bold sora text-[15px] hover:bg-zinc-900 transition">Entrar</button>
+      </form>
+      <form id="form-signup" class="space-y-4 hidden">
+        <div>
+          <label class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Nome completo</label>
+          <input id="signup-nome" type="text" required="" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="Ex: Maria Oliveira" autocomplete="name">
+        </div>
+        <div>
+          <label class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">E-mail</label>
+          <input id="signup-email" type="email" required="" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="voce@email.com" autocomplete="email">
+        </div>
+        <div>
+          <label class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Senha</label>
+          <input id="signup-senha" type="password" required="" minlength="6" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+        </div>
+        <div>
+          <label class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Telefone (opcional)</label>
+          <input id="signup-telefone" type="tel" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="(11) 99999-9999">
+        </div>
+        <button type="submit" id="btn-signup-submit" class="w-full bg-[#FF6A00] text-white rounded-2xl py-4 font-bold sora text-[15px] hover:bg-[#e55a00] transition">Criar conta</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL CADASTRO MOTOQUEIRO
+     ============================================================ -->
+<div id="modal-moto" class="fixed inset-0 z-[2000] bg-white hidden flex-col">
+  <div class="sticky top-0 bg-white/90 backdrop-blur-xl border-b px-6 py-4 flex items-center justify-between" style="padding-top:max(1rem,env(safe-area-inset-top))">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-[#FF6A00] text-white flex items-center justify-center font-bold">🪪</div>
+      <h2 id="titulo-moto" class="sora font-extrabold text-[18px]">Seja Motoqueiro Premium</h2>
+    </div>
+    <button id="btn-fechar-moto" type="button" class="w-9 h-9 rounded-full bg-zinc-100 flex items-center justify-center">✕</button>
+  </div>
+  <div class="h-1 bg-zinc-100"><div class="h-full flex gap-1 p-1" id="moto-progress">
+    <div class="bar flex-1 rounded-full bg-zinc-200"></div>
+    <div class="bar flex-1 rounded-full bg-zinc-200"></div>
+    <div class="bar flex-1 rounded-full bg-zinc-200"></div>
+    <div class="bar flex-1 rounded-full bg-zinc-200"></div>
+  </div></div>
+  <div class="flex-1 overflow-y-auto px-6 py-8 max-w-[560px] mx-auto w-full">
+    <div class="form-step" data-step="1">
+      <h3 class="sora font-extrabold text-[20px]">Dados pessoais</h3>
+      <div class="grid gap-4 mt-6">
+        <input id="moto-nome" type="text" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="Nome completo">
+        <div class="grid grid-cols-2 gap-3">
+          <input id="moto-cpf" type="text" maxlength="14" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="CPF">
+          <input id="moto-nasc" type="date" class="rounded-2xl border border-zinc-200 px-4 py-3.5">
+        </div>
+        <input id="moto-email" type="email" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="E-mail">
+        <div class="grid grid-cols-2 gap-3">
+          <input id="moto-whats" type="tel" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="WhatsApp">
+          <input id="moto-cep" type="text" maxlength="9" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="CEP">
+        </div>
+      </div>
+    </div>
+    <div class="form-step hidden" data-step="2">
+      <h3 class="sora font-extrabold text-[20px]">Sua moto premium</h3>
+      <div class="grid gap-4 mt-6">
+        <div class="grid grid-cols-2 gap-3">
+          <select id="moto-marca" class="rounded-2xl border border-zinc-200 px-4 py-3.5 bg-white">
+            <option value="">Marca</option>
+            <option>Honda</option><option>Yamaha</option><option>BMW</option>
+            <option>Royal Enfield</option><option>Kawasaki</option><option>Suzuki</option>
+          </select>
+          <input id="moto-ano" type="number" min="2010" max="2026" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="Ano">
+        </div>
+        <input id="moto-modelo" type="text" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="Modelo ex: CG 160 Titan">
+        <div class="grid grid-cols-3 gap-3">
+          <input id="moto-cc" type="number" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="CC">
+          <input id="moto-cor" type="text" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="Cor">
+          <input id="moto-placa" type="text" class="rounded-2xl border border-zinc-200 px-4 py-3.5 uppercase" placeholder="PLACA" maxlength="7">
+        </div>
+      </div>
+    </div>
+    <div class="form-step hidden" data-step="3">
+      <h3 class="sora font-extrabold text-[20px]">Documentos</h3>
+      <p class="text-[13px] text-zinc-500 mt-1 mb-4">Toque para escolher o arquivo (foto ou PDF)</p>
+      <div class="grid gap-3 mt-2">
+        <label class="upload border-2 border-dashed border-zinc-200 rounded-2xl p-5 text-center cursor-pointer hover:border-black transition select-none" data-doc="cnh">
+          <input type="file" accept="image/*,.pdf" class="hidden" data-file="cnh">
+          <div class="text-2xl">🪪</div>
+          <div class="font-bold text-[13px] mt-1">CNH A ou AB com EAR</div>
+          <div class="text-[11px] text-zinc-500 mt-1" data-status="cnh">Não enviado</div>
+        </label>
+        <label class="upload border-2 border-dashed border-zinc-200 rounded-2xl p-5 text-center cursor-pointer hover:border-black transition select-none" data-doc="crlv">
+          <input type="file" accept="image/*,.pdf" class="hidden" data-file="crlv">
+          <div class="text-2xl">📋</div>
+          <div class="font-bold text-[13px] mt-1">CRLV vigente</div>
+          <div class="text-[11px] text-zinc-500 mt-1" data-status="crlv">Não enviado</div>
+        </label>
+        <label class="upload border-2 border-dashed border-zinc-200 rounded-2xl p-5 text-center cursor-pointer hover:border-black transition select-none" data-doc="selfie">
+          <input type="file" accept="image/*" class="hidden" data-file="selfie">
+          <div class="text-2xl">🤳</div>
+          <div class="font-bold text-[13px] mt-1">Selfie com CNH</div>
+          <div class="text-[11px] text-zinc-500 mt-1" data-status="selfie">Não enviado</div>
+        </label>
+      </div>
+    </div>
+    <div class="form-step hidden" data-step="4">
+      <h3 class="sora font-extrabold text-[20px]">Confirmações</h3>
+      <div class="mt-6 space-y-3">
+        <div class="check-item flex gap-3 p-4 rounded-2xl border border-zinc-200 cursor-pointer select-none" data-check="auth">
+          <div class="box w-5 h-5 rounded-full border-2 border-zinc-300 flex items-center justify-center flex-shrink-0"></div>
+          <div class="text-[13px]">Declaro autenticidade dos dados e autorizo consulta de antecedentes.</div>
+        </div>
+        <div class="check-item flex gap-3 p-4 rounded-2xl border border-zinc-200 cursor-pointer select-none" data-check="capacete">
+          <div class="box w-5 h-5 rounded-full border-2 border-zinc-300 flex items-center justify-center flex-shrink-0"></div>
+          <div class="text-[13px]">Comprometo-me a levar capacete extra higienizado em todas as corridas.</div>
+        </div>
+      </div>
+    </div>
+    <div class="form-step hidden" data-step="5">
+      <div class="text-center py-16">
+        <div class="w-20 h-20 rounded-full bg-black text-white text-3xl flex items-center justify-center mx-auto mb-6">✓</div>
+        <h3 class="sora font-extrabold text-[24px]">Cadastro enviado</h3>
+        <p class="text-zinc-500 mt-2">Análise em até 48h úteis.</p>
+        <p class="mt-4 text-[12px]">Protocolo <strong id="protocolo-moto">MJ-000000</strong></p>
+      </div>
+    </div>
+  </div>
+  <div class="border-t p-4 flex gap-3 bg-white" style="padding-bottom:max(1rem,env(safe-area-inset-bottom))">
+    <button id="btn-moto-voltar" type="button" class="flex-[0_0_100px] rounded-2xl bg-zinc-100 py-4 font-bold">Voltar</button>
+    <button id="btn-moto-proximo" type="button" class="flex-1 rounded-2xl bg-[#FF6A00] text-white py-4 font-bold">Continuar →</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL FAVORITOS
+     ============================================================ -->
+<div id="modal-fav" class="fixed inset-0 z-[2100] bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4">
+  <div class="bg-white rounded-[24px] w-full max-w-[420px] p-6 shadow-premium-lg" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="sora font-extrabold text-[18px]">Novo favorito</h3>
+      <button id="btn-fechar-fav" type="button" class="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-[13px]">✕</button>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Nome do lugar</label>
+        <input id="fav-nome" type="text" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="Ex: Casa, Trabalho" maxlength="40">
+      </div>
+      <div>
+        <label class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Endereço</label>
+        <input id="fav-endereco" type="search" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5 outline-none focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="Digite o endereço" autocomplete="off">
+        <div id="fav-sugestoes" class="mt-2 max-h-[180px] overflow-y-auto no-scrollbar"></div>
+        <div id="fav-selecionado" class="hidden mt-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 flex items-center gap-2 text-[12px] text-emerald-700 font-medium">
+          <span>✓</span><span id="fav-sel-txt" class="truncate"></span>
+        </div>
+      </div>
+      <div>
+        <span class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Ícone</span>
+        <div class="grid grid-cols-8 gap-2 mt-2" id="fav-icones">
+          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🏠">🏠</button>
+          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🏢">🏢</button>
+          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🎓">🎓</button>
+          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🛒">🛒</button>
+          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🏥">🏥</button>
+          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="✈️">✈️</button>
+          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="🍽️">🍽️</button>
+          <button type="button" class="ico-btn w-9 h-9 rounded-xl border-2 border-zinc-200 flex items-center justify-center transition hover:border-[#FF6A00]" data-ico="❤️">❤️</button>
+        </div>
+      </div>
+    </div>
+    <button id="btn-salvar-fav" type="button" disabled="" class="mt-6 w-full bg-zinc-200 text-zinc-400 rounded-2xl py-4 font-bold sora transition">Salvar favorito</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL ADMIN
+     ============================================================ -->
+<div id="modal-admin" class="fixed inset-0 z-[2500] bg-zinc-50 hidden flex-col">
+  <div class="sticky top-0 bg-white border-b border-zinc-200 px-6 py-4 flex items-center justify-between z-10" style="padding-top:max(1rem,env(safe-area-inset-top))">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center font-bold">🔧</div>
+      <div>
+        <h2 class="sora font-extrabold text-[18px] leading-tight">Painel Admin</h2>
+        <p class="text-[11px] text-zinc-500">MotoJá Premium</p>
+      </div>
+    </div>
+    <button id="btn-fechar-admin" type="button" class="w-9 h-9 rounded-full bg-zinc-100 flex items-center justify-center text-[14px] hover:bg-zinc-200 transition">✕</button>
+  </div>
+
+  <div class="bg-white border-b border-zinc-200 px-6 py-3 flex gap-2 overflow-x-auto no-scrollbar">
+    <button type="button" class="admin-tab on" data-aba="pendentes">⏳ Pendentes <span id="badge-pendentes" class="ml-1 bg-[#FF6A00] text-white text-[10px] rounded-full px-2 py-0.5">0</span></button>
+    <button type="button" class="admin-tab" data-aba="motoqueiros">🏍️ Motoqueiros</button>
+    <button type="button" class="admin-tab" data-aba="corridas">📋 Corridas</button>
+    <button type="button" class="admin-tab" data-aba="stats">📊 Estatísticas</button>
+  </div>
+
+  <div class="flex-1 overflow-y-auto p-6">
+    <div class="admin-painel" data-painel="pendentes">
+      <div id="admin-lista-pendentes" class="space-y-3">
+        <div class="text-center py-12 text-zinc-400 text-[14px]">Carregando...</div>
+      </div>
+    </div>
+
+    <div class="admin-painel hidden" data-painel="motoqueiros">
+      <div class="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
+        <button type="button" class="admin-filtro on" data-filtro="">Todos</button>
+        <button type="button" class="admin-filtro" data-filtro="pendente">Pendentes</button>
+        <button type="button" class="admin-filtro" data-filtro="aprovado">Aprovados</button>
+        <button type="button" class="admin-filtro" data-filtro="reprovado">Reprovados</button>
+        <button type="button" class="admin-filtro" data-filtro="suspenso">Suspensos</button>
+      </div>
+      <div id="admin-lista-motoqueiros" class="space-y-3">
+        <div class="text-center py-12 text-zinc-400 text-[14px]">Carregando...</div>
+      </div>
+    </div>
+
+    <div class="admin-painel hidden" data-painel="corridas">
+      <div id="admin-lista-corridas" class="space-y-3">
+        <div class="text-center py-12 text-zinc-400 text-[14px]">Carregando...</div>
+      </div>
+    </div>
+
+    <div class="admin-painel hidden" data-painel="stats">
+      <div id="admin-stats" class="grid grid-cols-2 gap-3">
+        <div class="text-center py-12 text-zinc-400 text-[14px] col-span-2">Carregando...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL SENHA ADMIN
+     ============================================================ -->
+<div id="modal-admin-senha" class="fixed inset-0 z-[2800] bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+  <div class="bg-white rounded-[28px] w-full max-w-[400px] shadow-premium-lg p-6" onclick="event.stopPropagation()">
+    <div class="text-center mb-5">
+      <div class="w-14 h-14 rounded-full bg-black text-white flex items-center justify-center text-2xl mx-auto">🔐</div>
+      <h3 class="sora font-extrabold text-[20px] mt-3">Acesso restrito</h3>
+      <p class="text-[13px] text-zinc-500 mt-1">Digite a senha de administrador</p>
+    </div>
+    <input id="admin-senha-input" type="password" autocomplete="off" class="w-full text-center text-[20px] sora font-extrabold
+         rounded-2xl border-2 border-zinc-200 px-4 py-4 outline-none
+         focus:border-[#FF6A00] focus:ring-4 focus:ring-[#FF6A00]/10 transition" placeholder="Digite sua senha">
+    <div class="flex gap-3 mt-5">
+      <button id="btn-admin-senha-cancelar" type="button" class="flex-1 bg-white border-2 border-zinc-200 rounded-2xl py-3.5 font-bold text-[14px] hover:bg-zinc-50 transition">
+        Cancelar
+      </button>
+      <button id="btn-admin-senha-entrar" type="button" class="flex-1 bg-black text-white rounded-2xl py-3.5 font-bold text-[14px] hover:bg-zinc-900 transition">
+        Entrar
+      </button>
+    </div>
+    <div id="admin-senha-erro" class="hidden mt-3 text-center text-[12px] text-red-500 font-bold">Senha incorreta</div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODO MAPA (ESCOLHER DESTINO ARRASTANDO)
+     ============================================================ -->
+<div id="modo-mapa-overlay" class="hidden">
+  <div id="modo-mapa-barra" class="absolute top-0 left-0 right-0 z-[1100] p-4" style="padding-top:max(1rem,env(safe-area-inset-top))">
+    <div class="glass shadow-premium-lg rounded-2xl p-4">
+      <div class="flex items-start gap-3 mb-3">
+        <div class="text-2xl">📍</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Escolher no mapa</div>
+          <div id="modo-mapa-endereco" class="sora font-bold text-[14px] mt-1 text-black">Arraste o mapa...</div>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button id="btn-modo-mapa-cancelar" type="button" class="flex-1 bg-white border border-zinc-200 rounded-xl py-3 font-bold text-[13px]">
+          Cancelar
+        </button>
+        <button id="btn-modo-mapa-confirmar" type="button" disabled="" class="flex-1 bg-[#FF6A00] text-white rounded-xl py-3 font-bold text-[13px] disabled:bg-zinc-300 disabled:cursor-not-allowed">
+          Confirmar local
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="absolute inset-0 z-[1050] pointer-events-none flex items-center justify-center">
+    <div class="relative -mt-10">
+      <div class="absolute left-1/2 -translate-x-1/2 bottom-0 w-4 h-2 rounded-full bg-black/30"></div>
+      <div class="text-[56px] leading-none drop-shadow-[0_6px_12px_rgba(0,0,0,.35)] animate-[pinBounce_1.5s_ease-in-out_infinite]">📍</div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet/leaflet-maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+
+<script src="script.js"></script></body></html>
