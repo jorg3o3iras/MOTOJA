@@ -146,7 +146,8 @@
     canalOfertas: null, canalMinhaCorrida: null, ofertaAtual: null,
     timerOferta: null, corridaAtual: null, timerHeartbeat: null,
     _pollOferta: null,
-    buscaAbort: null, favAbort: null
+    buscaAbort: null, favAbort: null,
+    precoOficial: null
   };
 
   function mostrarPasso(n) {
@@ -176,15 +177,19 @@
       return true;
     } catch (e) { console.warn('[MotoJá] atualizar posição:', e.message); return false; }
   }
-  async function criarCorridaBackend(origem, destino, distancia, duracao, preco) {
+
+  // 🔒 NÃO envia mais o preço — o backend calcula com base em `configuracoes`
+  async function criarCorridaBackend(origem, destino, distancia, duracao) {
     const { data, error } = await supabase.rpc('criar_corrida', {
       p_origem_nome: origem.nome, p_origem_lat: origem.lat, p_origem_lng: origem.lng,
       p_destino_nome: destino.nome, p_destino_lat: destino.lat, p_destino_lng: destino.lng,
-      p_distancia_km: distancia, p_duracao_min: duracao, p_preco_total: preco
+      p_distancia_km: distancia, p_duracao_min: duracao
+      // p_preco_total: o backend ignora e calcula o oficial
     });
     if (error) throw error;
     return data;
   }
+
   async function buscarMeuCadastroMotoqueiro() {
     if (!state.user) return null;
     const { data, error } = await supabase
@@ -985,13 +990,19 @@
     }
 
     try {
-      const preco = CATEGORIA_MOTO.base + CATEGORIA_MOTO.porKm * state.rota.distancia;
+      // 🔒 NÃO envia mais o preço — backend calcula
       const resp = await criarCorridaBackend(
         state.pickup, state.destino,
-        state.rota.distancia, state.rota.duracao, preco
+        state.rota.distancia, state.rota.duracao
       );
       state.corridaId = resp.corrida_id || resp.id || resp;
       if (!state.corridaId) throw new Error('Backend não retornou id');
+
+      // 💰 Guarda o preço OFICIAL devolvido pelo backend
+      if (resp.preco_total) {
+        state.precoOficial = Number(resp.preco_total);
+        console.log('[Corrida] Preço oficial do backend:', state.precoOficial);
+      }
 
       mostrarPasso('buscando');
       atualizarTextoBusca(
@@ -1208,6 +1219,7 @@
     state.destino = state.rota = state.opcao = null;
     state.corridaId = null;
     state.motoqueiroAtual = null;
+    state.precoOficial = null;
     limparRotaVisual();
     if (state.pickup) map.setView([state.pickup.lat, state.pickup.lng], 15);
     $('destino-input').value = '';
@@ -1325,6 +1337,7 @@
     state.corridaParaAvaliar = null;
     state.motoqueiroAtual = null;
     state.corridaId = null;
+    state.precoOficial = null;
     resetCorrida();
   }
 
