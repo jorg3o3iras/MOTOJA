@@ -2416,8 +2416,32 @@
     aplicarTema(novo);
     mostrarToast(novo === 'escuro' ? '🌙 Modo noturno ativado' : '☀️ Modo claro ativado');
   }
-  (function() { aplicarTema(localStorage.getItem(TEMA_KEY) || 'claro'); })();
+    (function() { aplicarTema(localStorage.getItem(TEMA_KEY) || 'claro'); })();
   $('btn-tema').addEventListener('click', alternarTema);
+
+  /* =========================================================
+     ✅ ANTI-AUTOFILL — limpa campos sensíveis ao carregar
+     ========================================================= */
+  (function limparAutofill() {
+    const campos = ['destino-input', 'fav-endereco'];
+
+    campos.forEach(id => {
+      const el = $(id);
+      if (!el) return;
+
+      // Limpa imediatamente
+      el.value = '';
+
+      // E de novo depois que o navegador "insistir" em preencher
+      [100, 500, 1500, 3000].forEach(ms => {
+        setTimeout(() => {
+          if (el.value && el.value.includes('@')) {
+            el.value = '';
+          }
+        }, ms);
+      });
+    });
+  })();
 
   /* =========================================================
      INIT
