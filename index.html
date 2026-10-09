@@ -58,35 +58,37 @@
   <button id="loc-acao" type="button" class="hidden ml-2 bg-black text-white rounded-full px-3 py-1 text-[11px] font-bold">Tentar</button>
 </div>
 
-<main id="sheet" class="absolute left-0 right-0 bottom-0 z-[1000] md:left-6 md:bottom-6 md:right-auto md:w-[420px] glass shadow-premium-lg rounded-t-[28px] md:rounded-[28px] border border-white/60 flex flex-col max-h-[84dvh] md:max-h-[calc(100dvh-100px)] overflow-hidden" style="padding-bottom:env(safe-area-inset-bottom,0px)">
+<!-- ============================================================
+     SHEET PRINCIPAL — reduzida no mobile para 60dvh
+     ============================================================ -->
+<main id="sheet" class="absolute left-0 right-0 bottom-0 z-[1000] md:left-6 md:bottom-6 md:right-auto md:w-[420px] glass shadow-premium-lg rounded-t-[28px] md:rounded-[28px] border border-white/60 flex flex-col max-h-[60dvh] md:max-h-[calc(100dvh-100px)] overflow-hidden" style="padding-bottom:env(safe-area-inset-bottom,0px)">
   <div class="h-[5px] w-10 bg-black/10 rounded-full mx-auto mt-3 md:hidden flex-shrink-0"></div>
-  <div class="flex-1 overflow-y-auto no-scrollbar p-6 pb-8">
+  <div class="flex-1 overflow-y-auto no-scrollbar p-4 pb-5 md:p-6 md:pb-8">
 
     <section id="step-destino">
-      <div id="user-logado" class="hidden mb-4">
+      <div id="user-logado" class="hidden mb-3">
         <div class="bg-zinc-900 text-white rounded-full px-3 py-2 flex items-center gap-3 text-[13px]">
           <div id="user-mini-av" class="w-8 h-8 rounded-full bg-[#FF6A00] flex items-center justify-center font-extrabold text-xs">--</div>
           <span>Olá, <strong id="user-nome" class="sora">Passageiro</strong></span>
           <button id="btn-logout" type="button" class="ml-auto text-zinc-400 underline text-[11px]">Sair</button>
         </div>
       </div>
-      <div class="flex items-start justify-between mb-5">
+      <div class="flex items-start justify-between mb-4">
         <div>
-          <h1 class="sora font-extrabold text-[28px] leading-[0.95] tracking-[-0.04em] text-black">Para onde<br><span class="text-zinc-400">vamos hoje?</span></h1>
-          <p id="pickup-info" class="mt-3 text-[13px] text-zinc-500 leading-snug">📍 Detectando embarque premium...</p>
+          <h1 class="sora font-extrabold text-[22px] md:text-[28px] leading-[1] tracking-[-0.04em] text-black">Para onde<br><span class="text-zinc-400">vamos hoje?</span></h1>
+          <p id="pickup-info" class="mt-2 text-[12px] md:text-[13px] text-zinc-500 leading-snug">📍 Detectando embarque premium...</p>
         </div>
-        <div class="w-12 h-12 rounded-2xl bg-black flex items-center justify-center text-xl">🏍</div>
+        <div class="w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-black flex items-center justify-center text-lg md:text-xl">🏍</div>
       </div>
 
-      <div class="input-premium bg-zinc-100 border-2 border-transparent rounded-2xl px-4 py-4 flex items-center gap-3">
+      <div class="input-premium bg-zinc-100 border-2 border-transparent rounded-2xl px-4 py-3.5 md:py-4 flex items-center gap-3">
         <div class="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center text-[13px]">●</div>
         <div class="flex-1">
           <label for="destino-input" class="text-[10px] font-bold tracking-[0.12em] text-zinc-400 uppercase">Destino</label>
-          <!-- ✅ CORRIGIDO: anti-autofill -->
           <input id="destino-input"
                  type="text"
                  name="mj-destino-busca"
-                 class="w-full bg-transparent outline-none text-[16px] font-semibold placeholder:text-zinc-400 text-black"
+                 class="w-full bg-transparent outline-none text-[15px] md:text-[16px] font-semibold placeholder:text-zinc-400 text-black"
                  placeholder="Para onde? Shopping, trabalho..."
                  autocomplete="one-time-code"
                  autocorrect="off"
@@ -98,20 +100,22 @@
         <div class="text-zinc-300">⌕</div>
       </div>
 
-      <button id="btn-escolher-mapa" type="button" class="mt-3 w-full bg-white border-2 border-zinc-200 rounded-2xl px-4 py-3.5 flex items-center justify-center gap-2 text-[14px] font-bold hover:border-[#FF6A00] hover:bg-[#FFF7ED] transition active:scale-[0.98]">
-        <span class="text-[18px]">📍</span>
+      <button id="btn-escolher-mapa" type="button" class="mt-2.5 w-full bg-white border-2 border-zinc-200 rounded-2xl px-4 py-3 md:py-3.5 flex items-center justify-center gap-2 text-[13px] md:text-[14px] font-bold hover:border-[#FF6A00] hover:bg-[#FFF7ED] transition active:scale-[0.98]">
+        <span class="text-[16px] md:text-[18px]">📍</span>
         <span>Escolher no mapa</span>
       </button>
 
       <div id="sugestoes" class="mt-2"></div>
-      <div class="mt-6">
-        <div class="flex items-center justify-between mb-3">
+      <div class="mt-4 md:mt-6">
+        <div class="flex items-center justify-between mb-2.5">
           <div class="text-[11px] font-bold tracking-[0.12em] text-zinc-400 uppercase">Meus favoritos</div>
           <button id="btn-add-favorito" type="button" class="text-[11px] font-bold text-[#FF6A00] hover:underline flex items-center gap-1">+ Adicionar</button>
         </div>
         <div id="favoritos-lista" class="grid grid-cols-2 gap-2"></div>
       </div>
-      <div class="mt-6 bg-black rounded-[20px] p-4 flex items-center gap-3 text-white">
+
+      <!-- ✅ Card "MotoJá Premium ativo" fica visível APENAS no desktop -->
+      <div class="mt-4 md:mt-6 bg-black rounded-[20px] p-4 items-center gap-3 text-white hidden md:flex">
         <div class="w-10 h-10 rounded-full bg-[#FF6A00] flex items-center justify-center">⚡</div>
         <div class="flex-1">
           <div class="sora font-bold text-[13px]">MotoJá Premium ativo</div>
@@ -456,7 +460,6 @@
       </div>
       <div>
         <label class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Endereço</label>
-        <!-- ✅ CORRIGIDO: anti-autofill -->
         <input id="fav-endereco"
                type="text"
                name="mj-fav-end"
@@ -620,9 +623,10 @@
 </div>
 
 <!-- ============================================================
-     MODO MAPA
+     MODO MAPA — PIN REDESENHADO COM SVG
      ============================================================ -->
 <div id="modo-mapa-overlay" class="hidden">
+  <!-- Barra superior -->
   <div id="modo-mapa-barra" class="absolute top-0 left-0 right-0 z-[1100] p-4" style="padding-top:max(1rem,env(safe-area-inset-top))">
     <div class="glass shadow-premium-lg rounded-2xl p-4">
       <div class="flex items-start gap-3 mb-3">
@@ -643,10 +647,17 @@
     </div>
   </div>
 
-  <div class="absolute inset-0 z-[1050] pointer-events-none flex items-center justify-center">
-    <div class="relative -mt-10">
-      <div class="absolute left-1/2 -translate-x-1/2 bottom-0 w-3 h-1.5 rounded-full bg-black/30"></div>
-      <div class="text-[32px] leading-none drop-shadow-[0_4px_8px_rgba(0,0,0,.35)] animate-[pinBounce_1.5s_ease-in-out_infinite]">📍</div>
+  <!-- ✅ PIN CENTRAL — agora com SVG fixo, z-index alto e position fixed -->
+  <div id="modo-mapa-pin" class="fixed inset-0 z-[1090] pointer-events-none flex items-center justify-center">
+    <div class="map-pin-holder">
+      <div class="map-pin-bounce">
+        <svg width="44" height="56" viewBox="0 0 44 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22 2C12.059 2 4 10.059 4 20C4 35 22 54 22 54C22 54 40 35 40 20C40 10.059 31.941 2 22 2Z"
+                fill="#FF6A00" stroke="#ffffff" stroke-width="3" stroke-linejoin="round"/>
+          <circle cx="22" cy="20" r="7" fill="#ffffff"/>
+        </svg>
+      </div>
+      <div class="map-pin-shadow"></div>
     </div>
   </div>
 </div>
