@@ -17,6 +17,9 @@
   const CATEGORIA_MOTO = { id: 'moto', nome: 'Moto', desc: 'Corrida premium de moto', icone: '🏍', base: 4, porKm: 1.6, espera: 3 };
   const PRECOS_PADRAO = { preco_base: 4, preco_por_km: 1.6, espera_min: 3, comissao_pct: 20 };
 
+  // 📏 Raio máximo de busca de endereços (km) — mudar aqui se quiser outro valor
+  const RAIO_BUSCA_KM = 25;
+
   /* =========================================================
      HELPERS
      ========================================================= */
@@ -83,12 +86,26 @@
   function esconderBanner() { $('loc-banner').classList.add('hidden'); }
 
   /* =========================================================
-     BIAS DE BUSCA (Photon) — prioriza resultados perto do pickup
+     BIAS DE BUSCA (Photon) — prioriza + filtra resultados próximos
      ========================================================= */
   function montarBiasPhoton() {
     if (!state.pickup) return '';
     const { lat, lng } = state.pickup;
-    return '&lat=' + lat + '&lon=' + lng;
+    // bbox ~40 km ao redor do pickup
+    const d = 0.4;
+    const bbox = (lng - d) + ',' + (lat - d) + ',' + (lng + d) + ',' + (lat + d);
+    return '&lat=' + lat + '&lon=' + lng + '&bbox=' + bbox;
+  }
+
+  function filtrarPorRegiao(features, maxKm) {
+    if (!state.pickup) return features;
+    if (!maxKm) maxKm = RAIO_BUSCA_KM;
+    return features.filter(function (f) {
+      const coords = f.geometry && f.geometry.coordinates;
+      if (!coords || coords.length < 2) return false;
+      const d = haversine(state.pickup, { lat: coords[1], lng: coords[0] });
+      return d <= maxKm;
+    });
   }
 
   /* =========================================================
@@ -741,14 +758,16 @@
     const ac = new AbortController(); state.buscaAbort = ac;
     const bias = montarBiasPhoton();
     try {
-      const url = 'https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&limit=8' + bias;
+      const url = 'https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&limit=20' + bias;
       const r = await fetch(url, {
         signal: ac.signal,
         headers: { 'Accept-Language': 'pt-BR' }
       });
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const j = await r.json();
-      resAtuais = (j.features || []).filter(f => f.properties?.countrycode === 'BR');
+      let lista = (j.features || []).filter(f => f.properties && f.properties.countrycode === 'BR');
+      lista = filtrarPorRegiao(lista, RAIO_BUSCA_KM);
+      resAtuais = lista.slice(0, 8);
       renderSug(resAtuais);
     } catch (e) {
       if (e.name !== 'AbortError') $('sugestoes').innerHTML = '<div class="p-3 text-zinc-400 text-[13px]">Erro ao buscar.</div>';
@@ -875,13 +894,14 @@
     const ac = new AbortController(); state.favAbort = ac;
     const bias = montarBiasPhoton();
     try {
-      const url = 'https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&limit=8' + bias;
+      const url = 'https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&limit=20' + bias;
       const r = await fetch(url, {
         signal: ac.signal,
         headers: { 'Accept-Language': 'pt-BR' }
       });
       const j = await r.json();
-      const favRes = (j.features || []).filter(f => f.properties?.countrycode === 'BR');
+      let favRes = (j.features || []).filter(f => f.properties && f.properties.countrycode === 'BR');
+      favRes = filtrarPorRegiao(favRes, RAIO_BUSCA_KM).slice(0, 8);
 
       $('fav-sugestoes').innerHTML = favRes.map((it, i) => {
         const p = it.properties || {};
