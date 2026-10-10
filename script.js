@@ -82,12 +82,13 @@
   }
   function esconderBanner() { $('loc-banner').classList.add('hidden'); }
 
-  function montarViewbox(raioGraus = 0.15) {
+  /* =========================================================
+     BIAS DE BUSCA (Photon) — prioriza resultados perto do pickup
+     ========================================================= */
+  function montarBiasPhoton() {
     if (!state.pickup) return '';
     const { lat, lng } = state.pickup;
-    const left = lng - raioGraus, right = lng + raioGraus;
-    const top = lat + raioGraus, bottom = lat - raioGraus;
-    return `&viewbox=${left},${top},${right},${bottom}&bounded=1`;
+    return `&lat=${lat}&lon=${lng}`;
   }
 
   /* =========================================================
@@ -650,14 +651,25 @@
   });
 
   /* =========================================================
-     GEOCODIFICAÇÃO
+     GEOCODIFICAÇÃO — PHOTON (komoot)
      ========================================================= */
   async function geocodificarReverso(lat, lng) {
     try {
-      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, { headers: { 'Accept-Language': 'pt-BR' } });
+      const r = await fetch(
+        `https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}&lang=pt`,
+        { signal: AbortSignal.timeout(6000) }
+      );
       if (!r.ok) throw new Error('HTTP');
       const j = await r.json();
-      if (j?.display_name) return j.display_name.split(',').slice(0, 2).join(',').trim();
+      const p = j?.features?.[0]?.properties;
+      if (p) {
+        const partes = [
+          p.street && p.housenumber ? `${p.street}, ${p.housenumber}` : (p.street || p.name),
+          p.district || p.suburb,
+          p.city || p.town || p.village
+        ].filter(Boolean);
+        if (partes.length) return partes.join(' - ');
+      }
     } catch (_) {}
     return 'Local selecionado';
   }
@@ -720,18 +732,19 @@
   });
 
   /* =========================================================
-     BUSCA DE DESTINO
+     BUSCA DE DESTINO — PHOTON
      ========================================================= */
   let resAtuais = [];
   const buscarDestino = debounce(async (q) => {
     if (state.buscaAbort) state.buscaAbort.abort();
     const ac = new AbortController(); state.buscaAbort = ac;
-    const viewboxParam = montarViewbox(0.15);
+    const bias = montarBiasPhoton();
     try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=8&countrycodes=br&addressdetails=1${viewboxParam}`;
-      const r = await fetch(url, { signal: ac.signal, headers: { 'Accept-Language': 'pt-BR' } });
+      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=8&lang=pt${bias}`;
+      const r = await fetch(url, { signal: ac.signal });
       if (!r.ok) throw new Error('HTTP');
-      resAtuais = await r.json();
+      const j = await r.json();
+      resAtuais = (j.features || []).filter(f => f.properties?.countrycode === 'BR');
       renderSug(resAtuais);
     } catch (e) {
       if (e.name !== 'AbortError') $('sugestoes').innerHTML = '<div class="p-3 text-zinc-400 text-[13px]">Erro ao buscar.</div>';
@@ -751,19 +764,36 @@
       return;
     }
     $('sugestoes').innerHTML = lista.map((it, i) => {
-      const p = it.display_name.split(',');
+      const p = it.properties || {};
+      const titulo = p.name || p.street || p.city || 'Local';
+      const sub = [
+        p.street && p.housenumber ? `${p.street}, ${p.housenumber}` : null,
+        p.district || p.suburb,
+        p.city || p.town || p.village,
+        p.state
+      ].filter(Boolean).join(', ') || (p.country || '');
       return `<div class="sugestao flex gap-3 p-3 hover:bg-zinc-100 rounded-2xl cursor-pointer transition" data-i="${i}">
         <div class="w-9 h-9 rounded-full bg-zinc-100 flex items-center justify-center">📍</div>
         <div class="min-w-0 flex-1">
-          <div class="font-bold text-[13px] truncate">${p[0]}</div>
-          <div class="text-[11px] text-zinc-500 truncate">${p.slice(1, 3).join(',')}</div>
+          <div class="font-bold text-[13px] truncate">${titulo}</div>
+          <div class="text-[11px] text-zinc-500 truncate">${sub}</div>
         </div>
       </div>`;
     }).join('');
+
     $$('.sugestao').forEach(el => {
       el.addEventListener('click', () => {
         const it = resAtuais[+el.dataset.i];
-        if (it) escolherDestino(+it.lat, +it.lon, it.display_name.split(',').slice(0, 2).join(',').trim());
+        if (!it) return;
+        const coords = it.geometry?.coordinates || [];
+        const lat = coords[1], lng = coords[0];
+        const p = it.properties || {};
+        const nome = p.name || p.street || p.city || 'Local';
+        const endereco = [
+          p.street && p.housenumber ? `${p.street}, ${p.housenumber}` : null,
+          p.city || p.town || p.village
+        ].filter(Boolean).join(' - ') || nome;
+        escolherDestino(lat, lng, endereco);
       });
     });
   }
@@ -839,27 +869,40 @@
   const buscarFav = debounce(async (q) => {
     if (state.favAbort) state.favAbort.abort();
     const ac = new AbortController(); state.favAbort = ac;
-    const viewboxParam = montarViewbox(0.15);
+    const bias = montarBiasPhoton();
     try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=8&countrycodes=br&addressdetails=1${viewboxParam}`;
-      const r = await fetch(url, { signal: ac.signal, headers: { 'Accept-Language': 'pt-BR' } });
-      const favRes = await r.json();
+      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=8&lang=pt${bias}`;
+      const r = await fetch(url, { signal: ac.signal });
+      const j = await r.json();
+      const favRes = (j.features || []).filter(f => f.properties?.countrycode === 'BR');
+
       $('fav-sugestoes').innerHTML = favRes.map((it, i) => {
-        const p = it.display_name.split(',');
+        const p = it.properties || {};
+        const titulo = p.name || p.street || p.city || 'Local';
+        const sub = [
+          p.street && p.housenumber ? `${p.street}, ${p.housenumber}` : null,
+          p.city || p.town || p.village
+        ].filter(Boolean).join(', ') || (p.state || '');
         return `<div class="fav-sug flex gap-3 p-2.5 hover:bg-zinc-100 rounded-xl cursor-pointer transition" data-i="${i}">
           <div class="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-[13px]">📍</div>
           <div class="min-w-0 flex-1">
-            <div class="font-bold text-[12px] truncate">${p[0]}</div>
-            <div class="text-[10px] text-zinc-500 truncate">${p.slice(1, 3).join(',')}</div>
+            <div class="font-bold text-[12px] truncate">${titulo}</div>
+            <div class="text-[10px] text-zinc-500 truncate">${sub}</div>
           </div>
         </div>`;
       }).join('');
+
       $$('.fav-sug').forEach(el => {
         el.addEventListener('click', () => {
           const it = favRes[+el.dataset.i];
           if (!it) return;
-          favLatLng = { lat: +it.lat, lng: +it.lon };
-          const label = it.display_name.split(',').slice(0, 2).join(',').trim();
+          const coords = it.geometry?.coordinates || [];
+          favLatLng = { lat: coords[1], lng: coords[0] };
+          const p = it.properties || {};
+          const label = [
+            p.name || p.street,
+            p.city || p.town || p.village
+          ].filter(Boolean).join(' - ') || 'Local';
           $('fav-endereco').value = label;
           $('fav-sugestoes').innerHTML = '';
           $('fav-selecionado').classList.remove('hidden');
@@ -2429,10 +2472,8 @@
       const el = $(id);
       if (!el) return;
 
-      // Limpa imediatamente
       el.value = '';
 
-      // E de novo depois que o navegador "insistir" em preencher
       [100, 500, 1500, 3000].forEach(ms => {
         setTimeout(() => {
           if (el.value && el.value.includes('@')) {
