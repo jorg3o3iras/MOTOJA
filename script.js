@@ -1774,28 +1774,37 @@
     $('of-destino').textContent = c.destino_nome || '—';
     $('of-dist').textContent   = Number(c.distancia_km).toFixed(1) + ' km · ' + Math.round(c.duracao_min) + ' min';
 
-    navigator.geolocation.getCurrentPosition((pos) => {
-      const d = haversine(
-        { lat: pos.coords.latitude, lng: pos.coords.longitude },
-        { lat: c.origem_lat, lng: c.origem_lng }
-      );
-      $('of-ate-embarque').textContent = 'a ' + d.toFixed(1) + ' km de você';
-    }, () => { $('of-ate-embarque').textContent = ''; }, { timeout: 4000 });
+    // 👤 Reset passageiro
+    $('of-passageiro-info').textContent = 'Carregando...';
+    $('of-ligar-passageiro').classList.add('hidden');
 
-    clearInterval(state.timerOferta);
-    const expiry = new Date(c.offer_expires_at).getTime();
-    const atualizar = () => {
-      const restam = Math.max(0, Math.floor((expiry - Date.now()) / 1000));
-      $('of-timer').textContent = restam + 's';
-      $('of-progress').style.width = Math.min(100, (restam / 25) * 100) + '%';
-      if (restam <= 0) {
-        clearInterval(state.timerOferta);
-        supabase.rpc('expirar_oferta', { p_corrida_id: c.id }).then(() => fecharModalOferta());
-      }
-    };
-    atualizar();
-    state.timerOferta = setInterval(atualizar, 250);
-  }
+    // 🔍 Buscar telefone do passageiro
+    supabase
+      .from('corridas')
+      .select('passageiro:profiles!corridas_passageiro_id_fkey(nome_completo, telefone)')
+      .eq('id', c.id)
+      .single()
+      .then(({ data, error }) => {
+        if (error || !data?.passageiro) {
+          $('of-passageiro-info').textContent = 'Dados indisponíveis';
+          return;
+        }
+        const nome = data.passageiro.nome_completo || 'Passageiro';
+        const tel  = data.passageiro.telefone || '';
+
+        $('of-passageiro-info').textContent = tel ? (nome + ' · ' + tel) : (nome + ' (sem telefone)');
+
+        // Salva pro card da corrida em andamento também
+        state.telefonePassageiro = tel;
+        state.nomePassageiro = nome;
+
+               if (tel) {
+          const btn = $('of-ligar-passageiro');
+          btn.href = 'tel:' + tel.replace(/\D/g, '');
+          btn.classList.remove('hidden');
+        }
+      });
+  }   
 
   function fecharModalOferta() {
     clearInterval(state.timerOferta);
@@ -1851,16 +1860,23 @@
       .subscribe();
   }
 
-  function renderCorridaEmAndamento(data) {
+   function renderCorridaEmAndamento(data) {
     const box = $('ofertas-box');
+    const telLimpo = (state.telefonePassageiro || '').replace(/\D/g, '');
+    const botaoLigar = telLimpo
+      ? '<a href="tel:' + telLimpo + '" class="bg-blue-600 text-white rounded-xl px-4 py-3 font-bold text-[13px] flex items-center justify-center" title="Ligar para ' + (state.nomePassageiro || 'passageiro') + '">📞</a>'
+      : '';
+
     box.innerHTML =
       '<div class="bg-black text-white rounded-2xl p-4 shadow-premium-lg">' +
         '<div class="text-[11px] text-white/60 uppercase font-bold">Indo ao embarque</div>' +
         '<div class="text-[12px] text-white/70 mt-2">📍 ' + data.origem_nome + '</div>' +
         '<div class="text-[12px] text-white/70">🏁 ' + data.destino_nome + '</div>' +
+        (state.nomePassageiro ? '<div class="text-[11px] text-blue-300 mt-1">👤 ' + state.nomePassageiro + '</div>' : '') +
         '<div class="sora font-extrabold text-[22px] mt-3 text-[#FF6A00]">' + formatMoney(data.preco_total) + '</div>' +
-        '<div class="flex gap-2 mt-4">' +
+                '<div class="flex gap-2 mt-4">' +
           '<button id="btn-cheguei" class="flex-1 bg-[#FF6A00] text-white rounded-xl py-3 font-bold text-[13px]">Cheguei no embarque</button>' +
+          botaoLigar +
           '<button id="btn-cancelar-mot" class="bg-red-600 text-white rounded-xl px-4 py-3 font-bold text-[13px]">✕</button>' +
         '</div>' +
       '</div>';
@@ -1925,8 +1941,10 @@
     };
   }
 
-  function limparCorridaAtual() {
+   function limparCorridaAtual() {
     state.corridaAtual = null;
+    state.telefonePassageiro = null;
+    state.nomePassageiro = null;
     if (state.canalMinhaCorrida) { supabase.removeChannel(state.canalMinhaCorrida); state.canalMinhaCorrida = null; }
     $('ofertas-box').innerHTML = '';
     ouvirMinhasOfertas();
@@ -2594,9 +2612,6 @@
    window.addEventListener('beforeunload', () => {
     pararHeartbeat();
   });
-
-  // 🔍 DEBUG — permite testar funções do console (remover depois)
-    // 🔍 DEBUG — permite testar funções do console (remover depois)
   window.__mj = { gerarBRCodePix, crc16Pix, tlvPix, state, abrirModalPagamento };
 
 })();
