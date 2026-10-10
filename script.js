@@ -2596,8 +2596,7 @@
   });
 
   // 🔍 DEBUG — permite testar funções do console (remover depois)
+    // 🔍 DEBUG — permite testar funções do console (remover depois)
   window.__mj = { gerarBRCodePix, crc16Pix, tlvPix, state, abrirModalPagamento };
-
-})();
 
 })();
