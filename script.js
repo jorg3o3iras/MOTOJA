@@ -17,7 +17,7 @@
   const CATEGORIA_MOTO = { id: 'moto', nome: 'Moto', desc: 'Corrida premium de moto', icone: '🏍', base: 4, porKm: 1.6, espera: 3 };
   const PRECOS_PADRAO = { preco_base: 4, preco_por_km: 1.6, espera_min: 3, comissao_pct: 20 };
 
-  // 📏 Raio máximo de busca de endereços (km) — mudar aqui se quiser outro valor
+  // 📏 Raio máximo de busca de endereços (km)
   const RAIO_BUSCA_KM = 25;
 
   /* =========================================================
@@ -63,6 +63,64 @@
   function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
   /* =========================================================
+     PIX — Geração de BR Code (padrão Banco Central)
+     ========================================================= */
+  function crc16Pix(str) {
+    let crc = 0xFFFF;
+    for (let i = 0; i < str.length; i++) {
+      crc ^= str.charCodeAt(i) << 8;
+      for (let j = 0; j < 8; j++) {
+        if (crc & 0x8000) crc = (crc << 1) ^ 0x1021;
+        else crc <<= 1;
+        crc &= 0xFFFF;
+      }
+    }
+    return crc.toString(16).toUpperCase().padStart(4, '0');
+  }
+
+  function tlvPix(id, value) {
+    const len = String(value.length).padStart(2, '0');
+    return id + len + value;
+  }
+
+  function sanitizePix(s, max) {
+    return String(s || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^A-Za-z0-9 ]/g, '')
+      .toUpperCase()
+      .trim()
+      .slice(0, max);
+  }
+
+  function gerarBRCodePix(chave, nome, cidade, valor, txid) {
+    const chaveLimpa = String(chave || '').trim();
+    if (!chaveLimpa) return null;
+
+    const nomeLimpo   = sanitizePix(nome,   25) || 'MOTOQUEIRO';
+    const cidadeLimpa = sanitizePix(cidade, 15) || 'BRASIL';
+    const txidLimpo   = sanitizePix(txid,   25) || 'MOTOJA';
+    const valorStr    = Number(valor || 0).toFixed(2);
+
+    const gui = tlvPix('00', 'br.gov.bcb.pix');
+    const key = tlvPix('01', chaveLimpa);
+    const mai = tlvPix('26', gui + key);
+
+    let payload = '';
+    payload += tlvPix('00', '01');
+    payload += mai;
+    payload += tlvPix('52', '0000');
+    payload += tlvPix('53', '986');
+    payload += tlvPix('54', valorStr);
+    payload += tlvPix('58', 'BR');
+    payload += tlvPix('59', nomeLimpo);
+    payload += tlvPix('60', cidadeLimpa);
+    payload += tlvPix('62', tlvPix('05', txidLimpo));
+    payload += '6304';
+
+    return payload + crc16Pix(payload);
+  }
+
+  /* =========================================================
      TOAST / BANNER
      ========================================================= */
   let toastTimer = null;
@@ -86,12 +144,11 @@
   function esconderBanner() { $('loc-banner').classList.add('hidden'); }
 
   /* =========================================================
-     BIAS DE BUSCA (Photon) — prioriza + filtra resultados próximos
+     BIAS DE BUSCA (Photon)
      ========================================================= */
   function montarBiasPhoton() {
     if (!state.pickup) return '';
     const { lat, lng } = state.pickup;
-    // bbox ~40 km ao redor do pickup
     const d = 0.4;
     const bbox = (lng - d) + ',' + (lat - d) + ',' + (lng + d) + ',' + (lat + d);
     return '&lat=' + lat + '&lon=' + lng + '&bbox=' + bbox;
@@ -109,7 +166,7 @@
   }
 
   /* =========================================================
-     MAPA + CAMADAS (raster — funciona em qualquer cidade)
+     MAPA + CAMADAS
      ========================================================= */
   const map = L.map('map', {
     zoomControl: false,
@@ -121,45 +178,45 @@
   const ATTR_ESRI  = 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics';
 
   const CAMADAS = {
-  mapa: {
-    nome: 'Mapa',
-    layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: ATTR_OSM
-    }),
-    classe: ''
-  },
-  satelite: {
-    nome: 'Satélite',
-    layer: L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      { maxZoom: 19, attribution: ATTR_ESRI, className: 'satelite' }
-    ),
-    classe: 'satelite'
-  },
-  hibrido: {
-    nome: 'Híbrido',
-    layer: L.layerGroup([
-      L.tileLayer(
+    mapa: {
+      nome: 'Mapa',
+      layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: ATTR_OSM
+      }),
+      classe: ''
+    },
+    satelite: {
+      nome: 'Satélite',
+      layer: L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         { maxZoom: 19, attribution: ATTR_ESRI, className: 'satelite' }
       ),
-      L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/rastertiles/light_only_labels/{z}/{x}/{y}{r}.png?key=cb1_4g96_1_fee9aee7095928420870a200',
-        { maxZoom: 19, attribution: ATTR_CART, pane: 'shadowPane', opacity: 0.9 }
-      )
-    ]),
-    classe: 'hibrido'
-  },
-  escuro: {
-    nome: 'Escuro',
-    layer: L.tileLayer(
-      'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png?key=cb1_4g96_1_fee9aee7095928420870a200',
-      { maxZoom: 19, attribution: ATTR_CART }
-    ),
-    classe: 'escuro'
-  }
-};
+      classe: 'satelite'
+    },
+    hibrido: {
+      nome: 'Híbrido',
+      layer: L.layerGroup([
+        L.tileLayer(
+          'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          { maxZoom: 19, attribution: ATTR_ESRI, className: 'satelite' }
+        ),
+        L.tileLayer(
+          'https://{s}.basemaps.cartocdn.com/rastertiles/light_only_labels/{z}/{x}/{y}{r}.png?key=cb1_4g96_1_fee9aee7095928420870a200',
+          { maxZoom: 19, attribution: ATTR_CART, pane: 'shadowPane', opacity: 0.9 }
+        )
+      ]),
+      classe: 'hibrido'
+    },
+    escuro: {
+      nome: 'Escuro',
+      layer: L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png?key=cb1_4g96_1_fee9aee7095928420870a200',
+        { maxZoom: 19, attribution: ATTR_CART }
+      ),
+      classe: 'escuro'
+    }
+  };
 
   const CAMADA_KEY = 'mj_camada';
   let camadaAtual = null;
@@ -315,7 +372,7 @@
     if (!state.user) return null;
     const { data, error } = await supabase
       .from('motoqueiros')
-      .select('id, status, moto_marca, moto_modelo, moto_placa, disponivel, nota_media, total_corridas')
+      .select('id, status, moto_marca, moto_modelo, moto_placa, disponivel, nota_media, total_corridas, pix_key')
       .eq('profile_id', state.user.id).maybeSingle();
     if (error) return null;
     return data;
@@ -331,7 +388,8 @@
       moto_ano: parseInt(dados.ano) || null,
       moto_cor: dados.cor || null,
       moto_placa: dados.placa || null,
-      moto_cc: parseInt(dados.cc) || null
+      moto_cc: parseInt(dados.cc) || null,
+      pix_key: (dados.pix || '').trim() || null
     };
 
     const { data, error } = await supabase
@@ -665,7 +723,7 @@
   });
 
   /* =========================================================
-     GEOCODIFICAÇÃO — PHOTON (komoot) — sem lang na URL
+     GEOCODIFICAÇÃO — PHOTON
      ========================================================= */
   async function geocodificarReverso(lat, lng) {
     try {
@@ -750,7 +808,7 @@
   });
 
   /* =========================================================
-     BUSCA DE DESTINO — PHOTON (sem lang na URL)
+     BUSCA DE DESTINO
      ========================================================= */
   let resAtuais = [];
   const buscarDestino = debounce(async (q) => {
@@ -1281,7 +1339,7 @@
   async function carregarMotoqueiroReal(corrida) {
     const { data: mot } = await supabase
       .from('motoqueiros')
-      .select('id, moto_marca, moto_modelo, moto_ano, moto_cor, moto_placa, nota_media, total_corridas, lat, lng, profiles(nome_completo, telefone)')
+      .select('id, moto_marca, moto_modelo, moto_ano, moto_cor, moto_placa, nota_media, total_corridas, lat, lng, pix_key, profiles(nome_completo, telefone)')
       .eq('id', corrida.motoqueiro_id)
       .single();
 
@@ -1402,21 +1460,76 @@
   });
 
   /* =========================================================
-     PAGAMENTO + AVALIAÇÃO (PASSAGEIRO)
+     PAGAMENTO + AVALIAÇÃO
      ========================================================= */
   let formaPagamentoSel = null;
   let notaAv = 0;
+  let brcodeAtual = null;
 
   function abrirModalPagamento(corrida) {
     formaPagamentoSel = null;
+    brcodeAtual = null;
     state.corridaParaAvaliar = corrida;
     $('pg-valor').textContent = formatMoney(corrida.preco_total);
+
+    $('pg-etapa-1').classList.remove('hidden');
+    $('pg-etapa-2').classList.add('hidden');
+
     $$('.pg-op').forEach(b => b.classList.remove('!border-[#FF6A00]','!bg-[#FFF7ED]'));
     const btn = $('btn-pagar');
     btn.disabled = true; btn.textContent = 'Escolha a forma';
     btn.className = 'w-full bg-zinc-200 text-zinc-400 rounded-2xl py-4 font-bold sora';
+
     const modal = $('modal-pagamento');
     modal.classList.remove('hidden'); modal.classList.add('flex');
+  }
+
+  function fecharModalPagamento() {
+    const modal = $('modal-pagamento');
+    modal.classList.add('hidden'); modal.classList.remove('flex');
+  }
+
+  function voltarEtapaPagamento() {
+    $('pg-etapa-1').classList.remove('hidden');
+    $('pg-etapa-2').classList.add('hidden');
+  }
+
+  async function renderQRCodePix(valor) {
+    const mot = state.motoqueiroAtual;
+    if (!mot) { mostrarToast('Motoqueiro não carregado', 'error'); return; }
+
+    const chave = mot.pix_key;
+    if (!chave) {
+      mostrarToast('Motoqueiro não cadastrou chave PIX. Pague em dinheiro.', 'error');
+      voltarEtapaPagamento();
+      return;
+    }
+
+    const nomeMot = mot.profiles?.nome_completo || 'Motoqueiro';
+    const cidade  = 'OEIRAS DO PARA';
+    const txid    = 'MJ' + Date.now().toString().slice(-8);
+
+    const brcode = gerarBRCodePix(chave, nomeMot, cidade, valor, txid);
+    if (!brcode) { mostrarToast('Erro ao gerar QR Code', 'error'); voltarEtapaPagamento(); return; }
+    brcodeAtual = brcode;
+
+    $('pg-pix-nome').textContent  = nomeMot;
+    $('pg-pix-chave').textContent = chave;
+
+    const canvas = $('pg-pix-canvas');
+    try {
+      await QRCode.toCanvas(canvas, brcode, {
+        width: 220,
+        margin: 1,
+        color: { dark: '#0A0A0A', light: '#FFFFFF' }
+      });
+    } catch (e) {
+      console.error('[QR]', e);
+      mostrarToast('Erro ao gerar QR Code', 'error');
+    }
+
+    $('pg-etapa-1').classList.add('hidden');
+    $('pg-etapa-2').classList.remove('hidden');
   }
 
   $$('.pg-op').forEach(b => {
@@ -1432,15 +1545,52 @@
 
   $('btn-pagar').addEventListener('click', async () => {
     if (!formaPagamentoSel || !state.corridaParaAvaliar) return;
+
+    if (formaPagamentoSel === 'pix') {
+      await renderQRCodePix(state.corridaParaAvaliar.preco_total);
+      return;
+    }
+
     try {
       await supabase.rpc('confirmar_pagamento', {
-        p_corrida_id: state.corridaParaAvaliar.id, p_forma: formaPagamentoSel
+        p_corrida_id: state.corridaParaAvaliar.id,
+        p_forma: formaPagamentoSel
       });
-      $('modal-pagamento').classList.add('hidden');
-      $('modal-pagamento').classList.remove('flex');
+      fecharModalPagamento();
       abrirModalAvaliacao(state.corridaParaAvaliar);
     } catch (e) { mostrarToast(e.message, 'error'); }
   });
+
+  $('btn-paguei').addEventListener('click', async () => {
+    if (!state.corridaParaAvaliar) return;
+    const btn = $('btn-paguei');
+    const txt = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Registrando...';
+    try {
+      await supabase.rpc('confirmar_pagamento', {
+        p_corrida_id: state.corridaParaAvaliar.id,
+        p_forma: 'pix'
+      });
+      fecharModalPagamento();
+      abrirModalAvaliacao(state.corridaParaAvaliar);
+    } catch (e) {
+      mostrarToast(e.message, 'error');
+      btn.disabled = false; btn.textContent = txt;
+    }
+  });
+
+  $('btn-copiar-pix').addEventListener('click', async () => {
+    const chave = $('pg-pix-chave').textContent;
+    if (!chave || chave === '—') return;
+    try {
+      await navigator.clipboard.writeText(chave);
+      mostrarToast('📋 Chave PIX copiada!', 'success');
+    } catch (_) {
+      mostrarToast('Não foi possível copiar', 'error');
+    }
+  });
+
+  $('btn-voltar-pg').addEventListener('click', voltarEtapaPagamento);
 
   function abrirModalAvaliacao() {
     notaAv = 0;
@@ -1883,7 +2033,8 @@
           ano: $('moto-ano').value,
           cor: $('moto-cor').value.trim(),
           placa: $('moto-placa').value.toUpperCase().trim(),
-          cc: $('moto-cc').value
+          cc: $('moto-cc').value,
+          pix: ($('moto-pix') && $('moto-pix').value) ? $('moto-pix').value.trim() : ''
         };
         const motoqueiro = await salvarCadastroMotoqueiro(dados);
         for (const tipo of ['cnh', 'crlv', 'selfie']) {
