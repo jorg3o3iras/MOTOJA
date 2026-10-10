@@ -653,26 +653,26 @@
   /* =========================================================
      GEOCODIFICAÇÃO — PHOTON (komoot)
      ========================================================= */
-  async function geocodificarReverso(lat, lng) {
-    try {
-      const r = await fetch(
-        `https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`;
-        { signal: AbortSignal.timeout(6000) }
-      );
-      if (!r.ok) throw new Error('HTTP');
-      const j = await r.json();
-      const p = j?.features?.[0]?.properties;
-      if (p) {
-        const partes = [
-          p.street && p.housenumber ? `${p.street}, ${p.housenumber}` : (p.street || p.name),
-          p.district || p.suburb,
-          p.city || p.town || p.village
-        ].filter(Boolean);
-        if (partes.length) return partes.join(' - ');
-      }
-    } catch (_) {}
-    return 'Local selecionado';
-  }
+ async function geocodificarReverso(lat, lng) {
+  try {
+    const r = await fetch(
+      `https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`,
+      { signal: AbortSignal.timeout(6000) }
+    );
+    if (!r.ok) throw new Error('HTTP');
+    const j = await r.json();
+    const p = j?.features?.[0]?.properties;
+    if (p) {
+      const partes = [
+        p.street && p.housenumber ? `${p.street}, ${p.housenumber}` : (p.street || p.name),
+        p.district || p.suburb,
+        p.city || p.town || p.village
+      ].filter(Boolean);
+      if (partes.length) return partes.join(' - ');
+    }
+  } catch (_) {}
+  return 'Local selecionado';
+}
 
   /* =========================================================
      PICKUP / GPS
