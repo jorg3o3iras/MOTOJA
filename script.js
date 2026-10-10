@@ -145,7 +145,7 @@
         { maxZoom: 19, attribution: ATTR_ESRI, className: 'satelite' }
       ),
       L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png?apiKey=cb1_4g96_1_fee9aee7095928420870a200',
+        'https://{s}.basemaps.cartocdn.com/rastertiles/light_only_labels/{z}/{x}/{y}{r}.png?key=cb1_4g96_1_fee9aee7095928420870a200',
         { maxZoom: 19, attribution: ATTR_CART, pane: 'shadowPane', opacity: 0.9 }
       )
     ]),
@@ -154,7 +154,7 @@
   escuro: {
     nome: 'Escuro',
     layer: L.tileLayer(
-      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?apiKey=cb1_4g96_1_fee9aee7095928420870a200',
+      'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png?key=cb1_4g96_1_fee9aee7095928420870a200',
       { maxZoom: 19, attribution: ATTR_CART }
     ),
     classe: 'escuro'
