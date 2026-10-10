@@ -247,22 +247,52 @@
 </div>
 
 <!-- ============================================================
-     MODAL DE PAGAMENTO
+     MODAL DE PAGAMENTO (PIX QR Code + Dinheiro)
      ============================================================ -->
 <div id="modal-pagamento" class="fixed inset-0 z-[2600] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
-  <div class="bg-white rounded-[28px] w-full max-w-[400px] shadow-premium-lg p-6" onclick="event.stopPropagation()">
+  <div class="bg-white rounded-[28px] w-full max-w-[420px] shadow-premium-lg p-6" onclick="event.stopPropagation()">
+
+    <!-- Cabeçalho -->
     <div class="text-center mb-5">
       <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 text-3xl flex items-center justify-center mx-auto">✓</div>
       <h3 class="sora font-extrabold text-[20px] mt-3">Corrida finalizada</h3>
       <div id="pg-valor" class="sora font-extrabold text-[32px] text-[#FF6A00] mt-2">R$ 0,00</div>
     </div>
-    <div class="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Forma de pagamento</div>
-    <div class="grid grid-cols-3 gap-2 mb-5">
-      <button type="button" class="pg-op py-4 rounded-2xl border-2 border-zinc-200 font-bold text-[13px] hover:border-[#FF6A00]" data-forma="pix">💠<br>PIX</button>
-      <button type="button" class="pg-op py-4 rounded-2xl border-2 border-zinc-200 font-bold text-[13px] hover:border-[#FF6A00]" data-forma="dinheiro">💵<br>Dinheiro</button>
-      <button type="button" class="pg-op py-4 rounded-2xl border-2 border-zinc-200 font-bold text-[13px] hover:border-[#FF6A00]" data-forma="cartao">💳<br>Cartão</button>
+
+    <!-- ETAPA 1: escolher forma -->
+    <div id="pg-etapa-1">
+      <div class="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Forma de pagamento</div>
+      <div class="grid grid-cols-2 gap-2 mb-5">
+        <button type="button" class="pg-op py-4 rounded-2xl border-2 border-zinc-200 font-bold text-[13px] hover:border-[#FF6A00]" data-forma="pix">💠<br>PIX</button>
+        <button type="button" class="pg-op py-4 rounded-2xl border-2 border-zinc-200 font-bold text-[13px] hover:border-[#FF6A00]" data-forma="dinheiro">💵<br>Dinheiro</button>
+      </div>
+      <button id="btn-pagar" type="button" disabled="" class="w-full bg-zinc-200 text-zinc-400 rounded-2xl py-4 font-bold sora">Escolha a forma</button>
     </div>
-    <button id="btn-pagar" type="button" disabled="" class="w-full bg-zinc-200 text-zinc-400 rounded-2xl py-4 font-bold sora">Escolha a forma</button>
+
+    <!-- ETAPA 2: PIX QR Code -->
+    <div id="pg-etapa-2" class="hidden">
+      <div class="bg-zinc-100 rounded-2xl p-4 mb-4">
+        <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 text-center mb-3">Escaneie com seu banco</div>
+        <div class="flex justify-center bg-white rounded-xl p-3">
+          <canvas id="pg-pix-canvas"></canvas>
+        </div>
+        <div class="text-[11px] text-zinc-500 text-center mt-3">
+          Pague para <strong id="pg-pix-nome" class="text-black">—</strong>
+        </div>
+      </div>
+
+      <div class="bg-zinc-50 border border-zinc-200 rounded-xl p-3 mb-4">
+        <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Chave PIX</div>
+        <div class="flex items-center gap-2">
+          <div id="pg-pix-chave" class="flex-1 text-[12px] font-mono truncate">—</div>
+          <button id="btn-copiar-pix" type="button" class="bg-black text-white rounded-lg px-3 py-1.5 text-[11px] font-bold">Copiar</button>
+        </div>
+      </div>
+
+      <button id="btn-paguei" type="button" class="w-full bg-emerald-600 text-white rounded-2xl py-4 font-bold sora text-[15px]">✅ Já paguei</button>
+      <button id="btn-voltar-pg" type="button" class="mt-2 w-full text-[12px] text-zinc-400 underline">← Trocar forma de pagamento</button>
+    </div>
+
   </div>
 </div>
 
@@ -367,6 +397,11 @@
         <div class="grid grid-cols-2 gap-3">
           <input id="moto-whats" type="tel" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="WhatsApp">
           <input id="moto-cep" type="text" maxlength="9" class="rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="CEP">
+        </div>
+        <div>
+          <label class="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Chave PIX (pra receber)</label>
+          <input id="moto-pix" type="text" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-3.5" placeholder="CPF, telefone, e-mail ou chave aleatória">
+          <div class="text-[11px] text-zinc-500 mt-1">O passageiro vai pagar direto nessa chave.</div>
         </div>
       </div>
     </div>
@@ -721,6 +756,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet/leaflet-maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script src="script.js"></script></body></html>
