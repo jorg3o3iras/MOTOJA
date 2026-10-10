@@ -2591,8 +2591,13 @@
     try { ouvirMinhasOfertas(); } catch (_) {}
   }
 
-  window.addEventListener('beforeunload', () => {
+   window.addEventListener('beforeunload', () => {
     pararHeartbeat();
   });
+
+  // 🔍 DEBUG — permite testar funções do console (remover depois)
+  window.__mj = { gerarBRCodePix, crc16Pix, tlvPix, state, abrirModalPagamento };
+
+})();
 
 })();
