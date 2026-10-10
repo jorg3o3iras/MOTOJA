@@ -656,7 +656,7 @@
   async function geocodificarReverso(lat, lng) {
     try {
       const r = await fetch(
-        `https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`
+        `https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`;
         { signal: AbortSignal.timeout(6000) }
       );
       if (!r.ok) throw new Error('HTTP');
