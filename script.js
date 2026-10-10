@@ -177,11 +177,12 @@
   const ATTR_CART  = '&copy; <a href="https://carto.com/attributions">CARTO</a>';
   const ATTR_ESRI  = 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics';
 
-  const CAMADAS = {
+   const CAMADAS = {
     mapa: {
       nome: 'Mapa',
       layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
+        maxNativeZoom: 19,
         attribution: ATTR_OSM
       }),
       classe: ''
@@ -190,7 +191,7 @@
       nome: 'Satélite',
       layer: L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        { maxZoom: 19, attribution: ATTR_ESRI, className: 'satelite' }
+        { maxZoom: 19, maxNativeZoom: 17, attribution: ATTR_ESRI, className: 'satelite' }
       ),
       classe: 'satelite'
     },
@@ -199,11 +200,11 @@
       layer: L.layerGroup([
         L.tileLayer(
           'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-          { maxZoom: 19, attribution: ATTR_ESRI, className: 'satelite' }
+          { maxZoom: 19, maxNativeZoom: 17, attribution: ATTR_ESRI, className: 'satelite' }
         ),
         L.tileLayer(
           'https://{s}.basemaps.cartocdn.com/rastertiles/light_only_labels/{z}/{x}/{y}{r}.png?key=cb1_4g96_1_fee9aee7095928420870a200',
-          { maxZoom: 19, attribution: ATTR_CART, pane: 'shadowPane', opacity: 0.9 }
+          { maxZoom: 19, maxNativeZoom: 18, attribution: ATTR_CART, pane: 'shadowPane', opacity: 0.9 }
         )
       ]),
       classe: 'hibrido'
@@ -212,7 +213,7 @@
       nome: 'Escuro',
       layer: L.tileLayer(
         'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png?key=cb1_4g96_1_fee9aee7095928420870a200',
-        { maxZoom: 19, attribution: ATTR_CART }
+        { maxZoom: 19, maxNativeZoom: 18, attribution: ATTR_CART }
       ),
       classe: 'escuro'
     }
