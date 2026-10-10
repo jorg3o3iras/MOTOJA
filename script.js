@@ -121,45 +121,45 @@
   const ATTR_ESRI  = 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics';
 
   const CAMADAS = {
-    mapa: {
-      nome: 'Mapa',
-      layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: ATTR_OSM
-      }),
-      classe: ''
-    },
-    satelite: {
-      nome: 'Satélite',
-      layer: L.tileLayer(
+  mapa: {
+    nome: 'Mapa',
+    layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: ATTR_OSM
+    }),
+    classe: ''
+  },
+  satelite: {
+    nome: 'Satélite',
+    layer: L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      { maxZoom: 19, attribution: ATTR_ESRI, className: 'satelite' }
+    ),
+    classe: 'satelite'
+  },
+  hibrido: {
+    nome: 'Híbrido',
+    layer: L.layerGroup([
+      L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         { maxZoom: 19, attribution: ATTR_ESRI, className: 'satelite' }
       ),
-      classe: 'satelite'
-    },
-    hibrido: {
-      nome: 'Híbrido',
-      layer: L.layerGroup([
-        L.tileLayer(
-          'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-          { maxZoom: 19, attribution: ATTR_ESRI, className: 'satelite' }
-        ),
-        L.tileLayer(
-          'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
-          { maxZoom: 19, attribution: ATTR_CART, pane: 'shadowPane', opacity: 0.9 }
-        )
-      ]),
-      classe: 'hibrido'
-    },
-    escuro: {
-      nome: 'Escuro',
-      layer: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 19,
-        attribution: ATTR_CART
-      }),
-      classe: 'escuro'
-    }
-  };
+      L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png?apiKey=cb1_4g96_1_fee9aee7095928420870a200',
+        { maxZoom: 19, attribution: ATTR_CART, pane: 'shadowPane', opacity: 0.9 }
+      )
+    ]),
+    classe: 'hibrido'
+  },
+  escuro: {
+    nome: 'Escuro',
+    layer: L.tileLayer(
+      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?apiKey=cb1_4g96_1_fee9aee7095928420870a200',
+      { maxZoom: 19, attribution: ATTR_CART }
+    ),
+    classe: 'escuro'
+  }
+};
 
   const CAMADA_KEY = 'mj_camada';
   let camadaAtual = null;
