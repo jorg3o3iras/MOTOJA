@@ -88,11 +88,11 @@
   function montarBiasPhoton() {
     if (!state.pickup) return '';
     const { lat, lng } = state.pickup;
-    return `&lat=${lat}&lon=${lng}`;
+    return '&lat=' + lat + '&lon=' + lng;
   }
 
   /* =========================================================
-     MAPA + CAMADAS (Mapa / Satélite / Híbrido / Escuro)
+     MAPA + CAMADAS (raster — funciona em qualquer cidade)
      ========================================================= */
   const map = L.map('map', {
     zoomControl: false,
@@ -103,47 +103,46 @@
   const ATTR_CART  = '&copy; <a href="https://carto.com/attributions">CARTO</a>';
   const ATTR_ESRI  = 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics';
 
-  // 🔧 Camadas disponíveis
- const CAMADAS = {
-  mapa: {
-    nome: 'Mapa',
-    layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors'
-    }),
-    classe: ''
-  },
-  satelite: {
-    nome: 'Satélite',
-    layer: L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      { maxZoom: 19, attribution: ATTR_ESRI, className: 'satelite' }
-    ),
-    classe: 'satelite'
-  },
-  hibrido: {
-    nome: 'Híbrido',
-    layer: L.layerGroup([
-      L.tileLayer(
+  const CAMADAS = {
+    mapa: {
+      nome: 'Mapa',
+      layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: ATTR_OSM
+      }),
+      classe: ''
+    },
+    satelite: {
+      nome: 'Satélite',
+      layer: L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         { maxZoom: 19, attribution: ATTR_ESRI, className: 'satelite' }
       ),
-      L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
-        { maxZoom: 19, attribution: ATTR_CART, pane: 'shadowPane', opacity: 0.9 }
-      )
-    ]),
-    classe: 'hibrido'
-  },
-  escuro: {
-    nome: 'Escuro',
-    layer: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-      attribution: '&copy; CARTO'
-    }),
-    classe: 'escuro'
-  }
-};
+      classe: 'satelite'
+    },
+    hibrido: {
+      nome: 'Híbrido',
+      layer: L.layerGroup([
+        L.tileLayer(
+          'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          { maxZoom: 19, attribution: ATTR_ESRI, className: 'satelite' }
+        ),
+        L.tileLayer(
+          'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
+          { maxZoom: 19, attribution: ATTR_CART, pane: 'shadowPane', opacity: 0.9 }
+        )
+      ]),
+      classe: 'hibrido'
+    },
+    escuro: {
+      nome: 'Escuro',
+      layer: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+        attribution: ATTR_CART
+      }),
+      classe: 'escuro'
+    }
+  };
 
   const CAMADA_KEY = 'mj_camada';
   let camadaAtual = null;
@@ -183,13 +182,13 @@
   function criarIconeMoto(dir, eta) {
     return L.divIcon({
       className: '', iconSize: [48, 58], iconAnchor: [24, 30],
-      html: `<div class="moto-pin relative" style="transform:rotate(${dir}deg)"><div class="halo absolute inset-0"></div><div class="core relative z-10">🏍</div></div><div style="position:absolute;top:46px;left:50%;transform:translateX(-50%);background:#0A0A0A;color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;white-space:nowrap">${eta} min</div>`
+      html: '<div class="moto-pin relative" style="transform:rotate(' + dir + 'deg)"><div class="halo absolute inset-0"></div><div class="core relative z-10">🏍</div></div><div style="position:absolute;top:46px;left:50%;transform:translateX(-50%);background:#0A0A0A;color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;white-space:nowrap">' + eta + ' min</div>'
     });
   }
   function criarIconeMotoSimples(nome) {
     return L.divIcon({
       className: '', iconSize: [40, 40], iconAnchor: [20, 20],
-      html: `<div style="width:40px;height:40px;border-radius:50%;background:#FF6A00;border:3px solid #fff;box-shadow:0 4px 12px rgba(255,106,0,.5);display:flex;align-items:center;justify-content:center;font-size:18px" title="${nome}">🏍</div>`
+      html: '<div style="width:40px;height:40px;border-radius:50%;background:#FF6A00;border:3px solid #fff;box-shadow:0 4px 12px rgba(255,106,0,.5);display:flex;align-items:center;justify-content:center;font-size:18px" title="' + nome + '">🏍</div>'
     });
   }
 
@@ -259,7 +258,7 @@
 
   function mostrarPasso(n) {
     $$('#sheet section').forEach(s => s.classList.add('hidden'));
-    const el = $(`step-${n}`);
+    const el = $('step-' + n);
     if (el) el.classList.remove('hidden');
   }
 
@@ -318,26 +317,19 @@
       moto_cc: parseInt(dados.cc) || null
     };
 
-    console.log('[Moto] payload:', payload);
-
     const { data, error } = await supabase
       .from('motoqueiros')
       .upsert(payload, { onConflict: 'profile_id' })
       .select()
       .single();
 
-    if (error) {
-      console.error('[Moto] ERRO:', error);
-      throw error;
-    }
-
-    console.log('[Moto] salvo:', data);
+    if (error) throw error;
     return data;
   }
   async function uploadDocumento(motoqueiroId, tipo, arquivo) {
     if (!state.user) throw new Error('Faça login primeiro');
     const ext = (arquivo.name.split('.').pop() || 'jpg').toLowerCase();
-    const path = `${state.user.id}/${motoqueiroId}/${tipo}.${ext}`;
+    const path = state.user.id + '/' + motoqueiroId + '/' + tipo + '.' + ext;
     const { error: errUpload } = await supabase.storage
       .from('documentos')
       .upload(path, arquivo, { upsert: true, contentType: arquivo.type });
@@ -360,7 +352,7 @@
       const { data: signed } = await supabase.storage
         .from('documentos')
         .createSignedUrl(d.url_storage, 3600);
-      return { ...d, url_assinada: signed?.signedUrl || null };
+      return Object.assign({}, d, { url_assinada: signed?.signedUrl || null });
     }));
 
     return docs;
@@ -408,10 +400,10 @@
     const sim10 = base + km * 10;
     const sim20 = base + km * 20;
     $('cfg-simulacao').innerHTML =
-      `Base <b>R$ ${base.toFixed(2)}</b> + <b>R$ ${km.toFixed(2)}</b>/km + <b>${espera} min</b><br>` +
-      `• 5 km → <b>R$ ${sim5.toFixed(2)}</b><br>` +
-      `• 10 km → <b>R$ ${sim10.toFixed(2)}</b><br>` +
-      `• 20 km → <b>R$ ${sim20.toFixed(2)}</b>`;
+      'Base <b>R$ ' + base.toFixed(2) + '</b> + <b>R$ ' + km.toFixed(2) + '</b>/km + <b>' + espera + ' min</b><br>' +
+      '• 5 km → <b>R$ ' + sim5.toFixed(2) + '</b><br>' +
+      '• 10 km → <b>R$ ' + sim10.toFixed(2) + '</b><br>' +
+      '• 20 km → <b>R$ ' + sim20.toFixed(2) + '</b>';
   }
 
   ['cfg-preco-base','cfg-preco-km','cfg-espera','cfg-comissao'].forEach(id => {
@@ -550,7 +542,7 @@
       state.profile = profile;
       const nome = profile?.nome_completo || user.user_metadata?.nome_completo || user.email.split('@')[0];
       const primeiroNome = nome.split(' ')[0];
-      $('btn-conta').innerHTML = `👤 ${primeiroNome}`;
+      $('btn-conta').innerHTML = '👤 ' + primeiroNome;
       $('user-mini-av').textContent = initials(nome);
       $('user-nome').textContent = primeiroNome;
       $('user-logado').classList.remove('hidden');
@@ -575,7 +567,6 @@
   }
 
   supabase.auth.onAuthStateChange(async (event, session) => {
-    console.log('[Auth]', event);
     if (session?.user) {
       const profile = await carregarProfile(session.user.id);
       await atualizarUIUsuario(session.user, profile);
@@ -657,28 +648,32 @@
   });
 
   /* =========================================================
-     GEOCODIFICAÇÃO — PHOTON (komoot)
+     GEOCODIFICAÇÃO — PHOTON (komoot) — sem lang na URL
      ========================================================= */
- async function geocodificarReverso(lat, lng) {
-  try {
-    const r = await fetch(
-      `https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`,
-      { signal: AbortSignal.timeout(6000) }
-    );
-    if (!r.ok) throw new Error('HTTP');
-    const j = await r.json();
-    const p = j?.features?.[0]?.properties;
-    if (p) {
-      const partes = [
-        p.street && p.housenumber ? `${p.street}, ${p.housenumber}` : (p.street || p.name),
-        p.district || p.suburb,
-        p.city || p.town || p.village
-      ].filter(Boolean);
-      if (partes.length) return partes.join(' - ');
-    }
-  } catch (_) {}
-  return 'Local selecionado';
-}
+  async function geocodificarReverso(lat, lng) {
+    try {
+      const url = 'https://photon.komoot.io/reverse?lat=' + lat + '&lon=' + lng;
+      const r = await fetch(url, {
+        signal: AbortSignal.timeout(6000),
+        headers: { 'Accept-Language': 'pt-BR' }
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json();
+      const p = j && j.features && j.features[0] && j.features[0].properties;
+      if (p) {
+        const partes = [];
+        if (p.street && p.housenumber) partes.push(p.street + ', ' + p.housenumber);
+        else if (p.street) partes.push(p.street);
+        else if (p.name) partes.push(p.name);
+        const bairro = p.district || p.suburb;
+        if (bairro) partes.push(bairro);
+        const cidade = p.city || p.town || p.village;
+        if (cidade) partes.push(cidade);
+        if (partes.length) return partes.join(' - ');
+      }
+    } catch (_) {}
+    return 'Local selecionado';
+  }
 
   /* =========================================================
      PICKUP / GPS
@@ -692,7 +687,7 @@
       if (marcadorEu) map.removeLayer(marcadorEu);
       marcadorEu = L.marker([lat, lng], { icon: iconeEu, zIndexOffset: 500 }).addTo(map);
     }
-    $('pickup-info').innerHTML = `📍 <strong class="text-black">${nf}</strong>`;
+    $('pickup-info').innerHTML = '📍 <strong class="text-black">' + nf + '</strong>';
     if (!state.destino) map.flyTo([lat, lng], 15, { duration: 1.2 });
   }
 
@@ -738,7 +733,7 @@
   });
 
   /* =========================================================
-     BUSCA DE DESTINO — PHOTON
+     BUSCA DE DESTINO — PHOTON (sem lang na URL)
      ========================================================= */
   let resAtuais = [];
   const buscarDestino = debounce(async (q) => {
@@ -746,9 +741,12 @@
     const ac = new AbortController(); state.buscaAbort = ac;
     const bias = montarBiasPhoton();
     try {
-      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=8&lang=pt${bias}`;
-      const r = await fetch(url, { signal: ac.signal });
-      if (!r.ok) throw new Error('HTTP');
+      const url = 'https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&limit=8' + bias;
+      const r = await fetch(url, {
+        signal: ac.signal,
+        headers: { 'Accept-Language': 'pt-BR' }
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
       const j = await r.json();
       resAtuais = (j.features || []).filter(f => f.properties?.countrycode === 'BR');
       renderSug(resAtuais);
@@ -772,19 +770,19 @@
     $('sugestoes').innerHTML = lista.map((it, i) => {
       const p = it.properties || {};
       const titulo = p.name || p.street || p.city || 'Local';
-      const sub = [
-        p.street && p.housenumber ? `${p.street}, ${p.housenumber}` : null,
-        p.district || p.suburb,
-        p.city || p.town || p.village,
-        p.state
-      ].filter(Boolean).join(', ') || (p.country || '');
-      return `<div class="sugestao flex gap-3 p-3 hover:bg-zinc-100 rounded-2xl cursor-pointer transition" data-i="${i}">
-        <div class="w-9 h-9 rounded-full bg-zinc-100 flex items-center justify-center">📍</div>
-        <div class="min-w-0 flex-1">
-          <div class="font-bold text-[13px] truncate">${titulo}</div>
-          <div class="text-[11px] text-zinc-500 truncate">${sub}</div>
-        </div>
-      </div>`;
+      const partes = [];
+      if (p.street && p.housenumber) partes.push(p.street + ', ' + p.housenumber);
+      if (p.district || p.suburb) partes.push(p.district || p.suburb);
+      if (p.city || p.town || p.village) partes.push(p.city || p.town || p.village);
+      if (p.state) partes.push(p.state);
+      const sub = partes.join(', ') || p.country || '';
+      return '<div class="sugestao flex gap-3 p-3 hover:bg-zinc-100 rounded-2xl cursor-pointer transition" data-i="' + i + '">' +
+        '<div class="w-9 h-9 rounded-full bg-zinc-100 flex items-center justify-center">📍</div>' +
+        '<div class="min-w-0 flex-1">' +
+          '<div class="font-bold text-[13px] truncate">' + titulo + '</div>' +
+          '<div class="text-[11px] text-zinc-500 truncate">' + sub + '</div>' +
+        '</div>' +
+      '</div>';
     }).join('');
 
     $$('.sugestao').forEach(el => {
@@ -795,10 +793,10 @@
         const lat = coords[1], lng = coords[0];
         const p = it.properties || {};
         const nome = p.name || p.street || p.city || 'Local';
-        const endereco = [
-          p.street && p.housenumber ? `${p.street}, ${p.housenumber}` : null,
-          p.city || p.town || p.village
-        ].filter(Boolean).join(' - ') || nome;
+        const partes = [];
+        if (p.street && p.housenumber) partes.push(p.street + ', ' + p.housenumber);
+        if (p.city || p.town || p.village) partes.push(p.city || p.town || p.village);
+        const endereco = partes.join(' - ') || nome;
         escolherDestino(lat, lng, endereco);
       });
     });
@@ -814,22 +812,22 @@
   function renderFavoritos() {
     const el = $('favoritos-lista');
     if (!favoritos.length) {
-      el.innerHTML = `<div class="col-span-2 text-center py-6 px-4 rounded-2xl border-2 border-dashed border-zinc-200">
-        <div class="text-2xl mb-1">📌</div>
-        <div class="text-[12px] text-zinc-500 leading-snug">Salve seus destinos favoritos<br>para acessar com um toque</div>
-      </div>`;
+      el.innerHTML = '<div class="col-span-2 text-center py-6 px-4 rounded-2xl border-2 border-dashed border-zinc-200">' +
+        '<div class="text-2xl mb-1">📌</div>' +
+        '<div class="text-[12px] text-zinc-500 leading-snug">Salve seus destinos favoritos<br>para acessar com um toque</div>' +
+      '</div>';
       return;
     }
-    el.innerHTML = favoritos.map(f => `
-      <div class="relative group">
-        <button type="button" class="fav-card w-full bg-white border border-zinc-200 rounded-2xl px-4 py-3 text-left hover:border-black hover:shadow-lg" data-id="${f.id}">
-          <div class="text-[18px]">${f.icone}</div>
-          <div class="sora font-bold text-[13px] mt-1 truncate pr-5">${f.nome}</div>
-          <div class="text-[11px] text-zinc-500 truncate">${f.endereco || 'Toque para ir'}</div>
-        </button>
-        <button type="button" class="fav-del absolute top-2 right-2 w-6 h-6 rounded-full bg-zinc-100 hover:bg-red-100 hover:text-red-600 text-zinc-500 text-[11px] flex items-center justify-center transition" data-del="${f.id}">✕</button>
-      </div>
-    `).join('');
+    el.innerHTML = favoritos.map(f =>
+      '<div class="relative group">' +
+        '<button type="button" class="fav-card w-full bg-white border border-zinc-200 rounded-2xl px-4 py-3 text-left hover:border-black hover:shadow-lg" data-id="' + f.id + '">' +
+          '<div class="text-[18px]">' + f.icone + '</div>' +
+          '<div class="sora font-bold text-[13px] mt-1 truncate pr-5">' + f.nome + '</div>' +
+          '<div class="text-[11px] text-zinc-500 truncate">' + (f.endereco || 'Toque para ir') + '</div>' +
+        '</button>' +
+        '<button type="button" class="fav-del absolute top-2 right-2 w-6 h-6 rounded-full bg-zinc-100 hover:bg-red-100 hover:text-red-600 text-zinc-500 text-[11px] flex items-center justify-center transition" data-del="' + f.id + '">✕</button>' +
+      '</div>'
+    ).join('');
     el.querySelectorAll('.fav-card').forEach(btn => {
       btn.addEventListener('click', () => {
         const f = favoritos.find(x => x.id === btn.dataset.id);
@@ -877,25 +875,28 @@
     const ac = new AbortController(); state.favAbort = ac;
     const bias = montarBiasPhoton();
     try {
-      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=8&lang=pt${bias}`;
-      const r = await fetch(url, { signal: ac.signal });
+      const url = 'https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&limit=8' + bias;
+      const r = await fetch(url, {
+        signal: ac.signal,
+        headers: { 'Accept-Language': 'pt-BR' }
+      });
       const j = await r.json();
       const favRes = (j.features || []).filter(f => f.properties?.countrycode === 'BR');
 
       $('fav-sugestoes').innerHTML = favRes.map((it, i) => {
         const p = it.properties || {};
         const titulo = p.name || p.street || p.city || 'Local';
-        const sub = [
-          p.street && p.housenumber ? `${p.street}, ${p.housenumber}` : null,
-          p.city || p.town || p.village
-        ].filter(Boolean).join(', ') || (p.state || '');
-        return `<div class="fav-sug flex gap-3 p-2.5 hover:bg-zinc-100 rounded-xl cursor-pointer transition" data-i="${i}">
-          <div class="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-[13px]">📍</div>
-          <div class="min-w-0 flex-1">
-            <div class="font-bold text-[12px] truncate">${titulo}</div>
-            <div class="text-[10px] text-zinc-500 truncate">${sub}</div>
-          </div>
-        </div>`;
+        const partes = [];
+        if (p.street && p.housenumber) partes.push(p.street + ', ' + p.housenumber);
+        if (p.city || p.town || p.village) partes.push(p.city || p.town || p.village);
+        const sub = partes.join(', ') || p.state || '';
+        return '<div class="fav-sug flex gap-3 p-2.5 hover:bg-zinc-100 rounded-xl cursor-pointer transition" data-i="' + i + '">' +
+          '<div class="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-[13px]">📍</div>' +
+          '<div class="min-w-0 flex-1">' +
+            '<div class="font-bold text-[12px] truncate">' + titulo + '</div>' +
+            '<div class="text-[10px] text-zinc-500 truncate">' + sub + '</div>' +
+          '</div>' +
+        '</div>';
       }).join('');
 
       $$('.fav-sug').forEach(el => {
@@ -905,10 +906,10 @@
           const coords = it.geometry?.coordinates || [];
           favLatLng = { lat: coords[1], lng: coords[0] };
           const p = it.properties || {};
-          const label = [
-            p.name || p.street,
-            p.city || p.town || p.village
-          ].filter(Boolean).join(' - ') || 'Local';
+          const partes = [];
+          if (p.name || p.street) partes.push(p.name || p.street);
+          if (p.city || p.town || p.village) partes.push(p.city || p.town || p.village);
+          const label = partes.join(' - ') || 'Local';
           $('fav-endereco').value = label;
           $('fav-sugestoes').innerHTML = '';
           $('fav-selecionado').classList.remove('hidden');
@@ -1060,17 +1061,18 @@
     linhaRotaGlow = L.polyline(rota.coords, { color: '#FF6A00', weight: 2, opacity: 0.55 }).addTo(map);
     map.fitBounds(linhaRota.getBounds(), mapPad);
 
-    $('rota-resumo').innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-      <span><b class="text-black">${Math.round(rota.duracao)} min</b> • ${rota.distancia.toFixed(1)} km</span>
-      <span class="ml-auto truncate max-w-[140px]">${nome}</span>`;
+    $('rota-resumo').innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span>' +
+      '<span><b class="text-black">' + Math.round(rota.duracao) + ' min</b> • ' + rota.distancia.toFixed(1) + ' km</span>' +
+      '<span class="ml-auto truncate max-w-[140px]">' + nome + '</span>';
     renderOpcaoUnica();
   }
 
   async function calcularRota(a, b) {
     try {
-      const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${a.lng},${a.lat};${b.lng},${b.lat}?overview=full&geometries=geojson`, { signal: AbortSignal.timeout(8000) });
+      const url = 'https://router.project-osrm.org/route/v1/driving/' + a.lng + ',' + a.lat + ';' + b.lng + ',' + b.lat + '?overview=full&geometries=geojson';
+      const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
       const j = await r.json();
-      if (j.code !== 'Ok' || !j.routes?.[0]) throw new Error('OSRM');
+      if (j.code !== 'Ok' || !j.routes || !j.routes[0]) throw new Error('OSRM');
       return {
         coords: j.routes[0].geometry.coordinates.map(c => [c[1], c[0]]),
         distancia: j.routes[0].distance / 1000,
@@ -1089,24 +1091,24 @@
     const tempo = Math.round(duracao + CATEGORIA_MOTO.espera);
     state.opcao = CATEGORIA_MOTO;
 
-    $('lista-opcoes').innerHTML = `
-      <div class="op-card sel w-full flex items-center gap-4 p-5 rounded-[20px] border-2 border-black bg-black text-white">
-        <div class="w-14 h-14 rounded-2xl bg-[#FF6A00] text-white flex items-center justify-center font-bold text-[22px]">🏍</div>
-        <div class="flex-1 min-w-0">
-          <div class="sora font-extrabold text-[16px]">${CATEGORIA_MOTO.nome}</div>
-          <div class="text-[12px] text-white/60 mt-0.5">${CATEGORIA_MOTO.desc}</div>
-          <div class="text-[11px] text-white/50 mt-1">Chega em ~${CATEGORIA_MOTO.espera} min • Viagem de ${tempo} min</div>
-        </div>
-        <div class="text-right">
-          <div class="sora font-extrabold text-[20px] text-[#FF6A00]">${formatMoney(preco)}</div>
-          <div class="text-[10px] text-white/50 uppercase tracking-widest font-bold mt-1">Total</div>
-        </div>
-      </div>`;
+    $('lista-opcoes').innerHTML =
+      '<div class="op-card sel w-full flex items-center gap-4 p-5 rounded-[20px] border-2 border-black bg-black text-white">' +
+        '<div class="w-14 h-14 rounded-2xl bg-[#FF6A00] text-white flex items-center justify-center font-bold text-[22px]">🏍</div>' +
+        '<div class="flex-1 min-w-0">' +
+          '<div class="sora font-extrabold text-[16px]">' + CATEGORIA_MOTO.nome + '</div>' +
+          '<div class="text-[12px] text-white/60 mt-0.5">' + CATEGORIA_MOTO.desc + '</div>' +
+          '<div class="text-[11px] text-white/50 mt-1">Chega em ~' + CATEGORIA_MOTO.espera + ' min • Viagem de ' + tempo + ' min</div>' +
+        '</div>' +
+        '<div class="text-right">' +
+          '<div class="sora font-extrabold text-[20px] text-[#FF6A00]">' + formatMoney(preco) + '</div>' +
+          '<div class="text-[10px] text-white/50 uppercase tracking-widest font-bold mt-1">Total</div>' +
+        '</div>' +
+      '</div>';
 
     const btn = $('btn-confirmar');
     btn.disabled = false;
     btn.className = 'mt-5 w-full bg-black text-white rounded-2xl py-[18px] font-bold sora text-[15px] shadow-premium hover:bg-zinc-900 transition';
-    btn.textContent = `Confirmar • ${formatMoney(preco)}`;
+    btn.textContent = 'Confirmar • ' + formatMoney(preco);
   }
 
   /* =========================================================
@@ -1140,7 +1142,6 @@
 
       if (resp.preco_total) {
         state.precoOficial = Number(resp.preco_total);
-        console.log('[Corrida] Preço oficial do backend:', state.precoOficial);
       }
 
       mostrarPasso('buscando');
@@ -1180,14 +1181,13 @@
     state.canalCorrida = supabase
       .channel('corrida-' + corridaId)
       .on('postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'corridas', filter: `id=eq.${corridaId}` },
+        { event: 'UPDATE', schema: 'public', table: 'corridas', filter: 'id=eq.' + corridaId },
         ({ new: c }) => tratarUpdateCorrida(c))
       .subscribe();
   }
 
   async function tratarUpdateCorrida(c) {
     if (!c || c.id !== state.corridaId) return;
-    console.log('[corrida]', c.status);
 
     switch (c.status) {
       case 'oferecida':
@@ -1233,7 +1233,7 @@
 
     const nome = mot?.profiles?.nome_completo?.split(' ')[0] || 'motoqueiro';
     atualizarTextoBusca(
-      `Enviando solicitação para<br><span class="text-[#FF6A00]">${nome}</span>`,
+      'Enviando solicitação para<br><span class="text-[#FF6A00]">' + nome + '</span>',
       'Aguardando resposta...'
     );
   }
@@ -1261,9 +1261,7 @@
   async function carregarMotoqueiroReal(corrida) {
     const { data: mot } = await supabase
       .from('motoqueiros')
-      .select(`id, moto_marca, moto_modelo, moto_ano, moto_cor, moto_placa,
-               nota_media, total_corridas, lat, lng,
-               profiles(nome_completo, telefone)`)
+      .select('id, moto_marca, moto_modelo, moto_ano, moto_cor, moto_placa, nota_media, total_corridas, lat, lng, profiles(nome_completo, telefone)')
       .eq('id', corrida.motoqueiro_id)
       .single();
 
@@ -1278,8 +1276,8 @@
     $('dr-nome').textContent    = nome;
     $('dr-nota').textContent    = '★ ' + nota;
     $('dr-viagens').textContent = '· ' + trips + ' corridas';
-    $('dr-moto').textContent    = `${mot.moto_marca || ''} ${mot.moto_modelo || ''}`.trim() || 'Moto';
-    $('dr-detalhe').textContent = `${mot.moto_cor || ''} · ${mot.moto_ano || ''}`;
+    $('dr-moto').textContent    = ((mot.moto_marca || '') + ' ' + (mot.moto_modelo || '')).trim() || 'Moto';
+    $('dr-detalhe').textContent = (mot.moto_cor || '') + ' · ' + (mot.moto_ano || '');
     $('dr-placa').textContent   = mot.moto_placa || '---';
     $('codigo-embarque').textContent = (corrida.codigo_embarque || '----').split('').join(' ');
 
@@ -1310,7 +1308,7 @@
     state.canalMotoPos = supabase
       .channel('pos-moto-' + motoqueiroId)
       .on('postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'motoqueiros', filter: `id=eq.${motoqueiroId}` },
+        { event: 'UPDATE', schema: 'public', table: 'motoqueiros', filter: 'id=eq.' + motoqueiroId },
         ({ new: m }) => {
           if (!m?.lat || !m?.lng || !markerMoto) return;
           if (m.lat === ultimoLat && m.lng === ultimoLng) return;
@@ -1500,13 +1498,13 @@
 
     const c = state.motoqueiroCadastro;
     if (c.status !== 'aprovado') {
-      texto.textContent = `Status: ${c.status} · Aguarde aprovação`;
+      texto.textContent = 'Status: ' + c.status + ' · Aguarde aprovação';
       btnToggle.disabled = true;
       btnToggle.className = 'bg-zinc-500 text-white rounded-full px-3 py-1.5 text-[11px] font-bold cursor-not-allowed';
       btnToggle.textContent = 'Aguardando';
       return;
     }
-    texto.textContent = `Status: aprovado · ${c.disponivel ? 'Online' : 'Offline'}`;
+    texto.textContent = 'Status: aprovado · ' + (c.disponivel ? 'Online' : 'Offline');
     btnToggle.disabled = false;
     btnToggle.className = c.disponivel
       ? 'bg-red-500 text-white rounded-full px-3 py-1.5 text-[11px] font-bold'
@@ -1569,7 +1567,7 @@
       .channel('minhas-ofertas-' + meuMotId)
       .on('postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'corridas',
-          filter: `offer_motoqueiro_id=eq.${meuMotId}` },
+          filter: 'offer_motoqueiro_id=eq.' + meuMotId },
         ({ new: c }) => {
           if (c.status === 'oferecida' && c.offer_expires_at) {
             abrirModalOferta(c);
@@ -1604,14 +1602,14 @@
     $('of-valor').textContent  = formatMoney(c.preco_total);
     $('of-origem').textContent = c.origem_nome || '—';
     $('of-destino').textContent = c.destino_nome || '—';
-    $('of-dist').textContent   = `${Number(c.distancia_km).toFixed(1)} km · ${Math.round(c.duracao_min)} min`;
+    $('of-dist').textContent   = Number(c.distancia_km).toFixed(1) + ' km · ' + Math.round(c.duracao_min) + ' min';
 
     navigator.geolocation.getCurrentPosition((pos) => {
       const d = haversine(
         { lat: pos.coords.latitude, lng: pos.coords.longitude },
         { lat: c.origem_lat, lng: c.origem_lng }
       );
-      $('of-ate-embarque').textContent = `a ${d.toFixed(1)} km de você`;
+      $('of-ate-embarque').textContent = 'a ' + d.toFixed(1) + ' km de você';
     }, () => { $('of-ate-embarque').textContent = ''; }, { timeout: 4000 });
 
     clearInterval(state.timerOferta);
@@ -1669,7 +1667,7 @@
     state.canalMinhaCorrida = supabase
       .channel('minha-corrida-' + corridaId)
       .on('postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'corridas', filter: `id=eq.${corridaId}` },
+        { event: 'UPDATE', schema: 'public', table: 'corridas', filter: 'id=eq.' + corridaId },
         ({ new: c }) => {
           if (c.status === 'em_andamento') {
             renderCorridaRodando(c);
@@ -1685,21 +1683,17 @@
 
   function renderCorridaEmAndamento(data) {
     const box = $('ofertas-box');
-    box.innerHTML = `
-      <div class="bg-black text-white rounded-2xl p-4 shadow-premium-lg">
-        <div class="text-[11px] text-white/60 uppercase font-bold">Indo ao embarque</div>
-        <div class="text-[12px] text-white/70 mt-2">📍 ${data.origem_nome}</div>
-        <div class="text-[12px] text-white/70">🏁 ${data.destino_nome}</div>
-        <div class="sora font-extrabold text-[22px] mt-3 text-[#FF6A00]">
-          ${formatMoney(data.preco_total)}
-        </div>
-        <div class="flex gap-2 mt-4">
-          <button id="btn-cheguei" class="flex-1 bg-[#FF6A00] text-white rounded-xl py-3 font-bold text-[13px]">
-            Cheguei no embarque
-          </button>
-          <button id="btn-cancelar-mot" class="bg-red-600 text-white rounded-xl px-4 py-3 font-bold text-[13px]">✕</button>
-        </div>
-      </div>`;
+    box.innerHTML =
+      '<div class="bg-black text-white rounded-2xl p-4 shadow-premium-lg">' +
+        '<div class="text-[11px] text-white/60 uppercase font-bold">Indo ao embarque</div>' +
+        '<div class="text-[12px] text-white/70 mt-2">📍 ' + data.origem_nome + '</div>' +
+        '<div class="text-[12px] text-white/70">🏁 ' + data.destino_nome + '</div>' +
+        '<div class="sora font-extrabold text-[22px] mt-3 text-[#FF6A00]">' + formatMoney(data.preco_total) + '</div>' +
+        '<div class="flex gap-2 mt-4">' +
+          '<button id="btn-cheguei" class="flex-1 bg-[#FF6A00] text-white rounded-xl py-3 font-bold text-[13px]">Cheguei no embarque</button>' +
+          '<button id="btn-cancelar-mot" class="bg-red-600 text-white rounded-xl px-4 py-3 font-bold text-[13px]">✕</button>' +
+        '</div>' +
+      '</div>';
 
     $('btn-cheguei').onclick = async () => {
       try {
@@ -1717,20 +1711,16 @@
 
   function pedirCodigoEmbarque(data) {
     const box = $('ofertas-box');
-    box.innerHTML = `
-      <div class="bg-amber-500 text-white rounded-2xl p-4 shadow-premium-lg">
-        <div class="text-[11px] text-white/80 uppercase font-bold">Embarque</div>
-        <div class="sora font-bold text-[15px] mt-1">Digite o código que o passageiro vai mostrar</div>
-        <input id="inp-codigo" inputmode="numeric" maxlength="4"
-          class="w-full mt-3 text-center text-[28px] sora font-extrabold tracking-[0.4em]
-                 bg-white/20 text-white rounded-xl py-3 outline-none border-2 border-white/30
-                 focus:border-white"
-          placeholder="••••">
-        <div class="flex gap-2 mt-3">
-          <button id="btn-iniciar" class="flex-1 bg-white text-amber-700 rounded-xl py-3 font-bold">Iniciar corrida</button>
-          <button id="btn-cancelar-mot2" class="bg-red-600 text-white rounded-xl px-4 py-3 font-bold">✕</button>
-        </div>
-      </div>`;
+    box.innerHTML =
+      '<div class="bg-amber-500 text-white rounded-2xl p-4 shadow-premium-lg">' +
+        '<div class="text-[11px] text-white/80 uppercase font-bold">Embarque</div>' +
+        '<div class="sora font-bold text-[15px] mt-1">Digite o código que o passageiro vai mostrar</div>' +
+        '<input id="inp-codigo" inputmode="numeric" maxlength="4" class="w-full mt-3 text-center text-[28px] sora font-extrabold tracking-[0.4em] bg-white/20 text-white rounded-xl py-3 outline-none border-2 border-white/30 focus:border-white" placeholder="••••">' +
+        '<div class="flex gap-2 mt-3">' +
+          '<button id="btn-iniciar" class="flex-1 bg-white text-amber-700 rounded-xl py-3 font-bold">Iniciar corrida</button>' +
+          '<button id="btn-cancelar-mot2" class="bg-red-600 text-white rounded-xl px-4 py-3 font-bold">✕</button>' +
+        '</div>' +
+      '</div>';
 
     $('inp-codigo').focus();
     $('btn-iniciar').onclick = async () => {
@@ -1748,20 +1738,18 @@
 
   function renderCorridaRodando(c) {
     const box = $('ofertas-box');
-    box.innerHTML = `
-      <div class="bg-emerald-600 text-white rounded-2xl p-4 shadow-premium-lg">
-        <div class="text-[11px] text-white/80 uppercase font-bold">Em andamento</div>
-        <div class="sora font-extrabold text-[18px] mt-1">Levando passageiro</div>
-        <div class="text-[12px] text-white/70 mt-1">🏁 ${c.destino_nome || ''}</div>
-        <button id="btn-finalizar" class="w-full mt-3 bg-white text-emerald-700 rounded-xl py-3 font-bold">
-          Finalizar corrida
-        </button>
-      </div>`;
+    box.innerHTML =
+      '<div class="bg-emerald-600 text-white rounded-2xl p-4 shadow-premium-lg">' +
+        '<div class="text-[11px] text-white/80 uppercase font-bold">Em andamento</div>' +
+        '<div class="sora font-extrabold text-[18px] mt-1">Levando passageiro</div>' +
+        '<div class="text-[12px] text-white/70 mt-1">🏁 ' + (c.destino_nome || '') + '</div>' +
+        '<button id="btn-finalizar" class="w-full mt-3 bg-white text-emerald-700 rounded-xl py-3 font-bold">Finalizar corrida</button>' +
+      '</div>';
     $('btn-finalizar').onclick = async () => {
       try {
         const { data, error } = await supabase.rpc('finalizar_corrida', { p_corrida_id: c.id });
         if (error) throw error;
-        mostrarToast(`💰 Receberá ${formatMoney(data.liquido_motoqueiro)} (comissão ${formatMoney(data.comissao)})`, 'success');
+        mostrarToast('💰 Receberá ' + formatMoney(data.liquido_motoqueiro) + ' (comissão ' + formatMoney(data.comissao) + ')', 'success');
         limparCorridaAtual();
       } catch (e) { mostrarToast(e.message, 'error'); }
     };
@@ -1783,7 +1771,7 @@
     lista.forEach(m => {
       const marker = L.marker([m.lat, m.lng], { icon: criarIconeMotoSimples(m.nome) })
         .addTo(map)
-        .bindPopup(`<b>${m.nome}</b><br>${m.moto_marca || ''} ${m.moto_modelo || ''}<br>${m.distancia_km} km`);
+        .bindPopup('<b>' + m.nome + '</b><br>' + (m.moto_marca || '') + ' ' + (m.moto_modelo || '') + '<br>' + m.distancia_km + ' km');
       markersMotoqueiros.set(m.id, marker);
     });
   }
@@ -1828,7 +1816,7 @@
       const file = e.target.files[0];
       if (!file) return;
       arquivosMoto[tipo] = file;
-      const statusEl = modalMoto.querySelector(`[data-status="${tipo}"]`);
+      const statusEl = modalMoto.querySelector('[data-status="' + tipo + '"]');
       if (statusEl) { statusEl.textContent = '✓ ' + file.name.slice(0, 25); statusEl.className = 'text-[11px] text-emerald-600 mt-1 font-bold'; }
       const wrap = input.closest('.upload');
       if (wrap) wrap.classList.add('!border-emerald-500', '!bg-emerald-50');
@@ -1922,7 +1910,7 @@
   });
 
   /* =========================================================
-     ADMIN — proteção por senha + validação no banco
+     ADMIN
      ========================================================= */
   const modalAdmin = $('modal-admin');
   function abrirAdmin() {
@@ -2040,7 +2028,6 @@
         .order('criado_em', { ascending: false });
 
       if (error) {
-        console.error('[Admin] erro pendentes:', error);
         el.innerHTML = '<div class="text-center py-12 text-red-500 text-[13px]">Erro: ' + error.message + '</div>';
         return;
       }
@@ -2054,26 +2041,21 @@
       el.innerHTML = data.map(m => {
         const nome = (m.profiles && m.profiles.nome_completo) || 'Sem nome';
         const tel = (m.profiles && m.profiles.telefone) || '';
-        return `
-          <div class="admin-card" data-mot-id="${m.id}">
-            <div class="flex items-start justify-between gap-3 mb-3">
-              <div class="flex-1 min-w-0">
-                <div class="sora font-bold text-[16px] truncate">${nome}</div>
-                <div class="text-[12px] text-zinc-500 mt-0.5">${tel}</div>
-                <div class="text-[12px] text-zinc-500 mt-1">🏍️ ${(m.moto_marca || '')} ${(m.moto_modelo || '')} · ${(m.moto_placa || '')}</div>
-              </div>
-            </div>
-
-            <button type="button" class="ver-docs-btn w-full bg-zinc-100 hover:bg-zinc-200 rounded-xl py-2.5 text-[12px] font-bold mb-2 transition" data-mot-id="${m.id}">
-              📎 Ver documentos
-            </button>
-            <div class="docs-container hidden mb-3 space-y-2" data-docs-for="${m.id}"></div>
-
-            <div class="flex gap-2">
-              <button class="admin-btn aprovar flex-1" data-aprovar="${m.id}">✓ Aprovar</button>
-              <button class="admin-btn reprovar flex-1" data-reprovar="${m.id}">✕ Reprovar</button>
-            </div>
-          </div>`;
+        return '<div class="admin-card" data-mot-id="' + m.id + '">' +
+          '<div class="flex items-start justify-between gap-3 mb-3">' +
+            '<div class="flex-1 min-w-0">' +
+              '<div class="sora font-bold text-[16px] truncate">' + nome + '</div>' +
+              '<div class="text-[12px] text-zinc-500 mt-0.5">' + tel + '</div>' +
+              '<div class="text-[12px] text-zinc-500 mt-1">🏍️ ' + (m.moto_marca || '') + ' ' + (m.moto_modelo || '') + ' · ' + (m.moto_placa || '') + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<button type="button" class="ver-docs-btn w-full bg-zinc-100 hover:bg-zinc-200 rounded-xl py-2.5 text-[12px] font-bold mb-2 transition" data-mot-id="' + m.id + '">📎 Ver documentos</button>' +
+          '<div class="docs-container hidden mb-3 space-y-2" data-docs-for="' + m.id + '"></div>' +
+          '<div class="flex gap-2">' +
+            '<button class="admin-btn aprovar flex-1" data-aprovar="' + m.id + '">✓ Aprovar</button>' +
+            '<button class="admin-btn reprovar flex-1" data-reprovar="' + m.id + '">✕ Reprovar</button>' +
+          '</div>' +
+        '</div>';
       }).join('');
 
       el.querySelectorAll('[data-aprovar]').forEach(btn =>
@@ -2081,55 +2063,53 @@
       el.querySelectorAll('[data-reprovar]').forEach(btn =>
         btn.addEventListener('click', () => mudarStatus(btn.dataset.reprovar, 'reprovado')));
 
-      el.querySelectorAll('.ver-docs-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const motId = btn.dataset.motId;
-          const container = el.querySelector(`[data-docs-for="${motId}"]`);
-          if (!container) return;
-
-          if (!container.classList.contains('hidden')) {
-            container.classList.add('hidden');
-            container.innerHTML = '';
-            btn.textContent = '📎 Ver documentos';
-            return;
-          }
-
-          container.classList.remove('hidden');
-          container.innerHTML = '<div class="text-[12px] text-zinc-400 text-center py-3">Carregando documentos...</div>';
-          btn.textContent = '📎 Ocultar documentos';
-
-          const docs = await carregarDocumentosMotoqueiro(motId);
-
-          if (!docs.length) {
-            container.innerHTML = '<div class="text-[12px] text-zinc-400 text-center py-3">Nenhum documento enviado</div>';
-            return;
-          }
-
-          container.innerHTML = docs.map(d => {
-            const label = { cnh: '🪪 CNH', crlv: '📋 CRLV', selfie: '🤳 Selfie' }[d.tipo] || d.tipo;
-            const isImg = /\.(jpg|jpeg|png|webp|gif)$/i.test(d.url_storage);
-            return `
-              <div class="border border-zinc-200 rounded-xl overflow-hidden">
-                <div class="flex items-center justify-between px-3 py-2 bg-zinc-50">
-                  <span class="text-[12px] font-bold">${label}</span>
-                  <span class="text-[10px] text-emerald-600 font-bold uppercase">${d.status}</span>
-                </div>
-                ${isImg && d.url_assinada
-                  ? `<img src="${d.url_assinada}" class="w-full max-h-[240px] object-contain bg-zinc-100 cursor-pointer" onclick="window.open('${d.url_assinada}','_blank')">`
-                  : ''}
-                <a href="${d.url_assinada || '#'}" target="_blank"
-                   class="block text-center text-[12px] font-bold py-2 bg-white hover:bg-zinc-100 text-black border-t border-zinc-200">
-                  🔗 Abrir arquivo
-                </a>
-              </div>`;
-          }).join('');
-        });
-      });
-
+      bindVerDocs(el);
     } catch (e) {
-      console.error(e);
       el.innerHTML = '<div class="text-center py-12 text-red-500 text-[13px]">Erro: ' + e.message + '</div>';
     }
+  }
+
+  function bindVerDocs(el) {
+    el.querySelectorAll('.ver-docs-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const motId = btn.dataset.motId;
+        const container = el.querySelector('[data-docs-for="' + motId + '"]');
+        if (!container) return;
+
+        if (!container.classList.contains('hidden')) {
+          container.classList.add('hidden');
+          container.innerHTML = '';
+          btn.textContent = '📎 Ver documentos';
+          return;
+        }
+
+        container.classList.remove('hidden');
+        container.innerHTML = '<div class="text-[12px] text-zinc-400 text-center py-3">Carregando documentos...</div>';
+        btn.textContent = '📎 Ocultar documentos';
+
+        const docs = await carregarDocumentosMotoqueiro(motId);
+
+        if (!docs.length) {
+          container.innerHTML = '<div class="text-[12px] text-zinc-400 text-center py-3">Nenhum documento enviado</div>';
+          return;
+        }
+
+        container.innerHTML = docs.map(d => {
+          const label = { cnh: '🪪 CNH', crlv: '📋 CRLV', selfie: '🤳 Selfie' }[d.tipo] || d.tipo;
+          const isImg = /\.(jpg|jpeg|png|webp|gif)$/i.test(d.url_storage);
+          return '<div class="border border-zinc-200 rounded-xl overflow-hidden">' +
+            '<div class="flex items-center justify-between px-3 py-2 bg-zinc-50">' +
+              '<span class="text-[12px] font-bold">' + label + '</span>' +
+              '<span class="text-[10px] text-emerald-600 font-bold uppercase">' + d.status + '</span>' +
+            '</div>' +
+            (isImg && d.url_assinada
+              ? '<img src="' + d.url_assinada + '" class="w-full max-h-[240px] object-contain bg-zinc-100 cursor-pointer" onclick="window.open(\'' + d.url_assinada + '\',\'_blank\')">'
+              : '') +
+            '<a href="' + (d.url_assinada || '#') + '" target="_blank" class="block text-center text-[12px] font-bold py-2 bg-white hover:bg-zinc-100 text-black border-t border-zinc-200">🔗 Abrir arquivo</a>' +
+          '</div>';
+        }).join('');
+      });
+    });
   }
 
   async function carregarMotoqueiros(filtro) {
@@ -2162,44 +2142,32 @@
 
         let botoes = '';
         if (m.status === 'pendente') {
-          botoes = `
-            <button class="admin-btn aprovar flex-1" data-aprovar="${m.id}">✓ Aprovar</button>
-            <button class="admin-btn reprovar flex-1" data-reprovar="${m.id}">✕ Reprovar</button>`;
+          botoes = '<button class="admin-btn aprovar flex-1" data-aprovar="' + m.id + '">✓ Aprovar</button>' +
+                   '<button class="admin-btn reprovar flex-1" data-reprovar="' + m.id + '">✕ Reprovar</button>';
         } else if (m.status === 'aprovado') {
-          botoes = `
-            <button class="admin-btn suspender flex-1" data-suspender="${m.id}">⏸ Suspender</button>
-            <button class="admin-btn reprovar flex-1" data-excluir="${m.id}">🗑 Excluir</button>`;
+          botoes = '<button class="admin-btn suspender flex-1" data-suspender="' + m.id + '">⏸ Suspender</button>' +
+                   '<button class="admin-btn reprovar flex-1" data-excluir="' + m.id + '">🗑 Excluir</button>';
         } else if (m.status === 'suspenso') {
-          botoes = `
-            <button class="admin-btn aprovar flex-1" data-reativar="${m.id}">▶ Reativar</button>
-            <button class="admin-btn reprovar flex-1" data-excluir="${m.id}">🗑 Excluir</button>`;
+          botoes = '<button class="admin-btn aprovar flex-1" data-reativar="' + m.id + '">▶ Reativar</button>' +
+                   '<button class="admin-btn reprovar flex-1" data-excluir="' + m.id + '">🗑 Excluir</button>';
         } else if (m.status === 'reprovado') {
-          botoes = `
-            <button class="admin-btn aprovar flex-1" data-aprovar="${m.id}">✓ Aprovar</button>
-            <button class="admin-btn reprovar flex-1" data-excluir="${m.id}">🗑 Excluir</button>`;
+          botoes = '<button class="admin-btn aprovar flex-1" data-aprovar="' + m.id + '">✓ Aprovar</button>' +
+                   '<button class="admin-btn reprovar flex-1" data-excluir="' + m.id + '">🗑 Excluir</button>';
         }
 
-        return `
-          <div class="admin-card">
-            <div class="flex items-start justify-between gap-3 mb-2">
-              <div class="flex-1 min-w-0">
-                <div class="sora font-bold text-[15px] truncate">${nome}</div>
-                <div class="text-[12px] text-zinc-500 mt-0.5">${(m.moto_marca || '')} ${(m.moto_modelo || '')} · ${(m.moto_placa || '')}</div>
-              </div>
-              <div class="text-[10px] font-bold px-2 py-1 rounded-full"
-                   style="background:${corStatus}20; color:${corStatus}">
-                ${m.status.toUpperCase()}
-              </div>
-            </div>
-            <div class="text-[11px] text-zinc-500 mb-2">📞 ${tel} · 🏁 ${(m.total_corridas || 0)} corridas · ${m.disponivel ? '🟢 Online' : '⚫ Offline'}</div>
-
-            <button type="button" class="ver-docs-btn w-full bg-zinc-100 hover:bg-zinc-200 rounded-xl py-2.5 text-[12px] font-bold mb-2 transition" data-mot-id="${m.id}">
-              📎 Ver documentos
-            </button>
-            <div class="docs-container hidden mb-3 space-y-2" data-docs-for="${m.id}"></div>
-
-            <div class="flex gap-2">${botoes}</div>
-          </div>`;
+        return '<div class="admin-card">' +
+          '<div class="flex items-start justify-between gap-3 mb-2">' +
+            '<div class="flex-1 min-w-0">' +
+              '<div class="sora font-bold text-[15px] truncate">' + nome + '</div>' +
+              '<div class="text-[12px] text-zinc-500 mt-0.5">' + (m.moto_marca || '') + ' ' + (m.moto_modelo || '') + ' · ' + (m.moto_placa || '') + '</div>' +
+            '</div>' +
+            '<div class="text-[10px] font-bold px-2 py-1 rounded-full" style="background:' + corStatus + '20; color:' + corStatus + '">' + m.status.toUpperCase() + '</div>' +
+          '</div>' +
+          '<div class="text-[11px] text-zinc-500 mb-2">📞 ' + tel + ' · 🏁 ' + (m.total_corridas || 0) + ' corridas · ' + (m.disponivel ? '🟢 Online' : '⚫ Offline') + '</div>' +
+          '<button type="button" class="ver-docs-btn w-full bg-zinc-100 hover:bg-zinc-200 rounded-xl py-2.5 text-[12px] font-bold mb-2 transition" data-mot-id="' + m.id + '">📎 Ver documentos</button>' +
+          '<div class="docs-container hidden mb-3 space-y-2" data-docs-for="' + m.id + '"></div>' +
+          '<div class="flex gap-2">' + botoes + '</div>' +
+        '</div>';
       }).join('');
 
       el.querySelectorAll('[data-aprovar]').forEach(btn =>
@@ -2213,53 +2181,8 @@
       el.querySelectorAll('[data-excluir]').forEach(btn =>
         btn.addEventListener('click', () => excluirMotoqueiro(btn.dataset.excluir)));
 
-      el.querySelectorAll('.ver-docs-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const motId = btn.dataset.motId;
-          const container = el.querySelector(`[data-docs-for="${motId}"]`);
-          if (!container) return;
-
-          if (!container.classList.contains('hidden')) {
-            container.classList.add('hidden');
-            container.innerHTML = '';
-            btn.textContent = '📎 Ver documentos';
-            return;
-          }
-
-          container.classList.remove('hidden');
-          container.innerHTML = '<div class="text-[12px] text-zinc-400 text-center py-3">Carregando documentos...</div>';
-          btn.textContent = '📎 Ocultar documentos';
-
-          const docs = await carregarDocumentosMotoqueiro(motId);
-
-          if (!docs.length) {
-            container.innerHTML = '<div class="text-[12px] text-zinc-400 text-center py-3">Nenhum documento enviado</div>';
-            return;
-          }
-
-          container.innerHTML = docs.map(d => {
-            const label = { cnh: '🪪 CNH', crlv: '📋 CRLV', selfie: '🤳 Selfie' }[d.tipo] || d.tipo;
-            const isImg = /\.(jpg|jpeg|png|webp|gif)$/i.test(d.url_storage);
-            return `
-              <div class="border border-zinc-200 rounded-xl overflow-hidden">
-                <div class="flex items-center justify-between px-3 py-2 bg-zinc-50">
-                  <span class="text-[12px] font-bold">${label}</span>
-                  <span class="text-[10px] text-emerald-600 font-bold uppercase">${d.status}</span>
-                </div>
-                ${isImg && d.url_assinada
-                  ? `<img src="${d.url_assinada}" class="w-full max-h-[240px] object-contain bg-zinc-100 cursor-pointer" onclick="window.open('${d.url_assinada}','_blank')">`
-                  : ''}
-                <a href="${d.url_assinada || '#'}" target="_blank"
-                   class="block text-center text-[12px] font-bold py-2 bg-white hover:bg-zinc-100 text-black border-t border-zinc-200">
-                  🔗 Abrir arquivo
-                </a>
-              </div>`;
-          }).join('');
-        });
-      });
-
+      bindVerDocs(el);
     } catch (e) {
-      console.error(e);
       el.innerHTML = '<div class="text-center py-12 text-red-500 text-[13px]">Erro: ' + e.message + '</div>';
     }
   }
@@ -2301,9 +2224,9 @@
         try {
           const { data: arquivos } = await supabase.storage
             .from('documentos')
-            .list(`${profileId}/${id}`);
+            .list(profileId + '/' + id);
           if (arquivos?.length) {
-            const paths = arquivos.map(f => `${profileId}/${id}/${f.name}`);
+            const paths = arquivos.map(f => profileId + '/' + id + '/' + f.name);
             await supabase.storage.from('documentos').remove(paths);
           }
         } catch (e) { console.warn('Erro ao limpar storage:', e); }
@@ -2323,14 +2246,7 @@
     try {
       const { data, error } = await supabase
         .from('corridas')
-        .select(`
-          id, status, origem_nome, destino_nome, distancia_km, preco_total, criado_em,
-          passageiro:profiles!corridas_passageiro_id_fkey (nome_completo, telefone),
-          motoqueiro:motoqueiros!corridas_motoqueiro_id_fkey (
-            moto_marca, moto_modelo, moto_placa,
-            profiles (nome_completo, telefone)
-          )
-        `)
+        .select('id, status, origem_nome, destino_nome, distancia_km, preco_total, criado_em, passageiro:profiles!corridas_passageiro_id_fkey (nome_completo, telefone), motoqueiro:motoqueiros!corridas_motoqueiro_id_fkey (moto_marca, moto_modelo, moto_placa, profiles (nome_completo, telefone))')
         .order('criado_em', { ascending: false })
         .limit(100);
       if (error) throw error;
@@ -2340,14 +2256,9 @@
       }
 
       const coresStatus = {
-        buscando: '#f59e0b',
-        oferecida: '#f59e0b',
-        aceita: '#059669',
-        chegou: '#059669',
-        em_andamento: '#059669',
-        finalizada: '#0A0A0A',
-        cancelada: '#dc2626',
-        sem_motoqueiro: '#71717a'
+        buscando: '#f59e0b', oferecida: '#f59e0b', aceita: '#059669',
+        chegou: '#059669', em_andamento: '#059669', finalizada: '#0A0A0A',
+        cancelada: '#dc2626', sem_motoqueiro: '#71717a'
       };
 
       el.innerHTML = data.map(c => {
@@ -2357,49 +2268,41 @@
         const nomeMot   = c.motoqueiro?.profiles?.nome_completo || 'Sem motoqueiro';
         const telMot    = c.motoqueiro?.profiles?.telefone || '';
         const moto      = c.motoqueiro
-          ? `${c.motoqueiro.moto_marca || ''} ${c.motoqueiro.moto_modelo || ''}`.trim() +
-            (c.motoqueiro.moto_placa ? ' · ' + c.motoqueiro.moto_placa : '')
+          ? ((c.motoqueiro.moto_marca || '') + ' ' + (c.motoqueiro.moto_modelo || '')).trim() + (c.motoqueiro.moto_placa ? ' · ' + c.motoqueiro.moto_placa : '')
           : '';
         const corStatus = coresStatus[c.status] || '#71717a';
 
-        return `
-          <div class="admin-card">
-            <div class="flex items-start justify-between gap-3 mb-3">
-              <div class="flex-1 min-w-0">
-                <div class="font-bold text-[13px] truncate">${c.origem_nome || '—'}</div>
-                <div class="text-[11px] text-zinc-500 truncate">→ ${c.destino_nome || '—'}</div>
-              </div>
-              <div class="text-right flex-shrink-0">
-                <div class="sora font-bold text-[15px]">R$ ${(c.preco_total || 0).toFixed(2).replace('.', ',')}</div>
-                <div class="text-[10px] text-zinc-400">${dataFmt}</div>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-zinc-100">
-              <div class="min-w-0">
-                <div class="text-[9px] font-bold tracking-widest uppercase text-zinc-400">Passageiro</div>
-                <div class="text-[12px] font-semibold truncate mt-0.5">👤 ${nomePass}</div>
-                ${telPass ? `<div class="text-[10px] text-zinc-500 truncate">${telPass}</div>` : ''}
-              </div>
-              <div class="min-w-0">
-                <div class="text-[9px] font-bold tracking-widest uppercase text-zinc-400">Motoqueiro</div>
-                <div class="text-[12px] font-semibold truncate mt-0.5">🏍️ ${nomeMot}</div>
-                ${telMot ? `<div class="text-[10px] text-zinc-500 truncate">${telMot}</div>` : ''}
-                ${moto   ? `<div class="text-[10px] text-zinc-400 truncate">${moto}</div>` : ''}
-              </div>
-            </div>
-
-            <div class="flex items-center justify-between mt-3 pt-2 border-t border-zinc-100">
-              <div class="text-[10px] text-zinc-500">📏 ${(c.distancia_km || 0).toFixed(1)} km</div>
-              <div class="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                   style="background:${corStatus}20; color:${corStatus}">
-                ${(c.status || '').toUpperCase()}
-              </div>
-            </div>
-          </div>`;
+        return '<div class="admin-card">' +
+          '<div class="flex items-start justify-between gap-3 mb-3">' +
+            '<div class="flex-1 min-w-0">' +
+              '<div class="font-bold text-[13px] truncate">' + (c.origem_nome || '—') + '</div>' +
+              '<div class="text-[11px] text-zinc-500 truncate">→ ' + (c.destino_nome || '—') + '</div>' +
+            '</div>' +
+            '<div class="text-right flex-shrink-0">' +
+              '<div class="sora font-bold text-[15px]">R$ ' + (c.preco_total || 0).toFixed(2).replace('.', ',') + '</div>' +
+              '<div class="text-[10px] text-zinc-400">' + dataFmt + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-zinc-100">' +
+            '<div class="min-w-0">' +
+              '<div class="text-[9px] font-bold tracking-widest uppercase text-zinc-400">Passageiro</div>' +
+              '<div class="text-[12px] font-semibold truncate mt-0.5">👤 ' + nomePass + '</div>' +
+              (telPass ? '<div class="text-[10px] text-zinc-500 truncate">' + telPass + '</div>' : '') +
+            '</div>' +
+            '<div class="min-w-0">' +
+              '<div class="text-[9px] font-bold tracking-widest uppercase text-zinc-400">Motoqueiro</div>' +
+              '<div class="text-[12px] font-semibold truncate mt-0.5">🏍️ ' + nomeMot + '</div>' +
+              (telMot ? '<div class="text-[10px] text-zinc-500 truncate">' + telMot + '</div>' : '') +
+              (moto ? '<div class="text-[10px] text-zinc-400 truncate">' + moto + '</div>' : '') +
+            '</div>' +
+          '</div>' +
+          '<div class="flex items-center justify-between mt-3 pt-2 border-t border-zinc-100">' +
+            '<div class="text-[10px] text-zinc-500">📏 ' + (c.distancia_km || 0).toFixed(1) + ' km</div>' +
+            '<div class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:' + corStatus + '20; color:' + corStatus + '">' + (c.status || '').toUpperCase() + '</div>' +
+          '</div>' +
+        '</div>';
       }).join('');
     } catch (e) {
-      console.error(e);
       el.innerHTML = '<div class="text-center py-12 text-red-500 text-[13px]">Erro: ' + e.message + '</div>';
     }
   }
@@ -2424,7 +2327,6 @@
         { r: 'Receita mês', v: 'R$ ' + (s.receita_mes || 0).toFixed(2).replace('.', ',') }
       ].map(x => '<div class="admin-stat"><div class="valor">' + x.v + '</div><div class="rotulo">' + x.r + '</div></div>').join('');
     } catch (e) {
-      console.error(e);
       el.innerHTML = '<div class="text-center py-12 text-red-500 text-[13px] col-span-2">Erro: ' + e.message + '</div>';
     }
   }
@@ -2465,26 +2367,21 @@
     aplicarTema(novo);
     mostrarToast(novo === 'escuro' ? '🌙 Modo noturno ativado' : '☀️ Modo claro ativado');
   }
-    (function() { aplicarTema(localStorage.getItem(TEMA_KEY) || 'claro'); })();
+  (function() { aplicarTema(localStorage.getItem(TEMA_KEY) || 'claro'); })();
   $('btn-tema').addEventListener('click', alternarTema);
 
   /* =========================================================
-     ✅ ANTI-AUTOFILL — limpa campos sensíveis ao carregar
+     ANTI-AUTOFILL
      ========================================================= */
   (function limparAutofill() {
     const campos = ['destino-input', 'fav-endereco'];
-
     campos.forEach(id => {
       const el = $(id);
       if (!el) return;
-
       el.value = '';
-
       [100, 500, 1500, 3000].forEach(ms => {
         setTimeout(() => {
-          if (el.value && el.value.includes('@')) {
-            el.value = '';
-          }
+          if (el.value && el.value.includes('@')) el.value = '';
         }, ms);
       });
     });
@@ -2510,14 +2407,12 @@
       if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
       if (state._pollOferta) { clearInterval(state._pollOferta); state._pollOferta = null; }
       if (state.timerHeartbeat) { clearInterval(state.timerHeartbeat); state.timerHeartbeat = null; }
-      console.log('[Egress] aba oculta → polling pausado');
     } else {
       if (state.corridaId) iniciarPolling(state.corridaId);
       if (state.motoqueiroCadastro?.status === 'aprovado' && state.motoqueiroCadastro?.disponivel) {
         iniciarHeartbeat();
         ouvirMinhasOfertasSafe();
       }
-      console.log('[Egress] aba visível → polling religado');
     }
   });
 
